@@ -4,7 +4,7 @@ Title: File-Backed Array for Out-of-memory Computation
 Version: 0.1.0
 Encoding: UTF-8
 License: LGPL-3
-URL: https://github.com/dipterix/filearray
+URL: http://dipterix.org/filearray, https://github.com/dipterix/filearray
 BugReports: https://github.com/dipterix/filearray/issues
 Authors@R: c(
     person(
