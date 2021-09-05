@@ -1,0 +1,6 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+tests2
+README.md
+^adhoc
+^\.github$

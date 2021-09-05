@@ -1,0 +1,27 @@
+Package: filearray
+Type: Package
+Title: File-Backed Array for Out-of-memory Computation
+Version: 0.1.0
+Encoding: UTF-8
+License: LGPL-3
+URL: https://github.com/dipterix/filearray
+BugReports: https://github.com/dipterix/filearray/issues
+Authors@R: c(
+    person(
+        "Zhengjia", "Wang", role = c("aut", "cre", "cph"),
+        email = "dipterix.wang@gmail.com"
+    ))
+Description: Stores large arrays in files to avoid occupying large
+    memories. Implemented with super fast gigabyte-level multi-threaded 
+    reading/writing via 'OpenMP'. Supports multiple 
+    non-character data types (double, integer, logical and raw).
+Imports: 
+    methods, 
+    utils,
+    Rcpp
+Suggests: 
+    testthat (>= 3.0.0)
+RoxygenNote: 7.1.1
+LinkingTo: 
+    Rcpp
+Config/testthat/edition: 3
