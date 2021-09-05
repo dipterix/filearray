@@ -4,3 +4,6 @@ tests2
 README.md
 ^adhoc
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

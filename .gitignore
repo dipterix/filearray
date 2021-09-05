@@ -17,3 +17,4 @@ vignettes/UsingFilematrices_cache/*
 # extra tests
 tests2/
 *.DS_Store
+docs
