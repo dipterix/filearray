@@ -69,27 +69,53 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="filematrix-file-backed-matrix-class-with-convenient-read-and-write-access" class="section level1">
+<div id="filearray-file-backed-array-for-out-of-memory-computation" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#filematrix-file-backed-matrix-class-with-convenient-read-and-write-access" class="anchor"></a>Filematrix: File-Backed Matrix Class with Convenient Read and Write Access</h1></div>
-<p>Interface for working with large matrices stored in files, not in computer memory. Supports multiple non-character data types (double, integer, logical and raw) of various sizes (e.g. 8 and 4 byte real values). Access to parts of the matrix is done by indexing, exactly as with usual R matrices. Supports very large matrices. Tested on multi-terabyte matrices. Allows for more than 2^32 rows or columns. Allows for quick addition of extra columns to a filematrix. Cross-platform as the package has R code only.</p>
+<a href="#filearray-file-backed-array-for-out-of-memory-computation" class="anchor"></a>FileArray: File-Backed Array for Out-of-memory Computation</h1></div>
+<p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via ‘OpenMP’. Supports multiple non-character data types (double, integer, logical and raw).</p>
+<p><a href="https://CRAN.R-project.org/package=filearray">CRAN</a> | <a href="https://github.com/dipterix/filearray">Github</a></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<div id="install-cran-version" class="section level3">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"filearray"</span><span class="op">)</span></code></pre></div>
+<div id="install-develop-version" class="section level3">
 <h3 class="hasAnchor">
-<a href="#install-cran-version" class="anchor"></a>Install CRAN Version</h3>
-<p>To install the <a href="https://CRAN.R-project.org/package=filematrix">CRAN version</a> of <code>filematrix</code>, run</p>
-<pre><code><a href="https://rdrr.io/r/utils/install.packages.html">install.packages("filematrix")</a></code></pre>
+<a href="#install-develop-version" class="anchor"></a>Install Develop Version</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>
+    dipterix <span class="op">=</span> <span class="st">'https://dipterix.r-universe.dev'</span>,
+    CRAN <span class="op">=</span> <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span><span class="op">)</span>
+
+<span class="co"># Install some packages</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'dipsaus'</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="install-github-version" class="section level3">
-<h3 class="hasAnchor">
-<a href="#install-github-version" class="anchor"></a>Install GitHub Version</h3>
-<p>To install <code>filematrix</code> directly from GitHub, run</p>
-<pre><code>if(!requireNamespace("devtools", quietly = TRUE))
-    install.packages("devtools")
-devtools::install_github("andreyshabalin/filematrix")</code></pre>
 </div>
+<div id="basic-usage" class="section level2">
+<h2 class="hasAnchor">
+<a href="#basic-usage" class="anchor"></a>Basic Usage</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># -------------- Create/Load -------------- </span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray">filearray</a></span><span class="op">)</span>
+<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
+
+<span class="co"># load existing</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_load</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span>
+
+<span class="co"># -------------- Subset/Assign -------------- </span>
+<span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span>
+<span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span>
+
+<span class="co"># -------------- Generics -------------- </span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="co"># -------------- Map-Reduce -------------- </span>
+<span class="co"># Identical to sum(x, na.rm = TRUE)</span>
+<span class="fu"><a href="reference/mapreduce.html">mapreduce</a></span><span class="op">(</span><span class="va">x</span>, 
+          map <span class="op">=</span> \<span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">data</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span>, 
+          reduce <span class="op">=</span> \<span class="op">(</span><span class="va">mapped</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
   </div>
