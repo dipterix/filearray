@@ -69,13 +69,15 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, nbuffers / elem_size));
     }
-    IntegerVector buff_busy(ncores);
     
 #pragma omp parallel num_threads(ncores) 
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t ii = 0; ii < niter; ii++){
+        // get current buffer
+        int thread = ii % ncores;
+        
         int part = partitions[ii];
         int64_t skips = 0;
         if(ii > 0){
@@ -120,17 +122,6 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
             
             std::string s = "";
             
-            // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = 1;
-                    break;
-                }
-            }
-}
             // TODO: change
             // int* buffer = INTEGER(buf);
             int* buffer = INTEGER(buff_pool[thread]);
@@ -149,7 +140,6 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
                 conn = NULL;
                 err = part;
             }
-            buff_busy[thread] = 0;
             if( conn != NULL ){
                 fclose(conn);
             }
@@ -229,13 +219,15 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, nbuffers / elem_size));
     }
-    IntegerVector buff_busy(ncores);
     
 #pragma omp parallel num_threads(ncores) 
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t ii = 0; ii < niter; ii++){
+        // get current buffer
+        int thread = ii % ncores;
+        
         int part = partitions[ii];
         int64_t skips = 0;
         if(ii > 0){
@@ -280,18 +272,6 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
             
             std::string s = "";
             
-            // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = 1;
-                    break;
-                }
-            }
-}
-            
             // TODO: change
             // int* buffer = INTEGER(buf);
             double* buffer = REAL(buff_pool[thread]);
@@ -306,7 +286,6 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
                 conn = NULL;
                 err = part;
             }
-            buff_busy[thread] = 0;
             if( conn != NULL ){
                 fclose(conn);
             }
@@ -385,13 +364,15 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(RAWSXP, nbuffers / elem_size));
     }
-    IntegerVector buff_busy(ncores);
     
 #pragma omp parallel num_threads(ncores) 
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t ii = 0; ii < niter; ii++){
+        // get current buffer
+        int thread = ii % ncores;
+        
         int part = partitions[ii];
         int64_t skips = 0;
         if(ii > 0){
@@ -437,18 +418,6 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
             
             std::string s = "";
             
-            // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = 1;
-                    break;
-                }
-            }
-}
-
             // TODO: change
             // int* buffer = INTEGER(buf);
             Rbyte* buffer = RAW(buff_pool[thread]);
@@ -463,7 +432,6 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
                 conn = NULL;
                 err = part;
             }
-            buff_busy[thread] = 0;
             if( conn != NULL ){
                 fclose(conn);
             }

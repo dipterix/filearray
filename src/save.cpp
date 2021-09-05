@@ -24,12 +24,10 @@ SEXP FARR_subset_assign_integer(
     
     std::vector<SEXP> buff_pool(ncores);
     std::vector<int*> buff_ptrs(ncores);
-    std::vector<bool> buff_busy(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, block_size));
         buff_ptrs[i] = INTEGER(buff_pool[i]);
-        buff_busy[i] = false;
     }
     
     int* value_ptr = INTEGER(value);
@@ -42,7 +40,7 @@ SEXP FARR_subset_assign_integer(
     
 #pragma omp parallel num_threads(ncores)
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
@@ -55,16 +53,7 @@ SEXP FARR_subset_assign_integer(
         FILE* conn = fopen( file.c_str(), "r+b" );
         if (conn) {
             // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = true;
-                    break;
-                }
-            }
-}
+            int thread = iter % ncores;
             try{
                 SEXP idx2 = idx2s[iter];
                 
@@ -93,7 +82,6 @@ SEXP FARR_subset_assign_integer(
             if( conn != NULL ){
                 fclose(conn);
             }
-            buff_busy[thread] = false;
         }
     }
 }
@@ -129,12 +117,10 @@ SEXP FARR_subset_assign_double(
     
     std::vector<SEXP> buff_pool(ncores);
     std::vector<double*> buff_ptrs(ncores);
-    std::vector<bool> buff_busy(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, block_size));
         buff_ptrs[i] = REAL(buff_pool[i]);
-        buff_busy[i] = false;
     }
     
     double* value_ptr = REAL(value);
@@ -147,7 +133,7 @@ SEXP FARR_subset_assign_double(
     
 #pragma omp parallel num_threads(ncores)
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
@@ -160,16 +146,7 @@ SEXP FARR_subset_assign_double(
         FILE* conn = fopen( file.c_str(), "r+b" );
         if (conn) {
             // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = true;
-                    break;
-                }
-            }
-}
+            int thread = iter % ncores;
             try{
                 SEXP idx2 = idx2s[iter];
                 
@@ -198,7 +175,6 @@ SEXP FARR_subset_assign_double(
             if( conn != NULL ){
                 fclose(conn);
             }
-            buff_busy[thread] = false;
         }
     }
 }
@@ -234,25 +210,18 @@ SEXP FARR_subset_assign_raw(
     
     std::vector<SEXP> buff_pool(ncores);
     std::vector<Rbyte*> buff_ptrs(ncores);
-    std::vector<bool> buff_busy(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
         buff_pool[i] = PROTECT(Rf_allocVector(RAWSXP, block_size));
         buff_ptrs[i] = RAW(buff_pool[i]);
-        buff_busy[i] = false;
     }
     
     Rbyte* value_ptr = RAW(value);
     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
     
-    // std::vector<int64_t*> idx2_ptrs(idx2s.length());
-    // for(R_xlen_t ii = 0; ii < idx2s.length(); ii++){
-    //     idx2_ptrs[ii] = (int64_t*) REAL(idx2s[ii]);
-    // }
-    
 #pragma omp parallel num_threads(ncores)
 {
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 1) nowait
 {
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
@@ -265,16 +234,7 @@ SEXP FARR_subset_assign_raw(
         FILE* conn = fopen( file.c_str(), "r+b" );
         if (conn) {
             // get current buffer
-            int thread = 0;
-#pragma omp critical
-{
-            for(thread = 0; thread < ncores; thread++){
-                if(!buff_busy[thread]){
-                    buff_busy[thread] = true;
-                    break;
-                }
-            }
-}
+            int thread = iter % ncores;
             try{
                 SEXP idx2 = idx2s[iter];
                 
@@ -303,7 +263,6 @@ SEXP FARR_subset_assign_raw(
             if( conn != NULL ){
                 fclose(conn);
             }
-            buff_busy[thread] = false;
         }
     }
 }
