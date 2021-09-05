@@ -73,7 +73,6 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
 #pragma omp parallel num_threads(ncores) 
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t ii = 0; ii < niter; ii++){
         // get current buffer
         int thread = ii % ncores;
@@ -145,7 +144,6 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
             }
         }
     }
-}
 }
     UNPROTECT(1 + ncores);
     return(ret);
@@ -223,7 +221,6 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
 #pragma omp parallel num_threads(ncores) 
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t ii = 0; ii < niter; ii++){
         // get current buffer
         int thread = ii % ncores;
@@ -291,7 +288,6 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
             }
         }
     }
-}
 }
     UNPROTECT(1 + ncores);
     return(ret);
@@ -368,7 +364,6 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
 #pragma omp parallel num_threads(ncores) 
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t ii = 0; ii < niter; ii++){
         // get current buffer
         int thread = ii % ncores;
@@ -437,7 +432,6 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
             }
         }
     }
-}
 }
     UNPROTECT(1 + ncores);
     return(ret);

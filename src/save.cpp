@@ -41,7 +41,6 @@ SEXP FARR_subset_assign_integer(
 #pragma omp parallel num_threads(ncores)
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
         int64_t skips = 0;
@@ -84,7 +83,6 @@ SEXP FARR_subset_assign_integer(
             }
         }
     }
-}
 }
 
     UNPROTECT(ncores);
@@ -134,7 +132,6 @@ SEXP FARR_subset_assign_double(
 #pragma omp parallel num_threads(ncores)
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
         int64_t skips = 0;
@@ -177,7 +174,6 @@ SEXP FARR_subset_assign_double(
             }
         }
     }
-}
 }
     
     UNPROTECT(ncores);
@@ -222,7 +218,6 @@ SEXP FARR_subset_assign_raw(
 #pragma omp parallel num_threads(ncores)
 {
 #pragma omp for schedule(static, 1) nowait
-{
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
         R_xlen_t part = partitions[iter];
         int64_t skips = 0;
@@ -265,7 +260,6 @@ SEXP FARR_subset_assign_raw(
             }
         }
     }
-}
 }
 
     UNPROTECT(ncores);
