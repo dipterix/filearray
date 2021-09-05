@@ -1,8 +1,11 @@
-# FileArray: File-Backed Array for Out-of-memory Computation
+# File-Backed Array for Out-of-memory Computation
 
-Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via 'OpenMP'. Supports multiple non-character data types (double, integer, logical and raw).
+Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, integer, logical and raw).
 
-[CRAN](https://CRAN.R-project.org/package=filearray) | [Github](https://github.com/dipterix/filearray)
+<!-- badges: start -->
+[![R-check](https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg)](https://github.com/dipterix/filearray/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/filearray)](https://CRAN.R-project.org/package=filearray)
+<!-- badges: end -->
 
 ## Installation
 

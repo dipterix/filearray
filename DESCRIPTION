@@ -17,7 +17,6 @@ Description: Stores large arrays in files to avoid occupying large
     non-character data types (double, integer, logical and raw).
 Imports: 
     methods, 
-    utils,
     Rcpp
 Suggests: 
     testthat (>= 3.0.0)

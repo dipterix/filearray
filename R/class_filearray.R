@@ -34,7 +34,7 @@ initialize_filearray <- function(path, dimension, partition_size, type){
     on.exit({
         try({close(conn)}, silent = TRUE)
     })
-    size = switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
+    size <- switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
                   stop("Unknown data type: ",type))
     write_header(conn, partition = partition_size, dimension = dimension, 
                  type = type, size = size)
@@ -66,13 +66,13 @@ setRefClass(
     ),
     methods = list(
         initialize = function(){
-            .self$.mode = 'readonly'
-            .self$.sep = .Platform$file.sep
-            .self$.filebase = '.'
-            .self$.header = list()
-            .self$.partition_info = NULL
-            .self$.na = NA_real_
-            .self$.valid = FALSE
+            .self$.mode <- 'readonly'
+            .self$.sep <- .Platform$file.sep
+            .self$.filebase <- '.'
+            .self$.header <- list()
+            .self$.partition_info <- NULL
+            .self$.na <- NA_real_
+            .self$.valid <- FALSE
         },
         create = function(filebase, dimension, type = 'double',
                           partition_size = 1){
@@ -123,7 +123,7 @@ setRefClass(
             }
             
             # set members
-            .self$.mode = mode
+            .self$.mode <- mode
             .self$.sep <- .Platform$file.sep
             .self$.filebase <- filebase
             .self$.valid <- TRUE
@@ -133,7 +133,7 @@ setRefClass(
             .self$.header <- header
             
             
-            .self$.na = switch(
+            .self$.na <- switch(
                 .self$type(),
                 double = NA_real_,
                 integer = NA_integer_,
@@ -308,14 +308,14 @@ setRefClass(
             if(buffer_len > part_len){
                 buffer_len <- part_len
             }
-            buf = writeBin(con = raw(), object = rep(value, buffer_len), 
+            buf <- writeBin(con = raw(), object = rep(value, buffer_len), 
                            size = size, endian = ENDIANNESS)
             nloop <- floor(part_len / buffer_len)
             replicate(nloop, {
                 writeBin(con = fid, object = buf)
                 NULL
             })
-            rest = part_len - buffer_len * nloop
+            rest <- part_len - buffer_len * nloop
             if( rest > 0 ){
                 writeBin(con = fid, object = buf[seq_len(rest * size)])
             }
@@ -330,9 +330,9 @@ setRefClass(
                 stop("Invalid file array")
             }
             if(isTRUE(.self$.mode == 'readonly')){
-                .self$.mode = 'readwrite'
+                .self$.mode <- 'readwrite'
                 on.exit({
-                    .self$.mode = 'readonly'
+                    .self$.mode <- 'readonly'
                 })
             }
             if(missing(parts)){

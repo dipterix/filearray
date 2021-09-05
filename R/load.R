@@ -97,7 +97,7 @@ filearray_create <- function(
         stop("Invalid dimension: FileArray dimension must not contain 0. Its length must be at least 2.")
     }
     
-    size = switch(
+    size <- switch(
         type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
         stop("Unknown data type: ",type))
     if(is.na(partition_size)) {

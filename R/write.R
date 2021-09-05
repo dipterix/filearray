@@ -5,10 +5,10 @@ ensure_partition <- function(
     
     type <- match.arg(type)
     if(is.null(size)){
-        size = switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
+        size <- switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
                       stop("Unknown data type: ",type))
     } else {
-        size = as.integer(size)
+        size <- as.integer(size)
     }
     
     if( !file.exists(file) ){

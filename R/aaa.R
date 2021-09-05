@@ -3,11 +3,11 @@
 #' @importFrom methods setGeneric
 #' @importFrom methods setRefClass
 NULL
-HEADER_SIZE = 1024
-FILE_VER = c( 1L, 0L, 0L )
+HEADER_SIZE <- 1024
+FILE_VER <- c( 1L, 0L, 0L )
 
 # The saved files are always little endian
-ENDIANNESS = "little"
+ENDIANNESS <- "little"
 
 max_buffer_size <- local({
     # By default, maximum of 2MB buffer size
