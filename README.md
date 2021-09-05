@@ -23,26 +23,48 @@ install.packages('dipsaus')
 
 ## Basic Usage
 
+#### Create/load file array
+
 ```r
-# -------------- Create/Load -------------- 
 library(filearray)
 file <- tempfile()
 x <- filearray_create(file, c(100, 100, 100, 100))
 
 # load existing
 x <- filearray_load(file)
+```
 
-# -------------- Subset/Assign -------------- 
+See more: `help("filearray")`
+
+#### Assign & subset array
+
+```r
 x[,,,1] <- rnorm(1e6)
 x[1:10,1,1,1]
+```
 
-# -------------- Generics -------------- 
-dim(x)
+#### Generics
+
+```r
+typeof(x)
 max(x, na.rm = TRUE)
+apply(x, 3, min, na.rm = TRUE)
 
-# -------------- Map-Reduce -------------- 
+val = x[1,1,5,1]
+fwhich(x, val, arr.ind = TRUE)
+```
+
+See more: `help("S3-filearray")`, `help("fwhich")`
+
+#### Map-reduce
+
+Process segments of array and reduce to save memories.
+
+```
 # Identical to sum(x, na.rm = TRUE)
 mapreduce(x, 
           map = \(data){ sum(data, na.rm = TRUE) }, 
           reduce = \(mapped){ do.call(sum, mapped) })
 ```
+
+See more: `help("mapreduce")`
