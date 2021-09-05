@@ -87,6 +87,9 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -185,7 +188,7 @@ numbers of partitions as much as possible.</p>
     <pre class="examples"><div class='input'>
 
 <span class='co'># Prepare </span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://dipterix.org/filearray'>filearray</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://dipterix.org/filearray/'>filearray</a></span><span class='op'>)</span>
 <span class='va'>filebase</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='kw'>if</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span><span class='op'>(</span><span class='va'>filebase</span><span class='op'>)</span><span class='op'>)</span><span class='op'>{</span> <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>filebase</span>, <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'>}</span>
 
@@ -197,7 +200,7 @@ numbers of partitions as much as possible.</p>
 #&gt; Dimension: 200x30x8 
 #&gt; # of partitions: 8 
 #&gt; Partition size: 1 
-#&gt; Location: /tmp/Rtmp0vWdZA/file295937d20b7c </div><div class='input'>
+#&gt; Location: /tmp/RtmpwGqeeH/file29b7535080dc </div><div class='input'>
 <span class='co'># Assign values</span>
 <span class='va'>x</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>48000</span><span class='op'>)</span>
 
@@ -212,7 +215,7 @@ numbers of partitions as much as possible.</p>
 #&gt; Dimension: 200x30x8 
 #&gt; # of partitions: 8 
 #&gt; Partition size: 1 
-#&gt; Location: /tmp/Rtmp0vWdZA/file295937d20b7c </div><div class='input'>
+#&gt; Location: /tmp/RtmpwGqeeH/file29b7535080dc </div><div class='input'>
 
 
 </div></pre>
