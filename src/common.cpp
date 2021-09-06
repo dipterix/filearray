@@ -1,6 +1,8 @@
 #include "common.h"
 using namespace Rcpp;
 
+static int nbuffers = 65536;
+
 // [[Rcpp::export]]
 SEXP check_missing_dots(const SEXP env){
     if( TYPEOF(env) != ENVSXP ){
@@ -570,16 +572,39 @@ List schedule(const SEXP listOrEnv,
         part_size--;
     }
     
+    // get idx1 range
+    SEXP idx1range = PROTECT(Rf_allocVector(REALSXP, 2));
+    n_protected++;
+    int64_t* idx1_start = (int64_t*) REAL(idx1range);
+    int64_t* idx1_end = idx1_start + 1;
+    *idx1_start = NA_INTEGER64;
+    *idx1_end = -1;
+    int64_t* ptr = (int64_t*) REAL(idx1); 
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    R_xlen_t i = 0;
+    for(ptr = (int64_t*) REAL(idx1), i = 0; i < idx1len; i++, ptr++ ){
+        if( *ptr == NA_INTEGER64 ){
+            continue;
+        }
+        if( *ptr < *idx1_start || *idx1_start == NA_INTEGER64 ){
+            *idx1_start = *ptr;
+        }
+        if( *idx1_end < *ptr ){
+            *idx1_end = *ptr;
+        }
+    }
+    
     List re = List::create(
         _["idx1"] = idx1,
         _["idx2s"] = idx2s,
         _["block_size"] = block_size,
         _["partitions"] = partitions[seq(0, part_size)],
         _["idx2lens"] = idx2lens[seq(0, part_size)],
-        _["result_dim"] = result_dim
+        _["result_dim"] = result_dim,
+        _["idx1range"] = idx1range
     );
     
-    UNPROTECT(n_protected); // sliceIdx, result_dim, sliceIdx1, sliceIdx2, idx1, (maybe) tmp, tmp1idx
+    UNPROTECT(n_protected); // sliceIdx, result_dim, sliceIdx1, sliceIdx2, idx1, idx1range, (maybe) tmp, tmp1idx
     
     return(re);
 }

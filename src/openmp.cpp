@@ -1,5 +1,10 @@
 #include "openmp.h"
 
+static int ompThreads = 0;
+
+// stores n threads when fork occurs
+static bool detectFork = false;
+static int resetForked = true;
 
 int getThreads(bool max){
 #ifdef _OPENMP

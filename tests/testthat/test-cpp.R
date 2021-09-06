@@ -3,7 +3,6 @@ as_int64 <- function(x){
 }
 
 test_that("C++: Utils", {
-    
     misdot <- function(...){
         check_missing_dots(environment())
     }
@@ -55,23 +54,30 @@ test_that("C++: Utils", {
 
 
 test_that("C++: IO - subset/assign", {
+    bsz <- get_buffer_size()
+    on.exit({
+        set_buffer_size(bsz)
+    })
+    set_buffer_size(16L)
     
     set.seed(NULL)
     file <- tempfile()
     unlink(file, recursive = TRUE)
-    dim <- 3:5
+    dim <- 33:35
     x <- filearray_create(file, dim, partition_size = 2)
     
     expect_equal(x[[2]], x$.na)
     
     y <- array(x$.na, dim)
-    x[3:1, , c(5,2,1,3,4)] <- 1:60
-    y[3:1, , c(5,2,1,3,4)] <- 1:60
+    x[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
+    y[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
     
     expect_equal(x[], y)
     locs <-
         lapply(dim, function(d) {
-            as.double(sample(c(1:d, NA, NA), size = 10, replace = TRUE))
+            d1 <- sample(c(1:d), 10, replace = TRUE)
+            d2 <- c(NA, NA)
+            as.double(sample(c(d1,d2)))
         })
     expect_equal(
         x[locs[[1]], locs[[2]], locs[[3]]],
@@ -85,7 +91,9 @@ test_that("C++: IO - subset/assign", {
     
     locs <-
         lapply(dim, function(d) {
-            as.double(sample(c(1:d, NA, NA), size = d, replace = FALSE))
+            d1 <- sample(c(1:d), 10, replace = TRUE)
+            d2 <- c(NA, NA)
+            as.double(sample(c(d1,d2)))
         })
     expect_error({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1:prod(sapply(locs, length))
@@ -107,18 +115,18 @@ test_that("C++: IO - subset/assign", {
     
     expect_equal(x[], y)
     
-    expect_error(x[c(TRUE,TRUE,TRUE,FALSE),,])
-    expect_error(x[c(TRUE,TRUE,TRUE,NA),,])
+    expect_error(x[c(rep(c(TRUE,TRUE,TRUE, TRUE),8), TRUE, FALSE),,])
+    expect_error(x[c(rep(c(TRUE,TRUE,TRUE, TRUE),8), TRUE, NA),,])
     
     unlink(file, recursive = TRUE)
     x <- filearray_create(file, dim, partition_size = 2)
     y <- array(x$.na, dim)
-    x[3:1, , c(TRUE, FALSE, TRUE)] <- 1:36
-    y[3:1, , c(TRUE, FALSE, TRUE)] <- 1:36
+    x[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
+    y[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
     expect_equal(x[], y)
     
     expect_error({
-        x[3:1, , c(TRUE, FALSE, TRUE, TRUE, NA)] <- 1:36
+        x[3:1, , c(TRUE, FALSE, TRUE, TRUE, rep(NA, 29))] <- 1:36
     })
     
     unlink(file, recursive = TRUE)

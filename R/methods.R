@@ -67,19 +67,32 @@ NULL
     # guess split dim
     max_buffer <- max_buffer_size() / elem_size
     
-    sapply(seq_len(length(dim) - 1), function(split_dim){
-        idx1len <- prod(dim[seq_len(split_dim)])
-        idx2len <- prod(dim[-seq_len(split_dim)])
-        nloops <- ceiling(idx1len / max_buffer)
-        # buffer_sz <- ifelse(idx1len > max_buffer, max_buffer, idx1len)
-        (idx1len * nloops) * idx2len
-    })
+    if(length(listOrEnv) == length(dim)){
+        idxrange <- sapply(listOrEnv, function(x){
+            if(!length(x) || all(is.na(x))){ return(1L) }
+            rg <- range(x, na.rm = TRUE)
+            return(rg[2] - rg[1] + 1)
+        })
+    } else {
+        idxrange <- dim
+    }
+    
+    # sapply(seq_len(length(dim) - 1), function(split_dim){
+    #     idx1dim <- dim[seq_len(split_dim)]
+    #     idx1dim[[split_dim]] <- idxrange[[split_dim]]
+    #     idx1len <- prod(idx1dim)
+    #     idx2len <- prod(dim[-seq_len(split_dim)])
+    #     nloops <- ceiling(idx1len / max_buffer)
+    #     (idx1len * nloops) * idx2len
+    # })
     
     # worst-case time-complexity
     time_complexity <-
         sapply(seq_len(length(dim) - 1), function(split_dim) {
             dim[[length(dim)]] <- 1
-            idx1len <- prod(dim[seq_len(split_dim)])
+            idx1dim <- dim[seq_len(split_dim)]
+            idx1dim[[split_dim]] <- idxrange[[split_dim]]
+            idx1len <- prod(idx1dim)
             idx2len <- prod(dim[-seq_len(split_dim)])
             buffer_sz <-
                 ifelse(idx1len > max_buffer, max_buffer, idx1len)

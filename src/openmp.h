@@ -14,12 +14,6 @@
 #include <Rcpp.h>
 #include <algorithm>
 
-static int ompThreads = 0;
-
-// stores n threads when fork occurs
-static bool detectFork = false;
-static int resetForked = true;
-
 
 // [[Rcpp::export]]
 int getThreads(bool max = false);

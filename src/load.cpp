@@ -8,6 +8,7 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
     // List sch = schedule(filebase, listOrEnv, dim, cum_part_sizes, 
     //                     split_dim, strict);
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
@@ -25,20 +26,8 @@ SEXP FARR_subset_integer(const std::string& filebase, const List sch){
     // TODO: change
     const int elem_size = sizeof(int);
     
-    int64_t idx1_start = NA_INTEGER64, idx1_end = -1;
-    int64_t* ptr = (int64_t*) REAL(idx1); 
-    R_xlen_t i = 0;
-    for(ptr = (int64_t*) REAL(idx1), i = 0; i < idx1len; i++, ptr++ ){
-        if( *ptr == NA_INTEGER64 ){
-            continue;
-        }
-        if( *ptr < idx1_start || idx1_start == NA_INTEGER64 ){
-            idx1_start = *ptr;
-        }
-        if( idx1_end < *ptr ){
-            idx1_end = *ptr;
-        }
-    }
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
     
     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
         // idx1 are all NAs, no need to subset, return NA
@@ -156,6 +145,7 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
     // List sch = schedule(filebase, listOrEnv, dim, cum_part_sizes, 
     //                     split_dim, strict);
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
@@ -173,20 +163,8 @@ SEXP FARR_subset_double(const std::string& filebase, const List sch){
     // TODO: change
     const int elem_size = sizeof(double);
     
-    int64_t idx1_start = NA_INTEGER64, idx1_end = -1;
-    int64_t* ptr = (int64_t*) REAL(idx1); 
-    R_xlen_t i = 0;
-    for(ptr = (int64_t*) REAL(idx1), i = 0; i < idx1len; i++, ptr++ ){
-        if( *ptr == NA_INTEGER64 ){
-            continue;
-        }
-        if( *ptr < idx1_start || idx1_start == NA_INTEGER64 ){
-            idx1_start = *ptr;
-        }
-        if( idx1_end < *ptr ){
-            idx1_end = *ptr;
-        }
-    }
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
     
     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
         // idx1 are all NAs, no need to subset, return NA
@@ -301,6 +279,7 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
     // List sch = schedule(filebase, listOrEnv, dim, cum_part_sizes, 
     //                     split_dim, strict);
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
@@ -316,20 +295,8 @@ SEXP FARR_subset_raw(const std::string& filebase, const List sch,
     // TODO: change
     const int elem_size = sizeof(Rbyte);
     
-    int64_t idx1_start = NA_INTEGER64, idx1_end = -1;
-    int64_t* ptr = (int64_t*) REAL(idx1); 
-    R_xlen_t i = 0;
-    for(ptr = (int64_t*) REAL(idx1), i = 0; i < idx1len; i++, ptr++ ){
-        if( *ptr == NA_INTEGER64 ){
-            continue;
-        }
-        if( *ptr < idx1_start || idx1_start == NA_INTEGER64 ){
-            idx1_start = *ptr;
-        }
-        if( idx1_end < *ptr ){
-            idx1_end = *ptr;
-        }
-    }
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
     
     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
         // idx1 are all NAs, no need to subset, return NA

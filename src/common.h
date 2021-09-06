@@ -16,7 +16,6 @@ using namespace Rcpp;
 /**********************************************************
  * Buffer size
  ***********************************************************/
-static int nbuffers = 65536;
 
 int system_buffer_size();
 
