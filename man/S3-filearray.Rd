@@ -7,11 +7,14 @@
 \alias{[[.FileArray}
 \alias{as.array.FileArray}
 \alias{dim.FileArray}
+\alias{dimnames.FileArray}
+\alias{dimnames<-.FileArray}
 \alias{length.FileArray}
 \alias{max.FileArray}
 \alias{min.FileArray}
 \alias{range.FileArray}
 \alias{sum.FileArray}
+\alias{subset.FileArray}
 \title{'S3' methods for 'FileArray'}
 \usage{
 \method{[}{FileArray}(x, ..., drop = TRUE, reshape = NULL, strict = TRUE)
@@ -24,6 +27,10 @@
 
 \method{dim}{FileArray}(x)
 
+\method{dimnames}{FileArray}(x)
+
+\method{dimnames}{FileArray}(x) <- value
+
 \method{length}{FileArray}(x)
 
 \method{max}{FileArray}(x, na.rm = FALSE, ...)
@@ -33,6 +40,8 @@
 \method{range}{FileArray}(x, na.rm = FALSE, ...)
 
 \method{sum}{FileArray}(x, na.rm = FALSE, ...)
+
+\method{subset}{FileArray}(x, ..., drop = FALSE)
 }
 \arguments{
 \item{x}{a file array}
@@ -43,7 +52,7 @@
 
 \item{strict}{whether to allow indices to exceed bound; currently only accept \code{TRUE}}
 
-\item{value}{value to substitute}
+\item{value}{value to substitute or set}
 
 \item{i, ...}{index set, or passed to other methods}
 
@@ -64,6 +73,10 @@ These are 'S3' methods for 'FileArray'
 
 \item \code{dim.FileArray}: get dimensions
 
+\item \code{dimnames.FileArray}: get dimension names
+
+\item \code{dimnames<-.FileArray}: set dimension names
+
 \item \code{length.FileArray}: get array length
 
 \item \code{max.FileArray}: get max value
@@ -73,5 +86,7 @@ These are 'S3' methods for 'FileArray'
 \item \code{range.FileArray}: get value range
 
 \item \code{sum.FileArray}: get summation
+
+\item \code{subset.FileArray}: get subset file array with formulae
 }}
 

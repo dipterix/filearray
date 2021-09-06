@@ -123,8 +123,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_subset
-SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict);
-RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP) {
+SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict, const SEXP dimnames);
+RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP, SEXP dimnamesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,7 +137,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< const bool >::type drop(dropSEXP);
     Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict));
+    Rcpp::traits::input_parameter< const SEXP >::type dimnames(dimnamesSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -271,7 +272,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_reshape_or_drop", (DL_FUNC) &_filearray_reshape_or_drop, 3},
     {"_filearray_loc2idx", (DL_FUNC) &_filearray_loc2idx, 2},
     {"_filearray_schedule", (DL_FUNC) &_filearray_schedule, 5},
-    {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 9},
+    {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 10},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 7},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},

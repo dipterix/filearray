@@ -8,7 +8,7 @@
 #' @param drop whether to drop dimensions; see topic \code{\link[base]{Extract}}
 #' @param reshape a new dimension to set before returning subset results; default is \code{NULL} (use default dimensions)
 #' @param strict whether to allow indices to exceed bound; currently only accept \code{TRUE}
-#' @param value value to substitute
+#' @param value value to substitute or set
 #' @param na.rm whether to remove \code{NA} values during the calculation
 #' @param i,... index set, or passed to other methods
 NULL
@@ -19,6 +19,7 @@ NULL
     if(!x$valid()){
         stop("Invalid file array")
     }
+    drop <- isTRUE(drop)
     # file <- tempfile(); x <- filearray_create(file, c(300, 400, 100, 1))
     filebase <- paste0(x$.filebase, x$.sep)
     arglen <- ...length()
@@ -99,7 +100,24 @@ NULL
     })
     set_buffer_size(buffer_sz)
     
-    FARR_subset(
+    dnames <- NULL
+    if(is.null(reshape)){
+        dnames <- x$dimnames()
+        if(length(dnames)){
+            dnames <- structure(
+                lapply(seq_along(dnames), function(ii){
+                    if(length(dnames[[ii]])){
+                        dnames[[ii]][listOrEnv[[ii]]]
+                    } else {
+                        NULL
+                    }
+                }),
+                names = names(dnames)
+            )
+        }
+    }
+    
+    re <- FARR_subset(
         filebase = filebase,
         type = x$sexp_type(),
         listOrEnv = listOrEnv,
@@ -108,7 +126,8 @@ NULL
         reshape = reshape,
         drop = drop,
         strict = strict, 
-        split_dim = split_dim
+        split_dim = split_dim,
+        dimnames = dnames
     )
 }
 
@@ -258,6 +277,20 @@ dim.FileArray <- function(x){
     x$dimension()
 }
 
+#' @describeIn S3-filearray get dimension names
+#' @export
+dimnames.FileArray <- function(x){
+    x$dimnames()
+}
+
+#' @describeIn S3-filearray set dimension names
+#' @export
+`dimnames<-.FileArray` <- function(x, value){
+    x$dimnames(value)
+    invisible(x)
+}
+
+
 #' @describeIn S3-filearray get array length
 #' @export
 length.FileArray <- function(x){
@@ -345,7 +378,45 @@ sum.FileArray <- function(x, na.rm = FALSE, ...){
     }
 }
 
-
+#' @describeIn S3-filearray get subset file array with formulae
+#' @export
+subset.FileArray <- function(x, ..., drop = FALSE){
+    if(...length() == 0){
+        stop("No filters to subset")
+    }
+    dnames <- dimnames(x)
+    nms <- names(dnames)
+    filters <- list(...)
+    criteria <- list()
+    for(ftr in filters){
+        if(!is.call(ftr)){
+            stop("All filters must be formula object, e.g `Var ~ Var < 10`")
+        }
+        name <- as.character(ftr[[2]])
+        if(!name %in% nms){
+            stop("Cannot find name `", name, "` in x")
+        }
+        expr <- ftr[[3]]
+        if(length(criteria[[name]])){
+            expr <- as.call(list(`&`, criteria[[name]], expr))
+        }
+        criteria[[name]] <- expr
+    }
+    dim <- dim(x)
+    locs <- lapply(seq_along(dim), function(ii){
+        if(ii > length(nms)){
+            return(seq_len(dim[[ii]]))
+        }
+        name <- nms[[ii]]
+        if(is.null(criteria[[name]])){
+            return(seq_len(dim[[ii]]))
+        }
+        with(dnames, {
+            eval(criteria[[name]])
+        })
+    })
+    do.call(`[`, c(list(x = quote(x), drop = drop), locs))
+}
 
 #' @title A generic function of \code{which} that is \code{'FileArray'} compatible
 #' @param x any R vector, matrix, array or file-array

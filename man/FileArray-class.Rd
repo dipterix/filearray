@@ -15,6 +15,7 @@ to create instances.
 \item{\code{create(filebase, dimension, type = "double", partition_size = 1)}}{Create a file array instance}
 \item{\code{delete(force = FALSE)}}{Remove array from local file system and reset}
 \item{\code{dimension()}}{Get dimension vector}
+\item{\code{dimnames(v)}}{Set/get dimension names}
 \item{\code{element_size()}}{Internal storage: bytes per element}
 \item{\code{fill_partition(part, value)}}{Fill a partition with given scalar}
 \item{\code{get_partition(part, reshape = NULL)}}{Get partition data, and reshape (if not null) to desired dimension}

@@ -468,7 +468,8 @@ SEXP FARR_subset(const std::string& filebase,
                 const int split_dim, 
                 const SEXP reshape = R_NilValue, 
                 const bool drop = false,
-                const int strict = 1){
+                const int strict = 1,
+                const SEXP dimnames = R_NilValue){
     List sch = schedule(listOrEnv, dim, cum_part_sizes, 
                         split_dim, strict);
     
@@ -494,6 +495,11 @@ SEXP FARR_subset(const std::string& filebase,
     
     SEXP result_dim = sch["result_dim"];
     Rf_setAttrib(ret, R_DimSymbol, result_dim);
+    
+    if( dimnames != R_NilValue ){
+        Rf_setAttrib(ret, R_DimNamesSymbol, dimnames);
+    }
+    
     reshape_or_drop(ret, reshape, drop);
     
     UNPROTECT(1);

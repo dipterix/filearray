@@ -37,8 +37,8 @@ schedule <- function(listOrEnv, dim, cum_part_sizes, split_dim, strict) {
     .Call(`_filearray_schedule`, listOrEnv, dim, cum_part_sizes, split_dim, strict)
 }
 
-FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L) {
-    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict)
+FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL) {
+    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames)
 }
 
 FARR_buffer_mapreduce <- function(filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type) {

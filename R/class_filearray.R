@@ -9,6 +9,7 @@
 #' \item{\code{create(filebase, dimension, type = "double", partition_size = 1)}}{Create a file array instance}
 #' \item{\code{delete(force = FALSE)}}{Remove array from local file system and reset}
 #' \item{\code{dimension()}}{Get dimension vector}
+#' \item{\code{dimnames(v)}}{Set/get dimension names}
 #' \item{\code{element_size()}}{Internal storage: bytes per element}
 #' \item{\code{fill_partition(part, value)}}{Fill a partition with given scalar}
 #' \item{\code{get_partition(part, reshape = NULL)}}{Get partition data, and reshape (if not null) to desired dimension}
@@ -44,7 +45,21 @@ initialize_filearray <- function(path, dimension, partition_size, type){
 load_meta <- function(path){
     meta <- file.path(path, "meta")
     stopifnot(file.exists(meta))
-    validate_header(meta)
+    header <- validate_header(meta)
+    
+    if(header$content_length > 0){
+        # load dimnames
+        fid <- file(meta, "rb")
+        on.exit({ close(fid) })
+        seek(con = fid, where = HEADER_SIZE, origin = "start", rw = "read")
+        v <- readBin(con = fid, what = 'raw', size = 1L, 
+                     n = header$content_length)
+        conn = rawConnection(v, open = "rb")
+        dimnames <- readRDS(conn)
+        close(conn)
+        header$dimnames <- dimnames
+    }
+    header
 }
 
 get_elem_size <- function(type){
@@ -101,6 +116,31 @@ setRefClass(
         },
         dimension = function(){
             .self$.header$partition_dim
+        },
+        dimnames = function(v){
+            if(!missing(v)){
+                dim <- .self$.header$partition_dim
+                stopifnot(is.list(v) || length(v) <= length(dim))
+                for(ii in seq_along(v)){
+                    if(length(v[[ii]]) != dim[[ii]]){
+                        stop("Dimension ", ii, " length mismatch")
+                    }
+                }
+                nms <- names(v)
+                if(!is.null(nms) && length(nms) < length(dim)){
+                    nms <- c(nms, rep("", length(dim) - length(nms)))
+                }
+                v <- structure(lapply(seq_along(dim), function(ii){
+                    if(ii > length(v)){ return(NULL) }
+                    v[[ii]]
+                }), names = nms)
+                # set dimnames
+                meta <- file.path(.self$.filebase, "meta")
+                set_meta_content(meta, v)
+                # header <- load_meta(.self$.filebase)
+                .self$.header$dimnames <- v
+            }
+            .self$.header$dimnames
         },
         type = function(){
             sexp_to_type(.self$.header$sexp_type)

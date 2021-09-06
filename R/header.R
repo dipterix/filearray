@@ -103,5 +103,24 @@ validate_header <- function(file, fid){
     if( fz > 0 && header$content_length + HEADER_SIZE > fz ){
         stop("Filearray data is corrupted")
     }
+    
     return(header)
 }
+
+set_meta_content <- function(meta_file, data){
+    stopifnot(file.exists(meta_file))
+    conn <- rawConnection(raw(), "w+b")
+    saveRDS(file = conn, data, ascii = FALSE)
+    v <- rawConnectionValue(conn)
+    close(conn)
+    
+    fid <- file(meta_file, "r+b")
+    on.exit({ close(fid) })
+    seek(con = fid, where = HEADER_SIZE, origin = "start", rw = "write")
+    writeBin(object = v, con = fid, endian = ENDIANNESS)
+    
+    seek(con = fid, where = HEADER_SIZE - 8L, origin = "start", rw = "write")
+    writeBin(con = fid, object = as.double(length(v)), size = 8L, endian = ENDIANNESS)
+    seek(con = fid, where = 0, rw = "write")
+}
+
