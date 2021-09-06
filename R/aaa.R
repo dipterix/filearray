@@ -14,7 +14,7 @@ max_buffer_size <- local({
     size <- 2097152
     function(v){
         if(!missing(v)){
-            if(v < 1024){
+            if(v < 64){
                 stop("Maximum buffer size is too small.")
             }
             v <- 2^ceiling(log2(v))

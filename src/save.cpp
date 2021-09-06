@@ -8,13 +8,23 @@ SEXP FARR_subset_assign_integer(
         const List& sch, SEXP value){
     
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
     IntegerVector idx2lens = sch["idx2lens"];
     
-    R_xlen_t idx1len = Rf_xlength(idx1);
     int has_error = -1;
+    
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+    
+    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+        return( R_NilValue );
+    }
+    
+    
     
     int ncores = getThreads();
     if(ncores > idx2s.length()){
@@ -26,7 +36,7 @@ SEXP FARR_subset_assign_integer(
     std::vector<int*> buff_ptrs(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, block_size));
+        buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, idx1_end - idx1_start + 1));
         buff_ptrs[i] = INTEGER(buff_pool[i]);
     }
     
@@ -67,7 +77,8 @@ SEXP FARR_subset_assign_integer(
                 int64_t* idx1ptr = idx1ptr0;
                 subset_assign_partition(
                     conn, value_ptr2,
-                    block_size, idx1ptr, idx1len,
+                    block_size, idx1ptr, idx1len, 
+                    idx1_start, idx1_end, 
                     idx2_ptr, idx2_len,
                     buff_ptrs[thread] );
                 fflush(conn);
@@ -99,13 +110,20 @@ SEXP FARR_subset_assign_double(
         const List& sch, SEXP value){
     
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
     IntegerVector idx2lens = sch["idx2lens"];
     
-    R_xlen_t idx1len = Rf_xlength(idx1);
     int has_error = -1;
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+    
+    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+        return( R_NilValue );
+    }
     
     int ncores = getThreads();
     if(ncores > idx2s.length()){
@@ -117,7 +135,7 @@ SEXP FARR_subset_assign_double(
     std::vector<double*> buff_ptrs(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, block_size));
+        buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, idx1_end - idx1_start + 1));
         buff_ptrs[i] = REAL(buff_pool[i]);
     }
     
@@ -158,7 +176,8 @@ SEXP FARR_subset_assign_double(
                 int64_t* idx1ptr = idx1ptr0;
                 subset_assign_partition(
                     conn, value_ptr2,
-                    block_size, idx1ptr, idx1len,
+                    block_size, idx1ptr, idx1len, 
+                    idx1_start, idx1_end, 
                     idx2_ptr, idx2_len,
                     buff_ptrs[thread] );
                 fflush(conn);
@@ -190,13 +209,20 @@ SEXP FARR_subset_assign_raw(
         const List& sch, SEXP value){
     
     SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
     int64_t block_size = (int64_t) (sch["block_size"]);
     IntegerVector partitions = sch["partitions"];
     IntegerVector idx2lens = sch["idx2lens"];
     
-    R_xlen_t idx1len = Rf_xlength(idx1);
     int has_error = -1;
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+    
+    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+        return( R_NilValue );
+    }
     
     int ncores = getThreads();
     if(ncores > idx2s.length()){
@@ -208,7 +234,7 @@ SEXP FARR_subset_assign_raw(
     std::vector<Rbyte*> buff_ptrs(ncores);
     for(int i = 0; i < ncores; i++){
         // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(RAWSXP, block_size));
+        buff_pool[i] = PROTECT(Rf_allocVector(RAWSXP, idx1_end - idx1_start + 1));
         buff_ptrs[i] = RAW(buff_pool[i]);
     }
     
@@ -244,7 +270,8 @@ SEXP FARR_subset_assign_raw(
                 int64_t* idx1ptr = idx1ptr0;
                 subset_assign_partition(
                     conn, value_ptr2,
-                    block_size, idx1ptr, idx1len,
+                    block_size, idx1ptr, idx1len, 
+                    idx1_start, idx1_end, 
                     idx2_ptr, idx2_len,
                     buff_ptrs[thread] );
                 fflush(conn);

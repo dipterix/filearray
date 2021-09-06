@@ -205,7 +205,8 @@ inline void subset_partition(
 template <typename T>
 inline void subset_assign_partition(
         FILE* conn, T* value, const R_xlen_t block_size, 
-        int64_t* idx1ptr0, R_xlen_t idx1len,
+        int64_t* idx1ptr0, R_xlen_t idx1len, 
+        int64_t idx1_start, int64_t idx1_end, 
         int64_t* idx2ptr0, R_xlen_t idx2len,
         T* buffer ) {
     // TODO: swap_endian
@@ -224,6 +225,10 @@ inline void subset_assign_partition(
     
     T* valptr2 = value;
     T* buf = buffer;
+    int64_t buf_size = idx1_end - idx1_start + 1;
+    if( buf_size > block_size ){
+        buf_size = block_size;
+    }
     
     // Rcout << idx2_start << "---\n";
     R_xlen_t idx2ii = 0;
@@ -238,23 +243,23 @@ inline void subset_assign_partition(
         
         // idx1ptr = (int64_t*) REAL(idx1);
         idx1ptr = idx1ptr0;
-        start_loc = (*idx2ptr) * block_size;
+        start_loc = (*idx2ptr) * block_size + idx1_start;
         // valptr2 = value + (*idx2ptr) * idx1len;
         
         // load current block
         fseek(conn, start_loc * elem_size + FARR_HEADER_LENGTH, SEEK_SET);
         // buf = buffer;
-        lendian_fread(buf, elem_size, block_size, conn);
+        lendian_fread(buf, elem_size, buf_size, conn);
         
         for(idx1ii = 0; idx1ii < idx1len; idx1ii++, idx1ptr++, valptr2++){
             // calculate pointer location in the file
             // no check here, but tmp_loc should be >=0
             if(*idx1ptr != NA_INTEGER64){
-                *(buffer + (*idx1ptr)) = *valptr2;
+                *(buffer + (*idx1ptr - idx1_start)) = *valptr2;
             }
         }
         fseek(conn, start_loc * elem_size + FARR_HEADER_LENGTH, SEEK_SET);
-        lendian_fwrite(buf, elem_size, block_size, conn);
+        lendian_fwrite(buf, elem_size, buf_size, conn);
         
     }
     

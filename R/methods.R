@@ -232,6 +232,14 @@ NULL
     # decide split_dim
     buffer_sz <- max_buffer_size() / x$element_size()
     cprod <- cumprod(dim)
+    if(length(locs) == length(dim)){
+        tmp <- sapply(locs, function(x){
+            if(!length(x) || all(is.na(x))){ return(1L) }
+            rg <- range(x, na.rm = TRUE)
+            return(rg[2] - rg[1] + 1L)
+        })
+        cprod <- cprod / dim * tmp
+    }
     cprod <- cprod[-length(cprod)]
     if(all(cprod > buffer_sz)){
         split_dim <- 1

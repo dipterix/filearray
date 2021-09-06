@@ -57,8 +57,10 @@ test_that("C++: IO - subset/assign", {
     bsz <- get_buffer_size()
     on.exit({
         set_buffer_size(bsz)
+        max_buffer_size(2097152)
     })
     set_buffer_size(16L)
+    max_buffer_size(64L)
     
     set.seed(NULL)
     file <- tempfile()
