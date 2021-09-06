@@ -136,6 +136,12 @@ as.array(x, reshape = NULL, drop = FALSE, ...)
 dim(x)
 
 # S3 method for FileArray
+dimnames(x)
+
+# S3 method for FileArray
+dimnames(x) &lt;- value
+
+# S3 method for FileArray
 length(x)
 
 # S3 method for FileArray
@@ -148,7 +154,10 @@ min(x, na.rm = FALSE, ...)
 range(x, na.rm = FALSE, ...)
 
 # S3 method for FileArray
-sum(x, na.rm = FALSE, ...)</pre>
+sum(x, na.rm = FALSE, ...)
+
+# S3 method for FileArray
+subset(x, ..., drop = FALSE)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -171,7 +180,7 @@ sum(x, na.rm = FALSE, ...)</pre>
     </tr>
     <tr>
       <th>value</th>
-      <td><p>value to substitute</p></td>
+      <td><p>value to substitute or set</p></td>
     </tr>
     <tr>
       <th>i, ...</th>
@@ -192,11 +201,14 @@ sum(x, na.rm = FALSE, ...)</pre>
 <li><p><code>[[.FileArray</code>: get element by index</p></li>
 <li><p><code>as.array.FileArray</code>: converts file array to native array in R</p></li>
 <li><p><code>dim.FileArray</code>: get dimensions</p></li>
+<li><p><code>dimnames.FileArray</code>: get dimension names</p></li>
+<li><p><code>dimnames&lt;-.FileArray</code>: set dimension names</p></li>
 <li><p><code>length.FileArray</code>: get array length</p></li>
 <li><p><code>max.FileArray</code>: get max value</p></li>
 <li><p><code>min.FileArray</code>: get min value</p></li>
 <li><p><code>range.FileArray</code>: get value range</p></li>
 <li><p><code>sum.FileArray</code>: get summation</p></li>
+<li><p><code>subset.FileArray</code>: get subset file array with formulae</p></li>
 </ul>
 
   </div>
