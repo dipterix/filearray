@@ -1,94 +1,16 @@
 #include "common.h"
 using namespace Rcpp;
 
-template <typename T>
-void collapse(
-        FILE* conn, const SEXP& dim, SEXP keep_dim, 
-        T* bufptr, int buf_size,
-        T* ret, T na, SEXP loc){
-    int elem_size = sizeof(T);
-    int ndims = Rf_length(dim);
-    
-    // dim are int64_t, keep_dim are integers
-    int64_t* dimptr = (int64_t*) REAL(dim);
-    int64_t partlen = 1;
-    for(int i = 0; i < ndims; i++){
-        partlen *= *(dimptr + i);
-    }
-    
-    // calculate loc in original array
-    // SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
-    int64_t* locptr = (int64_t*) REAL(loc);
-    
-    int keeplen = Rf_length(keep_dim);
-    int* ptrkeep = INTEGER(keep_dim);
-    
-    int64_t buflen = buf_size / elem_size;
-    
-    if(conn != NULL){
-        fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-    } else {
-        T* bufptr_ii = bufptr;
-        for(int64_t kk = 0; kk < buflen; kk++){
-            *bufptr_ii++ = na;
-        }
-    }
-    
-    int64_t niter = partlen % buflen;
-    if( niter == 0 ){
-        niter = partlen / buflen;
-    } else {
-        niter = (partlen - niter) / buflen + 1;
-    }
-    
-    int64_t buf_idx = 0;
-    int64_t readlen = 0;
-    int ii = 0;
-    int64_t rem = 0, fct = 0, tmp = 0;
-    int64_t* locptr_ii = locptr;
-    int64_t* dimptr_ii = dimptr;
-    int* ptrkeep_ii = ptrkeep;
-    
-    for(int64_t iter = 0; iter < niter; iter++){
-        buf_idx = iter * buflen;
-        readlen = buflen;
-        if( iter == niter - 1 ){
-            readlen = partlen - buf_idx;
-        }
-        if(conn != NULL){
-            lendian_fread(bufptr, elem_size, readlen, conn);
-        }
-        
-        for(int64_t jj = 0; jj < readlen; jj++){
-            rem = jj + buf_idx; 
-            locptr_ii = locptr; 
-            dimptr_ii = dimptr;
-            for(ii = 0; ii < ndims; ii++, dimptr_ii++, locptr_ii++){
-                *locptr_ii = rem % (*dimptr_ii);
-                rem = (rem - *locptr_ii) / *dimptr_ii;
-            }
-            // if( rem > 0 ){ continue; }
-            rem = 0; fct = 1; ptrkeep_ii = ptrkeep;
-            for(ii = 0; ii < keeplen; ii++, ptrkeep_ii++){
-                tmp = *ptrkeep_ii - 1;
-                rem += fct * (*(locptr + tmp));
-                fct *= *(dimptr + tmp);
-            }
-            // rem is index of ret
-            // need to be atom
-            *(ret + rem) += *(bufptr + jj);
-        }
-    }
-    
-}
-
-
 // [[Rcpp::export]]
 SEXP FARR_collapse(
         const std::string& filebase, 
         const NumericVector& dim,
         const IntegerVector& keep, 
-        const NumericVector& cum_part
+        const NumericVector& cum_part,
+        SEXPTYPE array_type,
+        int method = 1,
+        bool remove_na = false,
+        double scale = 1.0
 ){
     int ndims = dim.length();
     SEXP dim_int64 = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1));
@@ -128,7 +50,23 @@ SEXP FARR_collapse(
     }
     
     int buf_size = get_buffer_size();
-    SEXP buffer = PROTECT(Rf_allocVector(REALSXP, buf_size / 8));
+    SEXP buffer = R_NilValue;
+    switch(array_type){
+    case REALSXP:
+        buffer = PROTECT(Rf_allocVector(REALSXP, buf_size / 8));
+        break;
+    case INTSXP:
+        buffer = PROTECT(Rf_allocVector(INTSXP, buf_size / 4));
+        break;
+    case LGLSXP:
+    case RAWSXP:
+        buffer = PROTECT(Rf_allocVector(RAWSXP, buf_size));
+        break;
+    default:
+        UNPROTECT(3);
+        stop("Unsupported array type.");
+    }
+    
     
     SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
     Rf_setAttrib(loc, R_ClassSymbol, wrap("integer64"));
@@ -149,15 +87,47 @@ SEXP FARR_collapse(
         
         try{
             // collapse_double(conn, dim_int64, keep, retptr);
-            collapse(conn, dim_int64, keep, 
-                REAL(buffer), buf_size,
-                retptr, NA_REAL, loc);
+            switch(array_type){
+            case REALSXP:
+                collapse(conn, dim_int64, keep, 
+                         REAL(buffer), buf_size,
+                         retptr, NA_REAL, loc, method, 
+                         remove_na);
+                break;
+            case INTSXP:
+                collapse(conn, dim_int64, keep, 
+                         INTEGER(buffer), buf_size,
+                         retptr, NA_INTEGER, loc, method, 
+                         remove_na);
+                break;
+            case LGLSXP: {
+                Rbyte na_lgl = 2;
+                collapse(conn, dim_int64, keep, 
+                         RAW(buffer), buf_size,
+                         retptr, na_lgl, loc, method, 
+                         remove_na);
+                break;
+            }
+            case RAWSXP: {
+                Rbyte na_lgl = 0;
+                collapse(conn, dim_int64, keep, 
+                         RAW(buffer), buf_size,
+                         retptr, na_lgl, loc, method, 
+                         true);
+                break;
+            }
+            }
         }catch(...){}
         
         if(conn != NULL){
             fclose(conn);
             conn = NULL;
         }
+    }
+    
+    retptr = REAL(ret);
+    for(R_xlen_t i = 0; i < retlen; i++){
+        *retptr++ *= scale;
     }
     
     
@@ -179,10 +149,10 @@ y <- array(rnorm(prod(dim)), dim)
 x[] <- y
 
 filebase <- paste0(x$.filebase, x$.sep)
-keep = c(2:3)
+keep = c(3,2)
 system.time({
-    b <- dipsaus::collapse(y, keep, FALSE)
-})
+    b <- dipsaus::collapse(x[], keep, FALSE)
+}, gcFirst = TRUE)
 
 system.time({
     dim1 <- dim

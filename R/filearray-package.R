@@ -6,7 +6,10 @@ NULL
 
 .onLoad <- function(libname, pkgname){
     if(hasOpenMP()){
-        filearray_threads(-1)
+        n <- filearray_threads(-1)
+        if(n > 8){
+            filearray_threads(8)
+        }
     }
 }
 

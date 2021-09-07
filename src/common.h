@@ -316,5 +316,110 @@ inline void subset_assign_partition_old(
     
 }
 
+template <typename T>
+void collapse(
+        FILE* conn, const SEXP& dim, SEXP keep_dim, T* bufptr, 
+        int buf_size, double* ret, T na, SEXP loc, int method, 
+        bool remove_na){
+    int elem_size = sizeof(T);
+    int ndims = Rf_length(dim);
+    
+    // dim are int64_t, keep_dim are integers
+    int64_t* dimptr = (int64_t*) REAL(dim);
+    int64_t partlen = 1;
+    for(int i = 0; i < ndims; i++){
+        partlen *= *(dimptr + i);
+    }
+    
+    // calculate loc in original array
+    // SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
+    int64_t* locptr = (int64_t*) REAL(loc);
+    
+    int keeplen = Rf_length(keep_dim);
+    int* ptrkeep = INTEGER(keep_dim);
+    
+    int64_t buflen = buf_size / elem_size;
+    
+    if(conn != NULL){
+        fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
+    } else {
+        T* bufptr_ii = bufptr;
+        for(int64_t kk = 0; kk < buflen; kk++){
+            *bufptr_ii++ = na;
+        }
+    }
+    
+    int64_t niter = partlen % buflen;
+    if( niter == 0 ){
+        niter = partlen / buflen;
+    } else {
+        niter = (partlen - niter) / buflen + 1;
+    }
+    
+    int64_t buf_idx = 0;
+    int64_t readlen = 0;
+    int ii = 0;
+    int64_t rem = 0, fct = 0, tmp = 0;
+    int64_t* locptr_ii = locptr;
+    int64_t* dimptr_ii = dimptr;
+    int* ptrkeep_ii = ptrkeep;
+    T v = 0;
+    
+    for(int64_t iter = 0; iter < niter; iter++){
+        buf_idx = iter * buflen;
+        readlen = buflen;
+        if( iter == niter - 1 ){
+            readlen = partlen - buf_idx;
+        }
+        if(conn != NULL){
+            lendian_fread(bufptr, elem_size, readlen, conn);
+        }
+        
+        for(int64_t jj = 0; jj < readlen; jj++){
+            v = *(bufptr + jj);
+            if( v == na && remove_na ){
+                continue;
+            }
+            rem = jj + buf_idx; 
+            locptr_ii = locptr; 
+            dimptr_ii = dimptr;
+            for(ii = 0; ii < ndims; ii++, dimptr_ii++, locptr_ii++){
+                *locptr_ii = rem % (*dimptr_ii);
+                rem = (rem - *locptr_ii) / *dimptr_ii;
+            }
+            // if( rem > 0 ){ continue; }
+            rem = 0; fct = 1; ptrkeep_ii = ptrkeep;
+            for(ii = 0; ii < keeplen; ii++, ptrkeep_ii++){
+                tmp = *ptrkeep_ii - 1;
+                rem += fct * (*(locptr + tmp));
+                fct *= *(dimptr + tmp);
+            }
+            
+            if( v == na ){ // remove_na must be false
+                *(ret + rem) = NA_REAL;
+                continue;
+            }
+            // rem is index of ret
+            // need to be atom
+            switch(method){
+            case 1: 
+                *(ret + rem) += v;
+                break;
+            case 2:
+                *(ret + rem) += std::log(v);
+                break;
+            case 3:
+                *(ret + rem) += v * v;
+                break;
+            case 4:
+                *(ret + rem) += std::sqrt(v);
+                break;
+            }
+        }
+    }
+    
+}
+
+
 
 #endif // FARR_COMMON_H

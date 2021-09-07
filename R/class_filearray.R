@@ -421,6 +421,54 @@ setRefClass(
         },
         valid = function(){
             return(.self$.valid && dir.exists(.self$.filebase))
+        },
+        collapse = function(keep, method = c('mean', 'sum'),
+                            transform = c('asis', 'log', 'square', 'sqrt'), 
+                            na.rm = FALSE){
+            method <- match.arg(method)
+            transform <- match.arg(transform)
+            keep <- as.integer(keep)
+            dim <- .self$dimension()
+            if(any(is.na(keep)) || !all(keep %in% seq_along(dim))){
+                stop("`keep` must be valid margin numbers")
+            }
+            filebase <- paste0(.self$.filebase, .self$.sep)
+            
+            dim1 <- dim
+            keep1 <- keep
+            transform1 <- which(c('asis', 'log', 'square', 'sqrt') == transform)
+            if( method == "sum" ){
+                scale <- 1
+            } else {
+                scale <- 1/prod(dim[-keep])
+            }
+            
+            re <- FARR_collapse(
+                filebase = filebase,
+                dim = dim1,
+                keep = keep1,
+                cum_part = .self$.partition_info[, 3],
+                remove_na = na.rm,
+                method = transform1,
+                scale = scale, 
+                array_type = .self$sexp_type()
+            )
+            
+            dnames <- .self$dimnames()
+            if(length(dnames) == length(dim)){
+                structure(
+                    lapply(keep, function(d){ dnames[[keep]] }),
+                    names = names(dnames)[keep]
+                )
+                if(length(keep) == 1){
+                    re <- structure(re, names = dnames[[1]])
+                } else {
+                    re <- structure(re, dimnames = dnames)
+                }
+            } else {
+                return(re)
+            }
+            
         }
     )
 )

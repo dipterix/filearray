@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // FARR_collapse
-SEXP FARR_collapse(const std::string& filebase, const NumericVector& dim, const IntegerVector& keep, const NumericVector& cum_part);
-RcppExport SEXP _filearray_FARR_collapse(SEXP filebaseSEXP, SEXP dimSEXP, SEXP keepSEXP, SEXP cum_partSEXP) {
+SEXP FARR_collapse(const std::string& filebase, const NumericVector& dim, const IntegerVector& keep, const NumericVector& cum_part, SEXPTYPE array_type, int method, bool remove_na, double scale);
+RcppExport SEXP _filearray_FARR_collapse(SEXP filebaseSEXP, SEXP dimSEXP, SEXP keepSEXP, SEXP cum_partSEXP, SEXP array_typeSEXP, SEXP methodSEXP, SEXP remove_naSEXP, SEXP scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const NumericVector& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type keep(keepSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type cum_part(cum_partSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_collapse(filebase, dim, keep, cum_part));
+    Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
+    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< bool >::type remove_na(remove_naSEXP);
+    Rcpp::traits::input_parameter< double >::type scale(scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_collapse(filebase, dim, keep, cum_part, array_type, method, remove_na, scale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -277,7 +281,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_filearray_FARR_collapse", (DL_FUNC) &_filearray_FARR_collapse, 4},
+    {"_filearray_FARR_collapse", (DL_FUNC) &_filearray_FARR_collapse, 8},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
     {"_filearray_set_buffer_size", (DL_FUNC) &_filearray_set_buffer_size, 1},
     {"_filearray_get_buffer_size", (DL_FUNC) &_filearray_get_buffer_size, 0},
