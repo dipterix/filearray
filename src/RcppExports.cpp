@@ -10,6 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// FARR_collapse
+SEXP FARR_collapse(const std::string& filebase, const NumericVector& dim, const IntegerVector& keep, const NumericVector& cum_part);
+RcppExport SEXP _filearray_FARR_collapse(SEXP filebaseSEXP, SEXP dimSEXP, SEXP keepSEXP, SEXP cum_partSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type keep(keepSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type cum_part(cum_partSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_collapse(filebase, dim, keep, cum_part));
+    return rcpp_result_gen;
+END_RCPP
+}
 // check_missing_dots
 SEXP check_missing_dots(const SEXP env);
 RcppExport SEXP _filearray_check_missing_dots(SEXP envSEXP) {
@@ -263,6 +277,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_filearray_FARR_collapse", (DL_FUNC) &_filearray_FARR_collapse, 4},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
     {"_filearray_set_buffer_size", (DL_FUNC) &_filearray_set_buffer_size, 1},
     {"_filearray_get_buffer_size", (DL_FUNC) &_filearray_get_buffer_size, 0},

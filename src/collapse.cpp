@@ -1,81 +1,73 @@
 #include "common.h"
-#include "openmp.h"
 using namespace Rcpp;
 
-
-void collapse_double(
+template <typename T>
+void collapse(
         FILE* conn, const SEXP& dim, SEXP keep_dim, 
-        double* ret){
-    
-    int elem_size = sizeof(double);
+        T* bufptr, int buf_size,
+        T* ret, T na, SEXP loc){
+    int elem_size = sizeof(T);
     int ndims = Rf_length(dim);
     
     // dim are int64_t, keep_dim are integers
     int64_t* dimptr = (int64_t*) REAL(dim);
-    int64_t retlen = 1;
-    for(int ii = 0; ii < ndims; ii++){
-        retlen *= *(dimptr + ii);
+    int64_t partlen = 1;
+    for(int i = 0; i < ndims; i++){
+        partlen *= *(dimptr + i);
     }
     
     // calculate loc in original array
-    SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
+    // SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
     int64_t* locptr = (int64_t*) REAL(loc);
     
     int keeplen = Rf_length(keep_dim);
     int* ptrkeep = INTEGER(keep_dim);
-    int* ptrkeep_ii = ptrkeep;
     
+    int64_t buflen = buf_size / elem_size;
     
     if(conn != NULL){
         fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-    }
-    
-    int64_t buflen = get_buffer_size() / elem_size;
-    
-    int64_t niter = retlen % buflen;
-    if( niter == 0 ){
-        niter = retlen / buflen;
     } else {
-        niter = (retlen - niter) / buflen + 1;
+        T* bufptr_ii = bufptr;
+        for(int64_t kk = 0; kk < buflen; kk++){
+            *bufptr_ii++ = na;
+        }
     }
     
-    int ncores = getThreads();
-    if( ncores > niter ){
-        ncores = niter;
+    int64_t niter = partlen % buflen;
+    if( niter == 0 ){
+        niter = partlen / buflen;
+    } else {
+        niter = (partlen - niter) / buflen + 1;
     }
     
-    SEXP buffer = PROTECT(Rf_allocVector(REALSXP, buflen));
-    double* bufptr = REAL(buffer);
-    int64_t current_pos = 0;
+    int64_t buf_idx = 0;
     int64_t readlen = 0;
     int ii = 0;
     int64_t rem = 0, fct = 0, tmp = 0;
     int64_t* locptr_ii = locptr;
     int64_t* dimptr_ii = dimptr;
+    int* ptrkeep_ii = ptrkeep;
     
     for(int64_t iter = 0; iter < niter; iter++){
-        current_pos = iter * buflen;
+        buf_idx = iter * buflen;
         readlen = buflen;
         if( iter == niter - 1 ){
-            readlen = retlen - current_pos;
+            readlen = partlen - buf_idx;
         }
         if(conn != NULL){
             lendian_fread(bufptr, elem_size, readlen, conn);
-        } else {
-            double* bufptr_ii = bufptr;
-            for(int64_t kk = 0; kk < readlen; kk++){
-                *bufptr_ii++ = NA_REAL;
-            }
         }
         
         for(int64_t jj = 0; jj < readlen; jj++){
-            rem = jj + current_pos; 
+            rem = jj + buf_idx; 
             locptr_ii = locptr; 
             dimptr_ii = dimptr;
             for(ii = 0; ii < ndims; ii++, dimptr_ii++, locptr_ii++){
                 *locptr_ii = rem % (*dimptr_ii);
                 rem = (rem - *locptr_ii) / *dimptr_ii;
             }
+            // if( rem > 0 ){ continue; }
             rem = 0; fct = 1; ptrkeep_ii = ptrkeep;
             for(ii = 0; ii < keeplen; ii++, ptrkeep_ii++){
                 tmp = *ptrkeep_ii - 1;
@@ -87,7 +79,7 @@ void collapse_double(
             *(ret + rem) += *(bufptr + jj);
         }
     }
-    UNPROTECT(2);
+    
 }
 
 
@@ -135,13 +127,19 @@ SEXP FARR_collapse(
         *retptr++ = 0;
     }
     
+    int buf_size = get_buffer_size();
+    SEXP buffer = PROTECT(Rf_allocVector(REALSXP, buf_size / 8));
+    
+    SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
+    Rf_setAttrib(loc, R_ClassSymbol, wrap("integer64"));
+    
     for(R_xlen_t part = 0; part < nparts; part++){
+        part_size = *(cum_part64ptr + part) - last_size;
         if( keep_lastdim ){
             retptr = REAL(ret) + last_size * retlen_ii;
         } else {
             retptr = REAL(ret);
         }
-        part_size = *(cum_part64ptr + part) - last_size;
         last_size += part_size;
         
         *last_dimptr = part_size;
@@ -150,7 +148,10 @@ SEXP FARR_collapse(
         conn = fopen(partition_path.c_str(), "rb"); 
         
         try{
-            collapse_double(conn, dim_int64, keep, retptr);
+            // collapse_double(conn, dim_int64, keep, retptr);
+            collapse(conn, dim_int64, keep, 
+                REAL(buffer), buf_size,
+                retptr, NA_REAL, loc);
         }catch(...){}
         
         if(conn != NULL){
@@ -160,31 +161,39 @@ SEXP FARR_collapse(
     }
     
     
-    UNPROTECT(3);
+    UNPROTECT(5);
     return(ret);
 }
 
 /*** R
 # devtools::load_all()
-require(filearray)
-filearray_threads(1)
-dim <- c(287, 100, 301, 15)
+require(filearray); require(bit64)
+filearray_threads(4)
+filearray:::set_buffer_size(16384 *4)
+dim <- c(15, 100, 301, 287)
+# dim <- c(6,6,6,6)
 set.seed(1); file <- tempfile(); unlink(file, recursive = TRUE)
 x <- filearray_create(file, dim)
 y <- array(rnorm(prod(dim)), dim)
+# y <- array(1:(prod(dim)), dim)
 x[] <- y
 
 filebase <- paste0(x$.filebase, x$.sep)
-keep = c(3,4)
+keep = c(2:3)
 system.time({
-    a <- FARR_collapse(filebase, dim, keep, 1:(dim[length(dim)]))
+    b <- dipsaus::collapse(y, keep, FALSE)
 })
+
 system.time({
-    b <- apply(y, keep, sum)
-})
-system.time({
-    dipsaus::collapse(y, keep, FALSE)
-})
+    dim1 <- dim
+    a <- FARR_collapse(filebase, dim1, keep, x$.partition_info[,3])
+}, gcFirst = TRUE)
+# a
+
+# system.time({
+#     b <- apply(y, keep, sum)
+# })
+
 
 range(a-b)
 */

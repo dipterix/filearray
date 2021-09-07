@@ -217,7 +217,15 @@ setRefClass(
             } else {
                 pinfo <- cbind(seq_len(nparts), partition_size)
             }
-            pinfo <- cbind(pinfo, cumsum(pinfo[,2]))
+            # need to make sure cumpart-size is correct
+            cpl <- cumsum(pinfo[,2])
+            nr <- sum(cpl <= margin)
+            if(cpl[[nr]] < margin){
+                nr <- nr + 1
+            }
+            cpl <- cpl[seq_len(nr)]
+            cpl[[nr]] <- margin
+            pinfo <- cbind(pinfo[seq_len(nr),,drop = FALSE], cpl)
             .self$.partition_info <- pinfo
             return(.self)
         },
