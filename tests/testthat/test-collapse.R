@@ -3,22 +3,22 @@ collapse_real <- function(y, keep, transform = c("asis", "10log10", "square", "s
         transform,
         'asis' = {
             apply(y, keep, function(x){
-                sum(x)
+                mean(x)
             })
         },
         '10log10' = {
             apply(y, keep, function(x){
-                sum(10* log10(x))
+                mean(10* log10(x))
             })
         },
         'square' = {
             apply(y, keep, function(x){
-                sum(x^2)
+                mean(x^2)
             })
         },
         'sqrt' = {
             apply(y, keep, function(x){
-                sum(sqrt(x))
+                mean(sqrt(x))
             })
         }, {
             stop("wrong transform")
@@ -34,26 +34,26 @@ collapse_cplx <- function(y, keep, transform = c("asis", "10log10", "square", "s
     re <- switch (
         transform,
         'asis' = {
-            apply(y, keep, sum)
+            apply(y, keep, mean)
         },
         '10log10' = {
             apply(y, keep, function(x){
-                sum(20 * log10(Mod(x)))
+                mean(20 * log10(Mod(x)))
             })
         },
         'square' = {
             apply(y, keep, function(x){
-                sum(Mod(x)^2)
+                mean(Mod(x)^2)
             })
         },
         'sqrt' = {
             apply(y, keep, function(x){
-                sum(Mod(x))
+                mean(Mod(x))
             })
         }, 
         'normalize' = {
             apply(y, keep, function(x){
-                sum(x / Mod(x))
+                mean(x / Mod(x))
             })
         },
         {
@@ -105,27 +105,27 @@ test_that("R/C++ - Collapse", {
     keep <- c(1,2,3,4)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
     
     keep <- c(1,4,3,2)
     expect_equal(
-        x$collapse(keep = keep, transform = 'asis', method = 'sum'),
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
         collapse_real(y, keep, transform = 'asis')
     )
     
     keep <- c(4,2,3,1)
     expect_equal(
-        x$collapse(keep = keep, transform = 'asis', method = 'sum'),
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
         collapse_real(y, keep, transform = 'asis')
     )
     
     keep <- c(3,1)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
@@ -133,7 +133,7 @@ test_that("R/C++ - Collapse", {
     keep <- c(4,1)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
@@ -141,47 +141,46 @@ test_that("R/C++ - Collapse", {
     keep <- c(4,2)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
     keep <- c(4,3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
     keep <- c(4)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        k <- x$collapse(keep = keep, transform = transform, method = 'sum')
-        print(k)
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
         s <- collapse_real(y, keep, transform = transform)
-        print(s)
-        diff <- k - s
-        print(diff)
-        cat(transform, max(abs(diff)), "\n")
-        expect_lt(max(abs(diff)), 1e-6)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
+        expect_lt(diff, 1e-6)
     }
     keep <- c(4,1,3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_real(y, keep, transform = transform)
         )
     }
     keep <- c(3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
-        cat(transform, diff)
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
+        s <- collapse_real(y, keep, transform = transform)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
         expect_lt(diff, 1e-6)
     }
     keep <- c(1)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
-        cat(transform, diff)
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
+        s <- collapse_real(y, keep, transform = transform)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
         expect_lt(diff, 1e-6)
     }
     
@@ -216,27 +215,27 @@ test_that("R/C++ - Collapse (complex)", {
     keep <- c(1,2,3,4)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
     
     keep <- c(1,4,3,2)
     expect_equal(
-        x$collapse(keep = keep, transform = 'asis', method = 'sum'),
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
         collapse_cplx(y, keep, transform = 'asis')
     )
     
     keep <- c(4,2,3,1)
     expect_equal(
-        x$collapse(keep = keep, transform = 'asis', method = 'sum'),
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
         collapse_cplx(y, keep, transform = 'asis')
     )
     
     keep <- c(3,1)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
@@ -244,7 +243,7 @@ test_that("R/C++ - Collapse (complex)", {
     keep <- c(4,1)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
@@ -252,21 +251,21 @@ test_that("R/C++ - Collapse (complex)", {
     keep <- c(4,2)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
     keep <- c(4,3)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
     keep <- c(4)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+            max(abs(x$collapse(keep = keep, transform = transform, method = 'mean')-
                         collapse_cplx(y, keep, transform = transform)), na.rm = TRUE),
             0
         )
@@ -274,14 +273,14 @@ test_that("R/C++ - Collapse (complex)", {
     keep <- c(4,1,3)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            x$collapse(keep = keep, transform = transform, method = 'sum'),
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
             collapse_cplx(y, keep, transform = transform)
         )
     }
     keep <- c(3)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+            max(abs(x$collapse(keep = keep, transform = transform, method = 'mean')-
                         collapse_cplx(y, keep, transform = transform)), na.rm = TRUE),
             0
         )
@@ -289,7 +288,7 @@ test_that("R/C++ - Collapse (complex)", {
     keep <- c(1)
     for(transform in c("asis", "10log10", "square", "sqrt", "normalize")){
         expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+            max(abs(x$collapse(keep = keep, transform = transform, method = 'mean')-
                         collapse_cplx(y, keep, transform = transform)), na.rm = TRUE),
             0
         )

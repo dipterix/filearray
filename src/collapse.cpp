@@ -5,7 +5,7 @@ template <typename T>
 void collapse(
         FILE* conn, const SEXP& dim, SEXP keep_dim, T* bufptr, 
         int buf_size, double* ret, T na, SEXP loc, int method, 
-        bool remove_na){
+        bool remove_na, const double& scale){
     int elem_size = sizeof(T);
     int ndims = Rf_length(dim);
     
@@ -88,16 +88,16 @@ void collapse(
             // need to be atom
             switch(method){
             case 1: 
-                *(ret + rem) += v;
+                *(ret + rem) += v * scale;
                 break;
             case 2:
-                *(ret + rem) += std::log10((double) v) * 10.0;
+                *(ret + rem) += std::log10((double) v) * (10.0 * scale);
                 break;
             case 3:
-                *(ret + rem) += std::pow((double) v, 2.0);
+                *(ret + rem) += std::pow((double) v, 2.0) * scale;
                 break;
             case 4:
-                *(ret + rem) += std::sqrt((double) v);
+                *(ret + rem) += std::sqrt((double) v) * scale;
                 break;
             }
         }
@@ -197,20 +197,20 @@ SEXP FARR_collapse(
                 collapse(conn, dim_int64, keep, 
                          REAL(buffer), buf_size,
                          retptr, NA_REAL, loc, method, 
-                         remove_na);
+                         remove_na, scale);
                 break;
             case INTSXP:
                 collapse(conn, dim_int64, keep, 
                          INTEGER(buffer), buf_size,
                          retptr, NA_INTEGER, loc, method, 
-                         remove_na);
+                         remove_na, scale);
                 break;
             case LGLSXP: {
                 Rbyte na_lgl = 2;
                 collapse(conn, dim_int64, keep, 
                          RAW(buffer), buf_size,
                          retptr, na_lgl, loc, method, 
-                         remove_na);
+                         remove_na, scale);
                 break;
             }
             case RAWSXP: {
@@ -218,7 +218,7 @@ SEXP FARR_collapse(
                 collapse(conn, dim_int64, keep, 
                          RAW(buffer), buf_size,
                          retptr, na_lgl, loc, method, 
-                         true);
+                         true, scale);
                 break;
             }
             }
@@ -230,10 +230,10 @@ SEXP FARR_collapse(
         }
     }
     
-    retptr = REAL(ret);
-    for(R_xlen_t i = 0; i < retlen; i++){
-        *retptr++ *= scale;
-    }
+    // retptr = REAL(ret);
+    // for(R_xlen_t i = 0; i < retlen; i++){
+    //     *retptr++ *= scale;
+    // }
     
     
     UNPROTECT(5);

@@ -28,7 +28,7 @@ options(repos = c(
 install.packages('dipsaus')
 ```
 
-Alternatively, you can compile from Github repository. This requires proper compilers (`rtools` on `windows`, or `xcode-select --install` on `osx`, or `build-essentials` on `linux`).
+Alternatively, you can compile from `Github` repository. This requires proper compilers (`rtools` on `windows`, or `xcode-select --install` on `osx`, or `build-essentials` on `linux`).
 
 ```r
 # install.packages("remotes")
@@ -110,6 +110,8 @@ For complex numbers, `transform` is a little bit different:
 * `square`: `|x|^2` 
 * `sqrt`: `|x|` (modulus)
 * `normalize`: `x / |x|` (unit length)
+
+Note: when array data range is large (say `x[[1]]=1`, but `x[[2]]=10^20`), `collapse` method might lose precision. This is `double` only uses 8 bytes of memory space. When calculating summations, R internally uses `long double` to prevent precision loss, but current `filearray` implementation does not, causing floating error around 16 decimal place. However, the relative difference to the native implementation is marginal (by floating number).
 
 ## Notes on `Complex` type
 
