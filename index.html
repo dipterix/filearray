@@ -75,9 +75,9 @@
 <div id="file-backed-array-for-out-of-memory-computation" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#file-backed-array-for-out-of-memory-computation" class="anchor"></a>File-Backed Array for Out-of-memory Computation</h1></div>
-<p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, integer, logical and raw).</p>
 <!-- badges: start -->
-<p><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a> <a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a> <!-- badges: end --></p>
+
+<p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, integer, complex, logical and raw).</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -86,6 +86,7 @@
 <div id="install-develop-version" class="section level3">
 <h3 class="hasAnchor">
 <a href="#install-develop-version" class="anchor"></a>Install Develop Version</h3>
+<p>The internal functions are written in <code>C++</code>. To avoid compiling the packages, you can install from my personal repository. It’s automatically updated every hour. Currently available on <code>Windows</code> and <code>osx (Intel chip)</code> only.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>
     dipterix <span class="op">=</span> <span class="st">'https://dipterix.r-universe.dev'</span>,
@@ -93,6 +94,10 @@
 
 <span class="co"># Install some packages</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'dipsaus'</span><span class="op">)</span></code></pre></div>
+<p>Alternatively, you can compile from Github repository. This requires proper compilers (<code>rtools</code> on <code>windows</code>, or <code>xcode-select --install</code> on <code>osx</code>, or <code>build-essentials</code> on <code>linux</code>).</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># install.packages("remotes")</span>
+<span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dipterix/filearray"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="basic-usage" class="section level2">
@@ -101,7 +106,7 @@
 <div id="createload-file-array" class="section level4">
 <h4 class="hasAnchor">
 <a href="#createload-file-array" class="anchor"></a>Create/load file array</h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span>
 <span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span><span class="op">(</span><span class="op">)</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
@@ -113,14 +118,14 @@
 <div id="assign--subset-array" class="section level4">
 <h4 class="hasAnchor">
 <a href="#assign--subset-array" class="anchor"></a>Assign &amp; subset array</h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span>
 <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></code></pre></div>
 </div>
 <div id="generics" class="section level4">
 <h4 class="hasAnchor">
 <a href="#generics" class="anchor"></a>Generics</h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/typeof.html">typeof</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span>, <span class="va">min</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
@@ -168,7 +173,15 @@ mapreduce(x,
 </ul>
 </div>
 
-  </div>
+  <div class="dev-status">
+<h2>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a></li>
+<li><a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a></li>
+<li><a href="https://dipterix.r-universe.dev/ui#builds"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a></li>
+</ul>
+</div>
+</div>
 </div>
 
 
