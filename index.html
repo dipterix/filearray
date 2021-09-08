@@ -144,6 +144,50 @@ mapreduce(x,
           reduce = \(mapped){ do.call(sum, mapped) })</a></code></pre>
 <p>See more: <code><a href="reference/mapreduce.html">help("mapreduce")</a></code></p>
 </div>
+<div id="collapse" class="section level4">
+<h4 class="hasAnchor">
+<a href="#collapse" class="anchor"></a>Collapse</h4>
+<p>Transform data, and collapse (calculate sum or mean) along margins.</p>
+<pre><code>a &lt;- x$collapse(keep = 4, method = "mean", transform = "asis")
+
+# equivalent to
+b &lt;- apply(x[], 4, mean)
+
+a[1] - b[1]</code></pre>
+<p>Available <code>transform</code> for double/integer numbers are:</p>
+<ul>
+<li>
+<code>asis</code>: no transform</li>
+<li>
+<code>10log10</code>: <code>10 * log10(v)</code>
+</li>
+<li>
+<code>square</code>: <code>v * v</code>
+</li>
+<li>
+<code>sqrt</code>: <code><a href="https://rdrr.io/r/base/MathFun.html">sqrt(v)</a></code>
+</li>
+</ul>
+<p>For complex numbers, <code>transform</code> is a little bit different:</p>
+<ul>
+<li>
+<code>asis</code>: no transform</li>
+<li>
+<code>10log10</code>: <code>10 * log10(|x|^2)</code> (power to decibel unit)</li>
+<li>
+<code>square</code>: <code>|x|^2</code>
+</li>
+<li>
+<code>sqrt</code>: <code>|x|</code> (modulus)</li>
+<li>
+<code>normalize</code>: <code>x / |x|</code> (unit length)</li>
+</ul>
+</div>
+</div>
+<div id="notes-on-complex-type" class="section level2">
+<h2 class="hasAnchor">
+<a href="#notes-on-complex-type" class="anchor"></a>Notes on <code>Complex</code> type</h2>
+<p>In native <code>R</code>, complex numbers are combination of two <code>double</code> numbers - real and imaginary (total 16 bytes). In <code>filearray</code>, complex numbers are coerced to two <code>float</code> numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, <code>1.0000001</code> will be store as <code>1</code>, or <code>123456789</code> will be stored as <code>123456792</code> (first 7 digits are accurate). Please be aware of this “feature” when choosing complex data type.</p>
 </div>
 </div>
   </div>
