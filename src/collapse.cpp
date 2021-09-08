@@ -94,7 +94,7 @@ void collapse(
                 *(ret + rem) += std::log10((double) v) * 10.0;
                 break;
             case 3:
-                *(ret + rem) += ((double) v) * ((double) v);
+                *(ret + rem) += std::pow((double) v, 2.0);
                 break;
             case 4:
                 *(ret + rem) += std::sqrt((double) v);

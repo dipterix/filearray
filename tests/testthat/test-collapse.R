@@ -2,7 +2,9 @@ collapse_real <- function(y, keep, transform = c("asis", "10log10", "square", "s
     re <- switch (
         transform,
         'asis' = {
-            apply(y, keep, sum)
+            apply(y, keep, function(x){
+                sum(x)
+            })
         },
         '10log10' = {
             apply(y, keep, function(x){
@@ -66,8 +68,12 @@ collapse_cplx <- function(y, keep, transform = c("asis", "10log10", "square", "s
 
 expect_equivalent_cplx <- function(x, y, eps = 1e-6){
     expect_equal(is.na(x), is.na(y))
-    expect_lte(max(abs(Re(x - y)), na.rm = TRUE), eps)
-    expect_lte(max(abs(Im(x - y)), na.rm = TRUE), eps)
+    if(is.complex(x)){
+        expect_lte(max(abs(Re(x - y)), na.rm = TRUE), eps)
+        expect_lte(max(abs(Im(x - y)), na.rm = TRUE), eps)
+    } else {
+        expect_lte(max(abs(x - y), na.rm = TRUE), eps)
+    }
 }
 
 test_that("R/C++ - Collapse", {
@@ -148,10 +154,14 @@ test_that("R/C++ - Collapse", {
     }
     keep <- c(4)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
-        cat(transform, diff)
-        expect_lt(diff, 1e-6)
+        k <- x$collapse(keep = keep, transform = transform, method = 'sum')
+        print(k)
+        s <- collapse_real(y, keep, transform = transform)
+        print(s)
+        diff <- k - s
+        print(diff)
+        cat(transform, max(abs(diff)), "\n")
+        expect_lt(max(abs(diff)), 1e-6)
     }
     keep <- c(4,1,3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
