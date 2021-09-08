@@ -20,8 +20,11 @@ Imports:
     methods, 
     Rcpp
 Suggests: 
+    rmarkdown,
+    knitr,
     testthat (>= 3.0.0)
 RoxygenNote: 7.1.1
 LinkingTo: 
     Rcpp
 Config/testthat/edition: 3
+VignetteBuilder: knitr

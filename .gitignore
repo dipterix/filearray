@@ -19,3 +19,4 @@ tests2/
 *.DS_Store
 docs
 CRAN-RELEASE
+inst/doc

@@ -1,0 +1,234 @@
+---
+title: "Performance Comparisons - (double)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Performance Comparisons - (double)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  eval = FALSE,
+  comment = "#>"
+)
+```
+
+This vignette profiles `FileArray` operations and compares with R native functions. The goal is to
+
+1. Benchmark different ways to operate on file arrays (write, read, subset, transform, ...)
+2. Compare with other methods to see what file array can and cannot do.
+
+The simulation was performed on `MacBook Air 2020 (M1 Chip, ARM, 8GB RAM)`, with R `4.1.0`. To reproduce the results, please install `CRAN` packages `dipsaus` and `microbenchmark`.
+
+
+## Setup
+
+We mainly test the performance of `double` data type. The dimensions for `double` array are `100x100x100x100`, which is around `800MB` in native R.
+
+```{r setup}
+library(filearray)
+
+filearray_threads()
+#> [1] 8
+
+# Create file array and initialize partitions
+set.seed(1)
+file <- tempfile(); unlink(file, recursive = TRUE)
+x_dbl <- filearray_create(file, rep(100, 4))
+x_dbl$initialize_partition()
+
+# 800 MB double array
+y <- array(rnorm(length(x_dbl)), dim(x_dbl))
+```
+
+## Simulation
+
+The simulation contains
+
+* Write speed
+  - Writing along margin
+  - Writing chunks of data
+* Real speed
+  - Read all the data
+  - Read along margins
+  - Random subset
+* Collapse
+
+### 1. Write along margin
+
+Writing along margins refer to something like `x[,,,i] <- v` (along the last margin), or `x[,i,,] <- v` (along the second margin). It is always recommended to write along the last margin, and always discouraged to write along the first margin to file arrays.
+
+1.  partition margin
+
+```{r}
+system.time({
+  for(i in 1:100){
+    x_dbl[,,,i] <- y[,,,i]
+  }
+})
+
+#>   user  system elapsed 
+#>  0.483   0.593   1.501
+```
+
+2. Write along fast margin
+
+```{r}
+system.time({
+  for(i in 1:100){
+    x_dbl[,,i,] <- y[,,i,]
+  }
+})
+
+#>   user  system elapsed 
+#>  4.967   7.352   1.752 
+```
+
+3. Writing along slow margin
+
+Since it'll take long to run, I only wrote first 10 slices, and multiply by 10 to approximate.
+
+```{r}
+system.time({
+  for(i in 1:10){
+    x_dbl[1,,,] <- y[1,,,]
+  }
+}) * 10
+#>    user  system elapsed 
+#>   20.09  312.84   53.89
+```
+
+
+### 2. Write chunks of data
+
+Instead of writing one slice at a time along each margin, we write `100x100x100x5` (10 slices) each time.
+
+1.  partition margin
+
+```{r}
+system.time({
+  for(i in 1:10){
+    idx <- (i-1)*10 + 1:10
+    x_dbl[,,,idx] <- y[,,,idx]
+  }
+})
+
+#>   user  system elapsed 
+#>  2.196   3.983   1.403 
+```
+
+2. Write along fast margin
+
+```{r}
+system.time({
+  for(i in 1:10){
+    idx <- (i-1)*10 + 1:10
+    x_dbl[,,idx,] <- y[,,idx,]
+  }
+})
+
+#>   user  system elapsed 
+#>  2.110   4.673   1.408 
+```
+
+3. Writing along slow margin
+
+```{r}
+system.time({
+  for(i in 1:10){
+    idx <- (i-1)*10 + 1:10
+    x_dbl[idx,,,] <- y[idx,,,]
+  }
+})
+#>   user  system elapsed 
+#>  4.889  32.416   6.365
+```
+
+Note: always avoid writing along the first margin (like `x[i,,,] <- ...`). It's slow.
+
+
+
+## Read 
+
+### 1. Read the whole array
+
+```{r}
+system.time({
+  x_dbl[]
+})
+
+#>   user  system elapsed 
+#>  0.162   0.442   0.441 
+```
+
+### 2. Read along margins
+
+```{r}
+microbenchmark::microbenchmark(
+  filearray_partition_margin = { x_dbl[,,,1] },
+  filearray_fast_margin = { x_dbl[,,1,] },
+  filearray_slow_margin = { x_dbl[1,,,] },
+  native_partition_margin = { y[,,,1] },
+  native_fast_margin = { y[,,1,] },
+  native_slow_margin = { y[1,,,] },
+  times = 100L, unit = "ms"
+)
+
+#> Unit: milliseconds
+#>                        expr       min        lq      mean    median        uq       max neval
+#>  filearray_partition_margin  1.575384  2.323983  4.011294  3.179960  4.576625  25.56617   100
+#>       filearray_fast_margin  1.246400  1.722205  3.619816  3.026846  4.071198  22.94741   100
+#>       filearray_slow_margin 22.588417 23.791234 39.778515 25.371374 32.281002 275.10037   100
+#>     native_partition_margin  3.405583  4.042662  6.502713  4.626665  5.367330  78.54518   100
+#>          native_fast_margin  3.426042  3.967878  4.950981  4.383043  5.353862  18.11933   100
+#>          native_slow_margin 21.699250 22.386062 31.750703 24.248323 31.205818 142.05061   100
+```
+
+The file array indexing is tied or even faster than native arrays in R!
+
+### 3. Random access
+
+```{r}
+# access 50 x 50 x 50 x 50 sub-array, with random indices
+idx1 <- sample(1:100, 50)
+idx2 <- sample(1:100, 50)
+idx3 <- sample(1:100, 50)
+idx4 <- sample(1:100, 50)
+
+microbenchmark::microbenchmark(
+  filearray = { x_dbl[idx1, idx2, idx3, idx4] },
+  native = { y[idx1, idx2, idx3, idx4] },
+  times = 100L, unit = "ms"
+)
+
+#> Unit: milliseconds
+#>       expr      min       lq     mean   median       uq      max neval
+#>  filearray 14.00306 14.80528 16.27592 15.32994 16.02700 34.82003   100
+#>     native 31.14704 31.61110 33.64501 32.44939 33.54587 53.57749   100
+```
+
+Random access could be faster than base R (also much less memory!)
+
+## Collapse
+
+Collapse calculates the margin sum/mean. Collapse function in `filearray` uses single thread. This is because the bottle-neck often comes from hard-disk accessing speed. However, it is still faster than native R, and is more memory-efficient.
+
+```{r}
+keep <- c(2, 4)
+microbenchmark::microbenchmark(
+  filearray = { x_dbl$collapse(keep = keep, method = "sum") },
+  native = { apply(y, keep, sum) },
+  dipsaus = { dipsaus::collapse(y, keep, average = FALSE) }, 
+  unit = "s", times = 5
+)
+
+#> Unit: seconds
+#>       expr       min        lq      mean    median        uq       max neval
+#>  filearray 0.6273382 0.6763549 0.7564261 0.6914919 0.7981457 0.9887996     5
+#>     native 1.0210512 1.3316828 1.4655959 1.3800226 1.5477807 2.0474423     5
+#>    dipsaus 0.1807238 0.1821159 0.2451417 0.2237019 0.3116792 0.3274874     5
+```
+
+The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `6x` as fast as base R. File array is `2x` as fast as base R.
