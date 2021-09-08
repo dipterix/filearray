@@ -149,6 +149,47 @@ SEXP each_partition_logical(
     
 }
 
+SEXP each_partition_complex(
+        FILE* conn, const int64_t exp_len, 
+        const SEXP& buffer_cplx, const SEXP& buffer_real, 
+        const Function fun, int64_t* count, List ret){
+    
+    size_t elem_size = sizeof(double);
+    
+    fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
+    
+    int64_t read_len = 0, current_pos = 0;
+    
+    double* bufreal_ptr = REAL(buffer_real);
+    Rcomplex* bufcplx_ptr = COMPLEX(buffer_cplx);
+    R_xlen_t bufferlen = Rf_xlength(buffer_real);
+    
+    int64_t rest_len = 0;
+    Rcomplex* bufcplx_ptr2 = bufcplx_ptr;
+    
+    while(current_pos < exp_len){
+        bufreal_ptr = REAL(buffer_real);
+        read_len = lendian_fread(bufreal_ptr, elem_size, bufferlen, conn);
+        realToCplx(bufreal_ptr, bufcplx_ptr, bufferlen);
+        bufcplx_ptr2 = bufcplx_ptr + read_len;
+        for(; read_len < bufferlen; read_len++, bufcplx_ptr2++){
+            bufcplx_ptr2->i = NA_REAL;
+            bufcplx_ptr2->r = NA_REAL;
+        }
+        rest_len = exp_len - current_pos;
+        if( rest_len > bufferlen ){
+            rest_len = bufferlen;
+        }
+        ret.push_back( fun(buffer_cplx, wrap(rest_len), wrap(*count)) );
+        current_pos += rest_len;
+        *count += rest_len;
+    }
+    
+    return( ret );
+    
+}
+
+
 // [[Rcpp::export]]
 SEXP FARR_buffer_mapreduce(
     const std::string& filebase, 
@@ -157,17 +198,22 @@ SEXP FARR_buffer_mapreduce(
     const NumericVector& partition_cumlens, 
     const int bufferlen, const SEXPTYPE x_type
 ){
+    int nprot = 0;
     int64_t count = 1;
     int64_t count2 = 1;
     R_xlen_t nparts = partition_cumlens.length();
     
     // int64_t bufferlen = get_buffer_size() / elem_size;
-    SEXP buffer = PROTECT(Rf_allocVector(x_type, bufferlen));
+    SEXP buffer = PROTECT(Rf_allocVector(x_type, bufferlen)); nprot++;
+    SEXP buffer_mid = R_NilValue;
+    if( x_type == CPLXSXP ){
+        buffer_mid = PROTECT(Rf_allocVector(REALSXP, bufferlen)); nprot++;
+    }
     
     List ret = List::create();
     
-    SEXP dim_ = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1));
-    SEXP pcumlens = PROTECT(realToUint64(partition_cumlens, 0, 1200000000000000000, 1));
+    SEXP dim_ = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1)); nprot++;
+    SEXP pcumlens = PROTECT(realToUint64(partition_cumlens, 0, 1200000000000000000, 1)); nprot++;
     int64_t* dimptr = (int64_t*) REAL(dim_);
     int64_t plen = 1;
     for(R_xlen_t ii = 0; ii < dim.length() - 1; ii++, dimptr++){
@@ -207,6 +253,9 @@ SEXP FARR_buffer_mapreduce(
                 case LGLSXP:
                     ret = each_partition_logical(conn, psize * plen, buffer, map, &(count), ret);
                     break;
+                case CPLXSXP:
+                    ret = each_partition_complex(conn, psize * plen, buffer, buffer_mid, map, &(count), ret);
+                    break;
                 default: 
                     fclose(conn);
                     conn = NULL;
@@ -220,13 +269,14 @@ SEXP FARR_buffer_mapreduce(
     }
     
     if(reduce == R_NilValue){
-        UNPROTECT(3);
+        UNPROTECT( nprot );
         return ret;
     }
     
     Function reduce2 = (Function) reduce;
     SEXP re = PROTECT(reduce2(ret));
-    UNPROTECT(4);
+    nprot++;
+    UNPROTECT( nprot );
     return(re);
 }
 

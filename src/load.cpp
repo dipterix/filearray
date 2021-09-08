@@ -426,6 +426,266 @@ SEXP FARR_subset_logical(const std::string& filebase, const List sch){
     return ret;
 }
 
+void subset_partition_complex(
+        FILE* conn, double* buffer1, int buflen,
+        Rcomplex* retptr, const R_xlen_t block_size, 
+        SEXP idx1, int64_t idx1_start, int64_t idx1_end,
+        SEXP idx2, int64_t idx2_start, int64_t idx2_end,
+        const int idx1_sorted, const int idx2_sorted,
+        int swap_endian = 0
+) {
+    // TODO: swap_endian
+    double content_size = 0;
+    // int elem_size = sizeof(T);
+    R_xlen_t buffer_size = buflen;
+    if( buffer_size > block_size ){
+        buffer_size = block_size;
+    }
+    double* bufferptr = buffer1;
+    
+    
+    
+    fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
+    lendian_fread(&(content_size), 8, 1, conn);
+    
+    int64_t start_idx = idx1_start;
+    int64_t end_idx = 0;
+    int64_t conn_pos = 0;
+    
+    int64_t* idx1ptr = (int64_t*) REAL(idx1);
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    
+    int64_t* idx2ptr = (int64_t*) REAL(idx2);
+    R_xlen_t idx2len = Rf_xlength(idx2);
+    
+    R_xlen_t ii = 0, jj = 0, ll = 0, ii_idx1 = 0;
+    Rcomplex* retptr2 = retptr;
+    Rcomplex* retptr3 = retptr;
+    
+    for(int64_t block = idx2_start; block <= idx2_end; block++){
+        // find block in idx2
+        for(ii_idx1 = 0, idx2ptr = (int64_t*) REAL(idx2);
+            ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
+            if( *idx2ptr == block ){
+                break;
+            }
+        }
+        if( *idx2ptr != block ){ continue; }
+        
+        // Rcout << block << "\n";
+        
+        // read current block!
+        retptr2 = retptr + ii_idx1 * idx1len;
+        start_idx = (idx1_start + block_size * block);
+        end_idx = start_idx - idx1_start + idx1_end + 1;
+        
+        if( start_idx >= content_size ){
+            if( idx2_sorted ){
+                break;
+            }
+            continue;
+        }
+        if( end_idx > content_size ){
+            end_idx = content_size;
+        }
+        
+        // Rcout << block << " " << ii_idx1 <<  " " << start_idx <<  " " << end_idx << "\n";
+        
+        // fseek is somehow slow, read to buffer without using it seems faster
+        while( conn_pos < start_idx ){
+            ii = start_idx - conn_pos;
+            ii = ii > buffer_size ? buffer_size : ii;
+            lendian_fread(buffer1, 8, ii, conn);
+            conn_pos += ii;
+        }
+        // fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
+        // fseek(conn, (start_idx - conn_pos) * elem_size, SEEK_CUR);
+        // conn_pos = start_idx;
+        
+        
+        idx1ptr = (int64_t*) REAL(idx1);
+        jj = 0;
+        while( conn_pos < end_idx ){
+            ii = end_idx - conn_pos;
+            ii = ii > buffer_size ? buffer_size : ii;
+            lendian_fread(buffer1, 8, ii, conn);
+            
+            if( !idx1_sorted ){
+                idx1ptr = (int64_t*) REAL(idx1);
+                jj = 0;
+            }
+            for(; jj < idx1len; jj++, idx1ptr++) {
+                if(*idx1ptr == NA_INTEGER64){ continue; }
+                // ll should be [conn_pos, conn_pos + ii)
+                
+                ll = *idx1ptr - idx1_start + start_idx - conn_pos;
+                if( ll < 0 ){ continue; }
+                if( ll >= ii ){
+                    if( idx1_sorted ) {
+                        break;
+                    }
+                    continue;
+                }
+                
+                realToCplx(bufferptr + ll, retptr2 + jj, 1);
+                // *(retptr2 + jj) = *(bufferptr + ll);
+            }
+            
+            conn_pos += ii;
+        }
+        
+        retptr2 = retptr + ii_idx1 * idx1len;
+        ii_idx1++;
+        idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
+        // Rcout << "1\n";
+        for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
+            if( *idx2ptr == block ){
+                retptr3 = retptr + ii_idx1 * idx1len;
+                for(R_xlen_t ii = 0; ii < idx1len; ii++){
+                    *(retptr3 + ii) = *(retptr2 + ii);
+                }
+                // memcpy(retptr3, retptr2, elem_size * idx1len);
+            } else if( idx2_sorted && *idx2ptr > block ){
+                break;
+            }
+        }
+        // Rcout << "2\n";
+    }
+}
+
+
+SEXP FARR_subset_complex(const std::string& filebase, const List sch){
+    const int buflen = get_buffer_size() / 8;
+    // Rcout << nbuffers << "\n";
+    // List sch = schedule(filebase, listOrEnv, dim, cum_part_sizes, 
+    //                     split_dim, strict);
+    SEXP idx1 = sch["idx1"];
+    SEXP idx1range = sch["idx1range"];
+    List idx2s = sch["idx2s"];
+    int64_t block_size = (int64_t) (sch["block_size"]);
+    IntegerVector partitions = sch["partitions"];
+    IntegerVector idx2lens = sch["idx2lens"];
+    
+    R_xlen_t niter = partitions.length();
+    
+    
+    R_xlen_t idx1len = Rf_xlength(idx1);
+    
+    // TODO: change
+    SEXP ret = PROTECT(Rf_allocVector(CPLXSXP, idx1len * idx2lens[niter - 1]));
+    // TODO: change
+    Rcomplex na_cplx; na_cplx.i = NA_REAL; na_cplx.r = NA_REAL;
+    // realToCplx(&(na_dbl), 1);
+    
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+    
+    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+        // idx1 are all NAs, no need to subset, return NA
+        
+        // TODO: change
+        Rcomplex* retptr = COMPLEX(ret);
+        R_xlen_t retlen = Rf_xlength(ret);
+        for(R_xlen_t jj = 0; jj < retlen; jj++){
+            *retptr++ = na_cplx;
+        }
+        UNPROTECT(1);
+        return(ret);
+    }
+    
+    const int idx1_sorted = kinda_sorted(idx1, idx1_start, buflen);
+    
+    int err = -1;
+    // char* buffer[nbuffers];
+    
+    int ncores = getThreads();
+    if(ncores > niter){
+        ncores = niter;
+    }
+    
+    
+    std::vector<SEXP> buff_pool(ncores);
+    for(int i = 0; i < ncores; i++){
+        // TODO: change
+        buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, buflen));
+    }
+    
+#pragma omp parallel num_threads(ncores) 
+{
+#pragma omp for schedule(static, 1) nowait
+    for(R_xlen_t ii = 0; ii < niter; ii++){
+        // get current buffer
+        int thread = ii % ncores;
+        
+        int part = partitions[ii];
+        int64_t skips = 0;
+        if(ii > 0){
+            skips = idx2lens[ii - 1];
+        }
+        int64_t idx2len = idx2lens[ii] - skips;
+        
+        // TODO: change
+        Rcomplex* retptr = COMPLEX(ret) + skips * idx1len;
+        for(R_xlen_t jj = 0; jj < idx2len * idx1len; jj++, retptr++ ){
+            *retptr = na_cplx;
+        }
+        
+        // TODO: change
+        retptr = COMPLEX(ret) + skips * idx1len;
+        
+        SEXP idx2 = idx2s[ii];
+        int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
+        int64_t* ptr2 = (int64_t*) REAL(idx1); 
+        for(ptr2 = (int64_t*) REAL(idx2); idx2len > 0; idx2len--, ptr2++ ){
+            if( *ptr2 == NA_INTEGER64 ){
+                continue;
+            }
+            if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
+                idx2_start = *ptr2;
+            }
+            if( idx2_end < *ptr2 ){
+                idx2_end = *ptr2;
+            }
+        }
+        
+        if( idx2_start == NA_INTEGER64 || idx2_end < 0 || idx2_start < 0 ){
+            // This is NA partition, no need to subset
+            continue;
+        }
+        
+        const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
+        std::string file = filebase + std::to_string(part) + ".farr";
+        
+        FILE* conn = fopen( file.c_str(), "rb" );
+        if (conn) {
+            
+            std::string s = "";
+            
+            // TODO: change
+            // int* buffer = INTEGER(buf);
+            double* buffer1 = REAL(buff_pool[thread]);
+            
+            try{
+                subset_partition_complex(conn, buffer1, buflen, retptr, block_size, 
+                                 idx1, idx1_start, idx1_end,
+                                 idx2, idx2_start, idx2_end,
+                                 idx1_sorted, idx2_sorted);
+            } catch(...){
+                fclose(conn);
+                conn = NULL;
+                err = part;
+            }
+            if( conn != NULL ){
+                fclose(conn);
+            }
+        }
+    }
+}
+    UNPROTECT(1 + ncores);
+    return(ret);
+}
+
+
 // [[Rcpp::export]]
 SEXP FARR_subset(const std::string& filebase, 
                 const SEXPTYPE type,
@@ -455,6 +715,9 @@ SEXP FARR_subset(const std::string& filebase,
         break;
     case LGLSXP: 
         ret = PROTECT(FARR_subset_logical(filebase, sch));
+        break;
+    case CPLXSXP: 
+        ret = PROTECT(FARR_subset_complex(filebase, sch));
         break;
     default:
         stop("Unsupported SEXP type");

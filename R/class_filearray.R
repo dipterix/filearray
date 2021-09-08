@@ -35,8 +35,7 @@ initialize_filearray <- function(path, dimension, partition_size, type){
     on.exit({
         try({close(conn)}, silent = TRUE)
     })
-    size <- switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
-                  stop("Unknown data type: ",type))
+    size <- get_elem_size(type = type)
     write_header(conn, partition = partition_size, dimension = dimension, 
                  type = type, size = size)
     close(conn)
@@ -63,8 +62,15 @@ load_meta <- function(path){
 }
 
 get_elem_size <- function(type){
-    switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
-                  stop("Unknown data type: ",type))
+    switch(
+        type,
+        double = 8L,
+        integer = 4L,
+        logical = 1L,
+        raw = 1L,
+        complex = 8L,
+        stop("Unknown data type: ", type)
+    )
 }
 
 
@@ -179,6 +185,7 @@ setRefClass(
                 integer = NA_integer_,
                 logical = FALSE,
                 raw = as.raw(0),
+                complex = NA_complex_,
                 stop("Unknown data type: ", type)
             )
             
@@ -329,6 +336,9 @@ setRefClass(
             value <- value[[1]]
             storage.mode(value) <- .self$type()
             type <- .self$type()
+            if(type == "complex"){
+                value <- cplxToReal2(value);
+            }
             size <- get_elem_size(type)
             file <- .self$partition_path(part)
             fid <- file(file, "wb")
@@ -435,28 +445,56 @@ setRefClass(
             filebase <- paste0(.self$.filebase, .self$.sep)
             
             dim1 <- dim
-            keep1 <- keep
             transform1 <- which(c('asis', 'log', 'square', 'sqrt') == transform)
             if( method == "sum" ){
                 scale <- 1
             } else {
                 scale <- 1/prod(dim[-keep])
             }
+            # make sure last margin is the last one
+            dim <- .self$dimension()
+            ndims <- length(dim)
+            perm <- FALSE
+            keep1 <- keep
+            nkeeps <- length(keep)
+            if(nkeeps > 1 && 
+               ndims %in% keep && 
+               keep[[nkeeps]] != ndims)
+            {
+                keep_ldidx <- which(keep == ndims)
+                
+                keep_ord <- seq_along(keep)
+                keep_ord <- c(
+                    keep_ord[-seq.int(keep_ldidx, nkeeps)], 
+                    nkeeps,
+                    keep_ord[-seq.int(1, keep_ldidx)] - 1
+                )
+                
+                keep1 <- c(keep[-keep_ldidx], keep[keep_ldidx])
+                perm <- TRUE
+            }
             
-            re <- FARR_collapse(
+            
+            expr <- quote(FARR_collapse(
                 filebase = filebase,
                 dim = dim1,
                 keep = keep1,
                 cum_part = .self$.partition_info[, 3],
                 remove_na = na.rm,
                 method = transform1,
-                scale = scale, 
-                array_type = .self$sexp_type()
-            )
+                scale = scale
+            ))
+            if(.self$type() == "complex"){
+                expr[[1]] <- quote(FARR_collapse_complex)
+            } else {
+                expr[["array_type"]] <- .self$sexp_type()
+            }
+                
+            re <- eval(expr)
             
             dnames <- .self$dimnames()
             if(length(dnames) == length(dim)){
-                structure(
+                dnames <- structure(
                     lapply(keep, function(d){ dnames[[keep]] }),
                     names = names(dnames)[keep]
                 )
@@ -465,9 +503,13 @@ setRefClass(
                 } else {
                     re <- structure(re, dimnames = dnames)
                 }
-            } else {
-                return(re)
             }
+            
+            if(perm) {
+                re <- aperm(re, keep_ord)
+            }
+            
+            return(re)
             
         }
     )

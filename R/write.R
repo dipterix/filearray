@@ -5,8 +5,7 @@ ensure_partition <- function(
     
     type <- match.arg(type)
     if(is.null(size)){
-        size <- switch(type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
-                      stop("Unknown data type: ",type))
+        size <- get_elem_size(type)
     } else {
         size <- as.integer(size)
     }
@@ -37,16 +36,27 @@ ensure_partition <- function(
 }
 
 sexp_to_type <- function(sexp){
-    switch(as.character(sexp), 
-           '14' = 'double', '13' = 'integer',
-           '10' = 'logical', '24' = 'raw', 
-           stop("Unknown SEXP code: ", sexp))
+    switch(
+        as.character(sexp),
+        '14' = 'double',
+        '13' = 'integer',
+        '10' = 'logical',
+        '24' = 'raw',
+        '15' = 'complex',
+        stop("Unknown SEXP code: ", sexp)
+    )
 }
 
 type_to_sexp <- function(type){
-    switch(type, double = 14L, integer = 13L, 
-           logical = 10L, raw = 24L,
-           stop("Unknown data type: ",type))
+    switch(
+        type,
+        double = 14L,
+        integer = 13L,
+        logical = 10L,
+        raw = 24L,
+        complex = 15L,
+        stop("Unknown data type: ", type)
+    )
 }
 
 load_partition <- function(file, dim){

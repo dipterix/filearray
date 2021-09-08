@@ -88,7 +88,7 @@ NULL
 #' @export
 filearray_create <- function(
     filebase, dimension, 
-    type = c('double', 'integer', 'logical', 'raw'), 
+    type = c('double', 'integer', 'logical', 'raw', 'complex'), 
     partition_size = NA)
 {
     type <- match.arg(type)
@@ -97,9 +97,7 @@ filearray_create <- function(
         stop("Invalid dimension: FileArray dimension must not contain 0. Its length must be at least 2.")
     }
     
-    size <- switch(
-        type, double = 8L, integer = 4L, logical = 1L, raw = 1L,
-        stop("Unknown data type: ",type))
+    size <- get_elem_size(type)
     if(is.na(partition_size)) {
         partition_size <- guess_partition(dimension, size)
     } else {

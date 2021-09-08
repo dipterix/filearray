@@ -28,6 +28,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FARR_collapse_complex
+SEXP FARR_collapse_complex(const std::string& filebase, const NumericVector& dim, const IntegerVector& keep, const NumericVector& cum_part, int method, bool remove_na, double scale);
+RcppExport SEXP _filearray_FARR_collapse_complex(SEXP filebaseSEXP, SEXP dimSEXP, SEXP keepSEXP, SEXP cum_partSEXP, SEXP methodSEXP, SEXP remove_naSEXP, SEXP scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type keep(keepSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type cum_part(cum_partSEXP);
+    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< bool >::type remove_na(remove_naSEXP);
+    Rcpp::traits::input_parameter< double >::type scale(scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_collapse_complex(filebase, dim, keep, cum_part, method, remove_na, scale));
+    return rcpp_result_gen;
+END_RCPP
+}
 // check_missing_dots
 SEXP check_missing_dots(const SEXP env);
 RcppExport SEXP _filearray_check_missing_dots(SEXP envSEXP) {
@@ -140,6 +157,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cplxToReal2
+SEXP cplxToReal2(SEXP x);
+RcppExport SEXP _filearray_cplxToReal2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(cplxToReal2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// realToCplx2
+SEXP realToCplx2(SEXP x);
+RcppExport SEXP _filearray_realToCplx2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(realToCplx2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_subset
 SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict, const SEXP dimnames);
 RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP, SEXP dimnamesSEXP) {
@@ -210,58 +249,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// FARR_subset_assign_integer
-SEXP FARR_subset_assign_integer(const std::string& filebase, const List& sch, SEXP value);
-RcppExport SEXP _filearray_FARR_subset_assign_integer(SEXP filebaseSEXP, SEXP schSEXP, SEXP valueSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const List& >::type sch(schSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_integer(filebase, sch, value));
-    return rcpp_result_gen;
-END_RCPP
-}
-// FARR_subset_assign_double
-SEXP FARR_subset_assign_double(const std::string& filebase, const List& sch, SEXP value);
-RcppExport SEXP _filearray_FARR_subset_assign_double(SEXP filebaseSEXP, SEXP schSEXP, SEXP valueSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const List& >::type sch(schSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_double(filebase, sch, value));
-    return rcpp_result_gen;
-END_RCPP
-}
-// FARR_subset_assign_raw
-SEXP FARR_subset_assign_raw(const std::string& filebase, const List& sch, SEXP value);
-RcppExport SEXP _filearray_FARR_subset_assign_raw(SEXP filebaseSEXP, SEXP schSEXP, SEXP valueSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const List& >::type sch(schSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_raw(filebase, sch, value));
-    return rcpp_result_gen;
-END_RCPP
-}
-// FARR_subset_assign_logical
-SEXP FARR_subset_assign_logical(const std::string& filebase, const List& sch, SEXP value);
-RcppExport SEXP _filearray_FARR_subset_assign_logical(SEXP filebaseSEXP, SEXP schSEXP, SEXP valueSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const List& >::type sch(schSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_logical(filebase, sch, value));
-    return rcpp_result_gen;
-END_RCPP
-}
 // FARR_subset_assign
 SEXP FARR_subset_assign(const std::string& filebase, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXPTYPE type, SEXP value_);
 RcppExport SEXP _filearray_FARR_subset_assign(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP typeSEXP, SEXP value_SEXP) {
@@ -282,6 +269,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_filearray_FARR_collapse", (DL_FUNC) &_filearray_FARR_collapse, 8},
+    {"_filearray_FARR_collapse_complex", (DL_FUNC) &_filearray_FARR_collapse_complex, 7},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
     {"_filearray_set_buffer_size", (DL_FUNC) &_filearray_set_buffer_size, 1},
     {"_filearray_get_buffer_size", (DL_FUNC) &_filearray_get_buffer_size, 0},
@@ -291,15 +279,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_reshape_or_drop", (DL_FUNC) &_filearray_reshape_or_drop, 3},
     {"_filearray_loc2idx", (DL_FUNC) &_filearray_loc2idx, 2},
     {"_filearray_schedule", (DL_FUNC) &_filearray_schedule, 5},
+    {"_filearray_cplxToReal2", (DL_FUNC) &_filearray_cplxToReal2, 1},
+    {"_filearray_realToCplx2", (DL_FUNC) &_filearray_realToCplx2, 1},
     {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 10},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 7},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
     {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
-    {"_filearray_FARR_subset_assign_integer", (DL_FUNC) &_filearray_FARR_subset_assign_integer, 3},
-    {"_filearray_FARR_subset_assign_double", (DL_FUNC) &_filearray_FARR_subset_assign_double, 3},
-    {"_filearray_FARR_subset_assign_raw", (DL_FUNC) &_filearray_FARR_subset_assign_raw, 3},
-    {"_filearray_FARR_subset_assign_logical", (DL_FUNC) &_filearray_FARR_subset_assign_logical, 3},
     {"_filearray_FARR_subset_assign", (DL_FUNC) &_filearray_FARR_subset_assign, 7},
     {NULL, NULL, 0}
 };

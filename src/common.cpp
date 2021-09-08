@@ -3,6 +3,17 @@ using namespace Rcpp;
 
 static int nbuffers = 65536;
 
+static double NA_COMPLEX_DBL = 0;
+
+double na_cplx_dbl(){
+    if( NA_COMPLEX_DBL == 0 ){
+        Rcomplex na_cplx; na_cplx.i = NA_REAL; na_cplx.r = NA_REAL;
+        cplxToReal(&(na_cplx), &(NA_COMPLEX_DBL), 1);
+    }
+    return(NA_COMPLEX_DBL);
+}
+
+
 // [[Rcpp::export]]
 SEXP check_missing_dots(const SEXP env){
     if( TYPEOF(env) != ENVSXP ){
@@ -644,7 +655,64 @@ size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 }
 
 
+void cplxToReal(Rcomplex* x, double* y, size_t nelem){
+    double* yptr = y;
+    Rcomplex* xptr = x;
+    float* fptr = NULL;
+    for(R_xlen_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
+        fptr = (float*) yptr;
+        *fptr++ = (float) (xptr->r);
+        *fptr = (float) (xptr->i);
+    }
+}
+
+void realToCplx(double* x, Rcomplex* y, size_t nelem){
+    double* xptr = x;
+    Rcomplex* yptr = y;
+    float* fptr = NULL;
+    na_cplx_dbl();
+    for(R_xlen_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
+        if(*xptr == NA_COMPLEX_DBL){
+            yptr->r = NA_REAL;
+            yptr->i = NA_REAL;
+        } else {
+            fptr = (float*) xptr;
+            yptr->r = *fptr++;
+            yptr->i = *fptr;
+        }
+    }
+}
+
+// [[Rcpp::export]]
+SEXP cplxToReal2(SEXP x){
+    if(TYPEOF(x) != CPLXSXP){
+        stop("Complex input required.");
+    }
+    
+    R_xlen_t xlen = Rf_xlength(x);
+    SEXP y = PROTECT(Rf_allocVector(REALSXP, xlen));
+    
+    cplxToReal(COMPLEX(x), REAL(y), xlen);
+    
+    UNPROTECT(1);
+    return(y);
+}
+
+// [[Rcpp::export]]
+SEXP realToCplx2(SEXP x){
+    if(TYPEOF(x) != REALSXP){
+        stop("Double input required.");
+    }
+    
+    R_xlen_t xlen = Rf_xlength(x);
+    SEXP y = PROTECT(Rf_allocVector(CPLXSXP, xlen));
+    
+    realToCplx(REAL(x), COMPLEX(y), xlen);
+    
+    UNPROTECT(1);
+    return(y);
+}
 
 /*** R
-(function(...){ check_missing_dots(environment()) })(,,1)
+realToCplx2(cplxToReal2(0.1 + 2i))
 */

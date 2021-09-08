@@ -5,6 +5,10 @@ FARR_collapse <- function(filebase, dim, keep, cum_part, array_type, method = 1L
     .Call(`_filearray_FARR_collapse`, filebase, dim, keep, cum_part, array_type, method, remove_na, scale)
 }
 
+FARR_collapse_complex <- function(filebase, dim, keep, cum_part, method = 1L, remove_na = FALSE, scale = 1.0) {
+    .Call(`_filearray_FARR_collapse_complex`, filebase, dim, keep, cum_part, method, remove_na, scale)
+}
+
 check_missing_dots <- function(env) {
     .Call(`_filearray_check_missing_dots`, env)
 }
@@ -41,6 +45,14 @@ schedule <- function(listOrEnv, dim, cum_part_sizes, split_dim, strict) {
     .Call(`_filearray_schedule`, listOrEnv, dim, cum_part_sizes, split_dim, strict)
 }
 
+cplxToReal2 <- function(x) {
+    .Call(`_filearray_cplxToReal2`, x)
+}
+
+realToCplx2 <- function(x) {
+    .Call(`_filearray_realToCplx2`, x)
+}
+
 FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL) {
     .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames)
 }
@@ -59,22 +71,6 @@ setThreads <- function(n, reset_after_fork = -1L) {
 
 hasOpenMP <- function() {
     .Call(`_filearray_hasOpenMP`)
-}
-
-FARR_subset_assign_integer <- function(filebase, sch, value) {
-    .Call(`_filearray_FARR_subset_assign_integer`, filebase, sch, value)
-}
-
-FARR_subset_assign_double <- function(filebase, sch, value) {
-    .Call(`_filearray_FARR_subset_assign_double`, filebase, sch, value)
-}
-
-FARR_subset_assign_raw <- function(filebase, sch, value) {
-    .Call(`_filearray_FARR_subset_assign_raw`, filebase, sch, value)
-}
-
-FARR_subset_assign_logical <- function(filebase, sch, value) {
-    .Call(`_filearray_FARR_subset_assign_logical`, filebase, sch, value)
 }
 
 FARR_subset_assign <- function(filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_) {

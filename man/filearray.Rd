@@ -9,7 +9,7 @@
 filearray_create(
   filebase,
   dimension,
-  type = c("double", "integer", "logical", "raw"),
+  type = c("double", "integer", "logical", "raw", "complex"),
   partition_size = NA
 )
 
