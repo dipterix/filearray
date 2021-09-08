@@ -82,3 +82,36 @@ mapreduce(x,
 ```
 
 See more: `help("mapreduce")`
+
+#### Collapse
+
+Transform data, and collapse (calculate sum or mean) along margins.
+
+```
+a <- x$collapse(keep = 4, method = "mean", transform = "asis")
+
+# equivalent to
+b <- apply(x[], 4, mean)
+
+a[1] - b[1]
+```
+
+Available `transform` for double/integer numbers are:
+
+* `asis`: no transform
+* `10log10`: `10 * log10(v)`
+* `square`: `v * v` 
+* `sqrt`: `sqrt(v)`
+
+For complex numbers, `transform` is a little bit different:
+
+* `asis`: no transform
+* `10log10`: `10 * log10(|x|^2)` (power to decibel unit)
+* `square`: `|x|^2` 
+* `sqrt`: `|x|` (modulus)
+* `normalize`: `x / |x|` (unit length)
+
+## Notes on `Complex` type
+
+In native `R`, complex numbers are combination of two `double` numbers - real and imaginary (total 16 bytes). In `filearray`, complex numbers are coerced to two `float` numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, `1.0000001` will be store as `1`, or `123456789` will be stored as `123456792` (first 7 digits are accurate).
+Please be aware of this "feature" when choosing complex data type.

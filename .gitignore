@@ -18,3 +18,4 @@ vignettes/UsingFilematrices_cache/*
 tests2/
 *.DS_Store
 docs
+CRAN-RELEASE
