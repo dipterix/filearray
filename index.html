@@ -94,7 +94,7 @@
 
 <span class="co"># Install some packages</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'dipsaus'</span><span class="op">)</span></code></pre></div>
-<p>Alternatively, you can compile from Github repository. This requires proper compilers (<code>rtools</code> on <code>windows</code>, or <code>xcode-select --install</code> on <code>osx</code>, or <code>build-essentials</code> on <code>linux</code>).</p>
+<p>Alternatively, you can compile from <code>Github</code> repository. This requires proper compilers (<code>rtools</code> on <code>windows</code>, or <code>xcode-select --install</code> on <code>osx</code>, or <code>build-essentials</code> on <code>linux</code>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># install.packages("remotes")</span>
 <span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dipterix/filearray"</span><span class="op">)</span></code></pre></div>
@@ -182,6 +182,7 @@ a[1] - b[1]</code></pre>
 <li>
 <code>normalize</code>: <code>x / |x|</code> (unit length)</li>
 </ul>
+<p>Note: when array data range is large (say <code>x[[1]]=1</code>, but <code>x[[2]]=10^20</code>), <code>collapse</code> method might lose precision. This is <code>double</code> only uses 8 bytes of memory space. When calculating summations, R internally uses <code>long double</code> to prevent precision loss, but current <code>filearray</code> implementation does not, causing floating error around 16 decimal place. However, the relative difference to the native implementation is marginal (by floating number).</p>
 </div>
 </div>
 <div id="notes-on-complex-type" class="section level2">
