@@ -148,11 +148,10 @@ test_that("R/C++ - Collapse", {
     }
     keep <- c(4)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                        collapse_real(y, keep, transform = transform)), na.rm = TRUE),
-            0
-        )
+        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
+        cat(transform, diff)
+        expect_lt(diff, 1e-6)
     }
     keep <- c(4,1,3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
@@ -163,19 +162,17 @@ test_that("R/C++ - Collapse", {
     }
     keep <- c(3)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                        collapse_real(y, keep, transform = transform)), na.rm = TRUE),
-            0
-        )
+        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
+        cat(transform, diff)
+        expect_lt(diff, 1e-6)
     }
     keep <- c(1)
     for(transform in c("asis", "10log10", "square", "sqrt")){
-        expect_equal(
-            max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
-                        collapse_real(y, keep, transform = transform)), na.rm = TRUE),
-            0
-        )
+        diff <- max(abs(x$collapse(keep = keep, transform = transform, method = 'sum')-
+                            collapse_real(y, keep, transform = transform)), na.rm = TRUE)
+        cat(transform, diff)
+        expect_lt(diff, 1e-6)
     }
     
 })

@@ -1,11 +1,13 @@
 # File-Backed Array for Out-of-memory Computation
 
-Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, integer, logical and raw).
 
 <!-- badges: start -->
 [![R-check](https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg)](https://github.com/dipterix/filearray/actions)
 [![CRAN status](https://www.r-pkg.org/badges/version/filearray)](https://CRAN.R-project.org/package=filearray)
+[![Develop](https://dipterix.r-universe.dev/badges/filearray)](https://dipterix.r-universe.dev/ui#builds)
 <!-- badges: end -->
+
+Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, integer, complex, logical and raw).
 
 ## Installation
 
@@ -15,6 +17,8 @@ install.packages("filearray")
 
 ### Install Develop Version
 
+The internal functions are written in `C++`. To avoid compiling the packages, you can install from my personal repository. It's automatically updated every hour. Currently available on `Windows` and `osx (Intel chip)` only.
+
 ```r
 options(repos = c(
     dipterix = 'https://dipterix.r-universe.dev',
@@ -22,6 +26,13 @@ options(repos = c(
 
 # Install some packages
 install.packages('dipsaus')
+```
+
+Alternatively, you can compile from Github repository. This requires proper compilers (`rtools` on `windows`, or `xcode-select --install` on `osx`, or `build-essentials` on `linux`).
+
+```r
+# install.packages("remotes")
+remotes::install_github("dipterix/filearray")
 ```
 
 ## Basic Usage
