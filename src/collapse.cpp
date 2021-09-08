@@ -91,13 +91,13 @@ void collapse(
                 *(ret + rem) += v;
                 break;
             case 2:
-                *(ret + rem) += std::log(v);
+                *(ret + rem) += std::log10((double) v) * 10.0;
                 break;
             case 3:
-                *(ret + rem) += v * v;
+                *(ret + rem) += ((double) v) * v;
                 break;
             case 4:
-                *(ret + rem) += std::sqrt(v);
+                *(ret + rem) += std::sqrt((double) v);
                 break;
             }
         }
@@ -337,9 +337,8 @@ void collapse_complex(
                 ret_ii->r += v.r;
                 break;
             case 2:
-                tmp_v = std::sqrt(v.i * v.i + v.r * v.r);
-                ret_ii->r += v.r / tmp_v;
-                ret_ii->i += v.i / tmp_v;
+                ret_ii->r += std::log10(v.i * v.i + v.r * v.r) * 10.0;
+                ret_ii->i += 1.0;
                 break;
             case 3:
                 ret_ii->r += v.i * v.i + v.r * v.r;
@@ -348,6 +347,11 @@ void collapse_complex(
             case 4:
                 ret_ii->r += std::sqrt(v.i * v.i + v.r * v.r);
                 ret_ii->i += 1.0;
+                break;
+            case 5:
+                tmp_v = std::sqrt(v.i * v.i + v.r * v.r);
+                ret_ii->r += v.r / tmp_v;
+                ret_ii->i += v.i / tmp_v;
                 break;
             }
         }
@@ -448,8 +452,9 @@ SEXP FARR_collapse_complex(
     nprot = 1;
     
     SEXP ret = ret_cplx;
-    if(method == 3 || method == 4){
+    if(method >= 2 && method <= 4){
         ret = PROTECT(Rf_allocVector(REALSXP, retlen)); nprot++;
+        Rf_setAttrib(ret, R_DimSymbol, dim[keep - 1]);
         double* ret_ptr = REAL(ret);
         retcplx_ptr = COMPLEX(ret_cplx);
         for(R_xlen_t i = 0; i < retlen; i++, retcplx_ptr++){

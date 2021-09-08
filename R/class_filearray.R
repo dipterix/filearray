@@ -244,6 +244,8 @@ setRefClass(
                     cat("Dimension:", paste(.self$dimension(), collapse = "x"), "\n")
                     cat("# of partitions:", nrow(.self$.partition_info), "\n")
                     cat("Partition size:", .self$partition_size(), "\n")
+                    cat("Storage type: ", .self$type(), " (internal size: ", get_elem_size(.self$type()), ")\n", sep = "")
+                    
                 }, error = function(e){
                     warning("Partition information is unavailable: might be broken or improperly set.", immediate. = FALSE)
                 })
@@ -432,9 +434,11 @@ setRefClass(
         valid = function(){
             return(.self$.valid && dir.exists(.self$.filebase))
         },
-        collapse = function(keep, method = c('mean', 'sum'),
-                            transform = c('asis', 'log', 'square', 'sqrt'), 
-                            na.rm = FALSE){
+        collapse = function(
+            keep, method = c('mean', 'sum'),
+            transform = c('asis', '10log10', 'square', 'sqrt', 'normalize'), 
+            na.rm = FALSE
+        ){
             method <- match.arg(method)
             transform <- match.arg(transform)
             keep <- as.integer(keep)
@@ -445,7 +449,7 @@ setRefClass(
             filebase <- paste0(.self$.filebase, .self$.sep)
             
             dim1 <- dim
-            transform1 <- which(c('asis', 'log', 'square', 'sqrt') == transform)
+            transform1 <- which(c('asis', '10log10', 'square', 'sqrt', 'normalize') == transform)
             if( method == "sum" ){
                 scale <- 1
             } else {
