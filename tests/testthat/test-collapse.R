@@ -186,6 +186,116 @@ test_that("R/C++ - Collapse", {
     
 })
 
+test_that("R/C++ - Float", {
+    bsz <- get_buffer_size()
+    on.exit({
+        set_buffer_size(bsz)
+        max_buffer_size(2097152)
+    })
+    set_buffer_size(16L)
+    max_buffer_size(64L)
+    
+    # dim <- c(287, 100, 301, 7)
+    dim <- c(33:36)
+    set.seed(5)
+    file <- tempfile()
+    unlink(file, recursive = TRUE)
+    x <- filearray_create(file, dim, type = "float")
+    y <- array(rnorm(length(x))^2, dim)
+    y[[20, 3, 3, 3]] <- NA
+    x[] <- y
+    
+    # make sure x[] == y
+    eps <- 10^(ceiling(log10(max(abs(y), na.rm = TRUE))) - 7)
+    expect_equal(x[], y, tolerance = eps)
+    y <- x[]
+    
+    
+    
+    # collapse
+    keep <- c(1,2,3,4)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    
+    keep <- c(1,4,3,2)
+    expect_equal(
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
+        collapse_real(y, keep, transform = 'asis')
+    )
+    
+    keep <- c(4,2,3,1)
+    expect_equal(
+        x$collapse(keep = keep, transform = 'asis', method = 'mean'),
+        collapse_real(y, keep, transform = 'asis')
+    )
+    
+    keep <- c(3,1)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    
+    keep <- c(4,1)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    
+    keep <- c(4,2)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    keep <- c(4,3)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    keep <- c(4)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
+        s <- collapse_real(y, keep, transform = transform)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
+        expect_lt(diff, 1e-6)
+    }
+    keep <- c(4,1,3)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        expect_equal(
+            x$collapse(keep = keep, transform = transform, method = 'mean'),
+            collapse_real(y, keep, transform = transform)
+        )
+    }
+    keep <- c(3)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
+        s <- collapse_real(y, keep, transform = transform)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
+        expect_lt(diff, 1e-6)
+    }
+    keep <- c(1)
+    for(transform in c("asis", "10log10", "square", "sqrt")){
+        k <- x$collapse(keep = keep, transform = transform, method = 'mean')
+        s <- collapse_real(y, keep, transform = transform)
+        diff <- max(abs(1-s / k), na.rm = TRUE)
+        # cat(transform, diff, "\n")
+        expect_lt(diff, 1e-6)
+    }
+    
+})
 
 test_that("R/C++ - Collapse (complex)", {
     bsz <- get_buffer_size()

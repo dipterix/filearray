@@ -43,6 +43,7 @@ sexp_to_type <- function(sexp){
         '10' = 'logical',
         '24' = 'raw',
         '15' = 'complex',
+        '26' = 'float',
         stop("Unknown SEXP code: ", sexp)
     )
 }
@@ -55,6 +56,7 @@ type_to_sexp <- function(type){
         logical = 10L,
         raw = 24L,
         complex = 15L,
+        float = 26L,
         stop("Unknown data type: ", type)
     )
 }

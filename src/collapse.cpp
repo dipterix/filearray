@@ -62,7 +62,7 @@ void collapse(
         
         for(int64_t jj = 0; jj < readlen; jj++){
             v = *(bufptr + jj);
-            if( v == na && remove_na ){
+            if( remove_na && (ISNAN(v) || v == na) ){
                 continue;
             }
             rem = jj + buf_idx; 
@@ -80,7 +80,7 @@ void collapse(
                 fct *= *(dimptr + tmp);
             }
             
-            if( v == na ){ // remove_na must be false
+            if( ISNAN(v) || v == na ){ // remove_na must be false
                 *(ret + rem) = NA_REAL;
                 continue;
             }
@@ -88,7 +88,7 @@ void collapse(
             // need to be atom
             switch(method){
             case 1: 
-                *(ret + rem) += v * scale;
+                *(ret + rem) += ((double) v) * scale;
                 break;
             case 2:
                 *(ret + rem) += std::log10((double) v) * (10.0 * scale);
@@ -167,6 +167,9 @@ SEXP FARR_collapse(
     case RAWSXP:
         buffer = PROTECT(Rf_allocVector(RAWSXP, buf_size));
         break;
+    case FLTSXP:
+        buffer = PROTECT(Rf_allocVector(INTSXP, buf_size / 4));
+        break;
     default:
         UNPROTECT(3);
     stop("Unsupported array type.");
@@ -205,6 +208,13 @@ SEXP FARR_collapse(
                          retptr, NA_INTEGER, loc, method, 
                          remove_na, scale);
                 break;
+            case FLTSXP: {
+                collapse(conn, dim_int64, keep, 
+                         FLOAT(buffer), buf_size,
+                         retptr, NA_FLOAT, loc, method, 
+                         remove_na, scale);
+                break;
+            }
             case LGLSXP: {
                 Rbyte na_lgl = 2;
                 collapse(conn, dim_int64, keep, 

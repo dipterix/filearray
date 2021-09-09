@@ -11,6 +11,8 @@ NULL
             filearray_threads(8)
         }
     }
+    ns <- asNamespace(pkgname)
+    ns$NA_float_ <- get_float_na()
 }
 
 .onAttach <- function(libname, pkgname){

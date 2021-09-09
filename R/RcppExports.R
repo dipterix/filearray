@@ -53,8 +53,20 @@ realToCplx2 <- function(x) {
     .Call(`_filearray_realToCplx2`, x)
 }
 
-FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL) {
-    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames)
+realToFloat2 <- function(x) {
+    .Call(`_filearray_realToFloat2`, x)
+}
+
+floatToReal2 <- function(x) {
+    .Call(`_filearray_floatToReal2`, x)
+}
+
+get_float_na <- function() {
+    .Call(`_filearray_get_float_na`)
+}
+
+FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL, half_size = FALSE) {
+    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames, half_size)
 }
 
 FARR_buffer_mapreduce <- function(filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type) {

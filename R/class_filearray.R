@@ -65,6 +65,7 @@ get_elem_size <- function(type){
     switch(
         type,
         double = 8L,
+        float = 4L,
         integer = 4L,
         logical = 1L,
         raw = 1L,
@@ -186,7 +187,8 @@ setRefClass(
                 logical = FALSE,
                 raw = as.raw(0),
                 complex = NA_complex_,
-                stop("Unknown data type: ", type)
+                float = NA_real_,
+                stop("Unknown data type: ", .self$type())
             )
             
             # load partition information
@@ -336,11 +338,20 @@ setRefClass(
             }
             
             value <- value[[1]]
-            storage.mode(value) <- .self$type()
+            
             type <- .self$type()
-            if(type == "complex"){
-                value <- cplxToReal2(value);
-            }
+            switch (
+                type,
+                "complex" = {
+                    value <- cplxToReal2(as.complex(value));
+                },
+                "float" = {
+                    value <- realToFloat2(as.double(value))
+                },
+                {
+                    storage.mode(value) <- type
+                }
+            )
             size <- get_elem_size(type)
             file <- .self$partition_path(part)
             fid <- file(file, "wb")

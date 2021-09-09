@@ -1,8 +1,8 @@
 ---
-title: "Performance Comparisons - (double)"
+title: "Performance Comparisons - (Numerical)"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Performance Comparisons - (double)}
+  %\VignetteIndexEntry{Performance Comparisons - (Numerical)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -25,7 +25,7 @@ The simulation was performed on `MacBook Air 2020 (M1 Chip, ARM, 8GB RAM)`, with
 
 ## Setup
 
-We mainly test the performance of `double` data type. The dimensions for `double` array are `100x100x100x100`, which is around `800MB` in native R.
+We mainly test the performance of `double` and `float` data type. The dimensions for both arrays are `100x100x100x100`. Both arrays are around `800MB` in native R. This is because R does not have float precision. However, while `double` array occupies `800MB` space on the hard disk, `float` array only uses half size (`400MB`).
 
 ```{r setup}
 library(filearray)
@@ -38,6 +38,10 @@ set.seed(1)
 file <- tempfile(); unlink(file, recursive = TRUE)
 x_dbl <- filearray_create(file, rep(100, 4))
 x_dbl$initialize_partition()
+
+file <- tempfile(); unlink(file, recursive = TRUE)
+x_flt <- filearray_create(file, rep(100, 4), type = 'float')
+x_flt$initialize_partition()
 
 # 800 MB double array
 y <- array(rnorm(length(x_dbl)), dim(x_dbl))
@@ -63,27 +67,45 @@ Writing along margins refer to something like `x[,,,i] <- v` (along the last mar
 1.  partition margin
 
 ```{r}
-system.time({
-  for(i in 1:100){
-    x_dbl[,,,i] <- y[,,,i]
-  }
-})
+microbenchmark::microbenchmark(
+  double = {
+    for(i in 1:100){
+      x_dbl[,,,i] <- y[,,,i]
+    }
+  },
+  float = {
+    for(i in 1:100){
+      x_flt[,,,i] <- y[,,,i]
+    }
+  }, unit = 's', times = 3
+)
 
-#>   user  system elapsed 
-#>  0.483   0.593   1.501
+#> Unit: seconds
+#>    expr       min        lq     mean    median       uq      max neval
+#>  double 1.4115227 1.5130041 1.695382 1.6144855 1.837312 2.060138     3
+#>   float 0.9400064 0.9661546 1.056188 0.9923029 1.114279 1.236255     3
 ```
 
 2. Write along fast margin
 
 ```{r}
-system.time({
-  for(i in 1:100){
-    x_dbl[,,i,] <- y[,,i,]
-  }
-})
+microbenchmark::microbenchmark(
+  double = {
+    for(i in 1:100){
+      x_dbl[,,i,] <- y[,,i,]
+    }
+  },
+  float = {
+    for(i in 1:100){
+      x_flt[,,i,] <- y[,,i,]
+    }
+  }, unit = 's', times = 3
+)
 
-#>   user  system elapsed 
-#>  4.967   7.352   1.752 
+#> Unit: seconds
+#>    expr      min       lq     mean   median       uq      max neval
+#>  double 1.553554 1.618782 3.233683 1.684009 4.073747 6.463485     3
+#>   float 1.297981 1.302451 1.385429 1.306921 1.429154 1.551386     3
 ```
 
 3. Writing along slow margin
@@ -108,42 +130,72 @@ Instead of writing one slice at a time along each margin, we write `100x100x100x
 1.  partition margin
 
 ```{r}
-system.time({
-  for(i in 1:10){
-    idx <- (i-1)*10 + 1:10
-    x_dbl[,,,idx] <- y[,,,idx]
-  }
-})
+microbenchmark::microbenchmark(
+  double = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_dbl[,,,idx] <- y[,,,idx]
+    }
+  },
+  float = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_flt[,,,idx] <- y[,,,idx]
+    }
+  }, unit = 's', times = 3
+)
 
-#>   user  system elapsed 
-#>  2.196   3.983   1.403 
+#> Unit: seconds
+#>    expr       min        lq      mean    median       uq      max neval
+#>  double 1.1543086 1.1656411 1.1777855 1.1769736 1.189524 1.202074     3
+#>   float 0.8987737 0.9232518 0.9699052 0.9477298 1.005471 1.063212     3
 ```
 
 2. Write along fast margin
 
 ```{r}
-system.time({
-  for(i in 1:10){
-    idx <- (i-1)*10 + 1:10
-    x_dbl[,,idx,] <- y[,,idx,]
-  }
-})
+microbenchmark::microbenchmark(
+  double = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_dbl[,,idx,] <- y[,,idx,]
+    }
+  },
+  float = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_flt[,,idx,] <- y[,,idx,]
+    }
+  }, unit = 's', times = 3
+)
 
-#>   user  system elapsed 
-#>  2.110   4.673   1.408 
+#> Unit: seconds
+#>    expr      min       lq     mean   median       uq      max neval
+#>  double 1.866938 1.889742 1.903477 1.912545 1.921747 1.930949     3
+#>   float 1.148298 1.218198 1.258743 1.288098 1.313966 1.339833     3
 ```
 
 3. Writing along slow margin
 
 ```{r}
-system.time({
-  for(i in 1:10){
-    idx <- (i-1)*10 + 1:10
-    x_dbl[idx,,,] <- y[idx,,,]
-  }
-})
-#>   user  system elapsed 
-#>  4.889  32.416   6.365
+microbenchmark::microbenchmark(
+  double = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_dbl[idx,,,] <- y[idx,,,]
+    }
+  },
+  float = {
+    for(i in 1:10){
+      idx <- (i-1)*10 + 1:10
+      x_flt[idx,,,] <- y[idx,,,]
+    }
+  }, unit = 's', times = 3
+)
+#> Unit: seconds
+#>    expr      min       lq     mean  median       uq      max neval
+#>  double 6.216564 6.305727 6.495289 6.39489 6.634652 6.874414     3
+#>   float 3.755463 3.801041 3.856988 3.84662 3.907751 3.968882     3
 ```
 
 Note: always avoid writing along the first margin (like `x[i,,,] <- ...`). It's slow.
@@ -155,21 +207,28 @@ Note: always avoid writing along the first margin (like `x[i,,,] <- ...`). It's 
 ### 1. Read the whole array
 
 ```{r}
-system.time({
-  x_dbl[]
-})
+microbenchmark::microbenchmark(
+  double = { x_dbl[] },
+  float = { x_flt[] },
+  unit = 's', times = 3
+)
 
-#>   user  system elapsed 
-#>  0.162   0.442   0.441 
+#> Unit: seconds
+#>    expr       min        lq      mean    median        uq       max neval
+#>  double 0.1255119 0.1825065 0.2082074 0.2395010 0.2495552 0.2596094     3
+#>   float 0.1182873 0.1566398 0.1827462 0.1949923 0.2149756 0.2349589     3
 ```
 
 ### 2. Read along margins
 
 ```{r}
 microbenchmark::microbenchmark(
-  filearray_partition_margin = { x_dbl[,,,1] },
-  filearray_fast_margin = { x_dbl[,,1,] },
-  filearray_slow_margin = { x_dbl[1,,,] },
+  farr_double_partition_margin = { x_dbl[,,,1] },
+  farr_double_fast_margin = { x_dbl[,,1,] },
+  farr_double_slow_margin = { x_dbl[1,,,] },
+  farr_float_partition_margin = { x_flt[,,,1] },
+  farr_float_fast_margin = { x_flt[,,1,] },
+  farr_float_slow_margin = { x_flt[1,,,] },
   native_partition_margin = { y[,,,1] },
   native_fast_margin = { y[,,1,] },
   native_slow_margin = { y[1,,,] },
@@ -177,13 +236,16 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: milliseconds
-#>                        expr       min        lq      mean    median        uq       max neval
-#>  filearray_partition_margin  1.575384  2.323983  4.011294  3.179960  4.576625  25.56617   100
-#>       filearray_fast_margin  1.246400  1.722205  3.619816  3.026846  4.071198  22.94741   100
-#>       filearray_slow_margin 22.588417 23.791234 39.778515 25.371374 32.281002 275.10037   100
-#>     native_partition_margin  3.405583  4.042662  6.502713  4.626665  5.367330  78.54518   100
-#>          native_fast_margin  3.426042  3.967878  4.950981  4.383043  5.353862  18.11933   100
-#>          native_slow_margin 21.699250 22.386062 31.750703 24.248323 31.205818 142.05061   100
+#>                          expr       min        lq      mean    median        uq        max neval
+#>  farr_double_partition_margin  1.792438  2.308669  5.369872  2.711576  3.744694 195.816943   100
+#>       farr_double_fast_margin  1.404045  1.699532  3.620348  2.021320  3.628787  93.920340   100
+#>       farr_double_slow_margin 22.748686 23.529387 37.885944 24.545593 26.726116 299.898108   100
+#>   farr_float_partition_margin  1.226761  2.018533  3.364908  2.463833  3.448735  22.872424   100
+#>        farr_float_fast_margin  1.267064  1.627638  5.287114  1.990550  3.370815 218.804741   100
+#>        farr_float_slow_margin 13.349108 14.117899 26.336786 15.020063 17.870629 220.553145   100
+#>       native_partition_margin  3.535594  4.034790  4.469297  4.152910  4.642656   8.365107   100
+#>            native_fast_margin  3.519645  4.035281  4.431636  4.111726  4.660654   9.594041   100
+#>            native_slow_margin 21.322911 22.716686 28.260453 23.391484 25.876576 102.389341   100
 ```
 
 The file array indexing is tied or even faster than native arrays in R!
@@ -198,15 +260,17 @@ idx3 <- sample(1:100, 50)
 idx4 <- sample(1:100, 50)
 
 microbenchmark::microbenchmark(
-  filearray = { x_dbl[idx1, idx2, idx3, idx4] },
+  farr_double = { x_dbl[idx1, idx2, idx3, idx4] },
+  farr_float = { x_flt[idx1, idx2, idx3, idx4] },
   native = { y[idx1, idx2, idx3, idx4] },
   times = 100L, unit = "ms"
 )
 
 #> Unit: milliseconds
-#>       expr      min       lq     mean   median       uq      max neval
-#>  filearray 14.00306 14.80528 16.27592 15.32994 16.02700 34.82003   100
-#>     native 31.14704 31.61110 33.64501 32.44939 33.54587 53.57749   100
+#>         expr       min       lq     mean   median       uq      max neval
+#>  farr_double 14.009085 15.27236 23.24250 15.69168 17.29390 136.5074   100
+#>   farr_float  8.916229 10.09071 15.33173 10.67378 11.47514 162.7953   100
+#>       native 31.193948 32.37274 36.27889 32.89500 33.75403 105.6884   100
 ```
 
 Random access could be faster than base R (also much less memory!)
@@ -218,17 +282,24 @@ Collapse calculates the margin sum/mean. Collapse function in `filearray` uses s
 ```{r}
 keep <- c(2, 4)
 microbenchmark::microbenchmark(
-  filearray = { x_dbl$collapse(keep = keep, method = "sum") },
+  farr_double = { x_dbl$collapse(keep = keep, method = "sum") },
+  farr_float = { x_flt$collapse(keep = keep, method = "sum") },
   native = { apply(y, keep, sum) },
   dipsaus = { dipsaus::collapse(y, keep, average = FALSE) }, 
   unit = "s", times = 5
 )
 
-#> Unit: seconds
-#>       expr       min        lq      mean    median        uq       max neval
-#>  filearray 0.6273382 0.6763549 0.7564261 0.6914919 0.7981457 0.9887996     5
-#>     native 1.0210512 1.3316828 1.4655959 1.3800226 1.5477807 2.0474423     5
-#>    dipsaus 0.1807238 0.1821159 0.2451417 0.2237019 0.3116792 0.3274874     5
+#> Unit: milliseconds
+#>                          expr       min        lq      mean    median        uq        max neval
+#>  farr_double_partition_margin  1.792438  2.308669  5.369872  2.711576  3.744694 195.816943   100
+#>       farr_double_fast_margin  1.404045  1.699532  3.620348  2.021320  3.628787  93.920340   100
+#>       farr_double_slow_margin 22.748686 23.529387 37.885944 24.545593 26.726116 299.898108   100
+#>   farr_float_partition_margin  1.226761  2.018533  3.364908  2.463833  3.448735  22.872424   100
+#>        farr_float_fast_margin  1.267064  1.627638  5.287114  1.990550  3.370815 218.804741   100
+#>        farr_float_slow_margin 13.349108 14.117899 26.336786 15.020063 17.870629 220.553145   100
+#>       native_partition_margin  3.535594  4.034790  4.469297  4.152910  4.642656   8.365107   100
+#>            native_fast_margin  3.519645  4.035281  4.431636  4.111726  4.660654   9.594041   100
+#>            native_slow_margin 21.322911 22.716686 28.260453 23.391484 25.876576 102.389341   100
 ```
 
 The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `6x` as fast as base R. File array is `2x` as fast as base R.

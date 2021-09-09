@@ -35,6 +35,42 @@ SEXP each_partition_integer(
     
 }
 
+SEXP each_partition_float(
+        FILE* conn, const int64_t exp_len, const SEXP& buffer, 
+        const Function fun, int64_t* count, List ret){
+    
+    size_t elem_size = sizeof(float);
+    
+    fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
+    
+    int64_t read_len = 0, current_pos = 0;
+    
+    R_xlen_t bufferlen = Rf_xlength(buffer);
+    double* bufptr = REAL(buffer);
+    float* bufflt_ptr = ((float*) REAL(buffer)) + bufferlen;
+    
+    int64_t rest_len = 0;
+    
+    while(current_pos < exp_len){
+        read_len = lendian_fread(bufflt_ptr, elem_size, bufferlen, conn);
+        floatToReal(bufflt_ptr, bufptr, bufferlen);
+        
+        for(; read_len < bufferlen; read_len++){
+            *(bufptr + read_len) = NA_REAL;
+        }
+        rest_len = exp_len - current_pos;
+        if( rest_len > bufferlen ){
+            rest_len = bufferlen;
+        }
+        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        current_pos += rest_len;
+        *count += rest_len;
+    }
+    
+    return( ret );
+    
+}
+
 SEXP each_partition_double(
         FILE* conn, const int64_t exp_len, const SEXP& buffer, 
         const Function fun, int64_t* count, List ret){
@@ -204,7 +240,12 @@ SEXP FARR_buffer_mapreduce(
     R_xlen_t nparts = partition_cumlens.length();
     
     // int64_t bufferlen = get_buffer_size() / elem_size;
-    SEXP buffer = PROTECT(Rf_allocVector(x_type, bufferlen)); nprot++;
+    SEXP buffer = R_NilValue;
+    if( x_type == FLTSXP ){
+        buffer = PROTECT(Rf_allocVector(REALSXP, bufferlen)); nprot++;
+    } else {
+        buffer = PROTECT(Rf_allocVector(x_type, bufferlen)); nprot++;
+    }
     SEXP buffer_mid = R_NilValue;
     if( x_type == CPLXSXP ){
         buffer_mid = PROTECT(Rf_allocVector(REALSXP, bufferlen)); nprot++;
@@ -246,6 +287,9 @@ SEXP FARR_buffer_mapreduce(
                     break;
                 case REALSXP:
                     ret = each_partition_double(conn, psize * plen, buffer, map, &(count), ret);
+                    break;
+                case FLTSXP:
+                    ret = each_partition_float(conn, psize * plen, buffer, map, &(count), ret);
                     break;
                 case RAWSXP:
                     ret = each_partition_raw(conn, psize * plen, buffer, map, &(count), ret);

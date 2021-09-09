@@ -179,9 +179,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// realToFloat2
+SEXP realToFloat2(SEXP x);
+RcppExport SEXP _filearray_realToFloat2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(realToFloat2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// floatToReal2
+SEXP floatToReal2(SEXP x);
+RcppExport SEXP _filearray_floatToReal2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(floatToReal2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_float_na
+SEXP get_float_na();
+RcppExport SEXP _filearray_get_float_na() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(get_float_na());
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_subset
-SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict, const SEXP dimnames);
-RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP, SEXP dimnamesSEXP) {
+SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict, const SEXP dimnames, const bool half_size);
+RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP, SEXP dimnamesSEXP, SEXP half_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -195,7 +227,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type drop(dropSEXP);
     Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type dimnames(dimnamesSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames));
+    Rcpp::traits::input_parameter< const bool >::type half_size(half_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames, half_size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -281,7 +314,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_schedule", (DL_FUNC) &_filearray_schedule, 5},
     {"_filearray_cplxToReal2", (DL_FUNC) &_filearray_cplxToReal2, 1},
     {"_filearray_realToCplx2", (DL_FUNC) &_filearray_realToCplx2, 1},
-    {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 10},
+    {"_filearray_realToFloat2", (DL_FUNC) &_filearray_realToFloat2, 1},
+    {"_filearray_floatToReal2", (DL_FUNC) &_filearray_floatToReal2, 1},
+    {"_filearray_get_float_na", (DL_FUNC) &_filearray_get_float_na, 0},
+    {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 11},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 7},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
