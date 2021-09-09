@@ -659,7 +659,7 @@ void cplxToReal(Rcomplex* x, double* y, size_t nelem){
     double* yptr = y;
     Rcomplex* xptr = x;
     float* fptr = NULL;
-    for(R_xlen_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
+    for(size_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
         fptr = (float*) yptr;
         *fptr++ = (float) (xptr->r);
         *fptr = (float) (xptr->i);
@@ -671,7 +671,7 @@ void realToCplx(double* x, Rcomplex* y, size_t nelem){
     Rcomplex* yptr = y;
     float* fptr = NULL;
     na_cplx_dbl();
-    for(R_xlen_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
+    for(size_t ii = 0; ii < nelem; ii++, xptr++, yptr++){
         if(*xptr == NA_COMPLEX_DBL){
             yptr->r = NA_REAL;
             yptr->i = NA_REAL;
@@ -726,7 +726,7 @@ void realToFloat(double* x, float* y, size_t nelem){
 
 void floatToReal(float* x, double* y, size_t nelem){
     for(R_xlen_t ii = 0; ii < nelem; ii++, y++, x++){
-        if(isnan(*x)){
+        if(ISNAN(*x)){
             *y = NA_REAL;
         } else {
             *y = *x;
