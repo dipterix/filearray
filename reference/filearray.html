@@ -87,6 +87,18 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/performance.html">Performance Comparisons - (Numerical)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
@@ -123,7 +135,7 @@
     <pre class="usage"><span class='fu'>filearray_create</span><span class='op'>(</span>
   <span class='va'>filebase</span>,
   <span class='va'>dimension</span>,
-  type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"double"</span>, <span class='st'>"integer"</span>, <span class='st'>"logical"</span>, <span class='st'>"raw"</span>, <span class='st'>"complex"</span><span class='op'>)</span>,
+  type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"double"</span>, <span class='st'>"float"</span>, <span class='st'>"integer"</span>, <span class='st'>"logical"</span>, <span class='st'>"raw"</span>, <span class='st'>"complex"</span><span class='op'>)</span>,
   partition_size <span class='op'>=</span> <span class='cn'>NA</span>
 <span class='op'>)</span>
 
@@ -201,7 +213,7 @@ numbers of partitions as much as possible.</p>
 #&gt; # of partitions: 8 
 #&gt; Partition size: 1 
 #&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpvB1ajo/file29b3b390e6d </div><div class='input'>
+#&gt; Location: /tmp/RtmpUmK8fg/file2e235e050f38 </div><div class='input'>
 <span class='co'># Assign values</span>
 <span class='va'>x</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>48000</span><span class='op'>)</span>
 
@@ -217,7 +229,7 @@ numbers of partitions as much as possible.</p>
 #&gt; # of partitions: 8 
 #&gt; Partition size: 1 
 #&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpvB1ajo/file29b3b390e6d </div><div class='input'>
+#&gt; Location: /tmp/RtmpUmK8fg/file2e235e050f38 </div><div class='input'>
 
 
 </div></pre>
