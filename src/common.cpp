@@ -110,7 +110,7 @@ double prod_double(const NumericVector& x){
 }
 
 // [[Rcpp::export]]
-SEXP realToUint64(NumericVector x, const double min_, const double max_, const int strict){
+SEXP realToInt64(NumericVector x, const double min_, const double max_, const int strict){
     R_xlen_t len = x.length();
     SEXP re = PROTECT(Rf_allocVector(REALSXP, len));
     Rf_setAttrib(re, R_ClassSymbol, wrap("integer64"));
@@ -124,7 +124,7 @@ SEXP realToUint64(NumericVector x, const double min_, const double max_, const i
             *reptr = NA_INTEGER64;
             continue;
         }
-        if( *xptr < min_ || *xptr > max_ ){
+        if( (min_ != NA_REAL && *xptr < min_) || (max_ != NA_REAL && *xptr > max_) ){
             if( strict ){
                 stop("Index out of margin bound");
             }
@@ -137,6 +137,32 @@ SEXP realToUint64(NumericVector x, const double min_, const double max_, const i
     UNPROTECT(1);
     return re;
 }
+
+SEXP realToInt64_inplace(SEXP x, const double min_, const double max_, const int strict){
+    R_xlen_t len = Rf_xlength(x);
+    Rf_setAttrib(x, R_ClassSymbol, wrap("integer64"));
+    
+    int64_t *reptr = (int64_t *) REAL(x);
+    double* xptr = REAL(x);
+    
+    for(R_xlen_t ii = 0; ii < len; ii++, xptr++, reptr++ ){
+        if( ISNAN(*xptr) ){
+            *reptr = NA_INTEGER64;
+            continue;
+        }
+        if( (min_ != NA_REAL && *xptr < min_) || (max_ != NA_REAL && *xptr > max_) ){
+            if( strict ){
+                stop("Index out of margin bound");
+            }
+            *reptr = NA_INTEGER64;
+            continue;
+        }
+        *reptr = (int64_t) *xptr;
+    }
+    
+    return x;
+}
+
 
 SEXP seq_len_int64(const R_xlen_t len){
     SEXP tmp = PROTECT(Rf_allocVector(REALSXP, len));
@@ -201,7 +227,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                     el = PROTECT(Rf_allocVector(REALSXP, 0));
                     n_protected++;
                 } else {
-                    el = PROTECT(realToUint64(as<NumericVector>(el), 1, dl, strict));
+                    el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
                     n_protected++;
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
@@ -210,7 +236,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                     el = PROTECT(seq_len_int64( dl ));
                     n_protected++;
                 } else {
-                    el = PROTECT(realToUint64(as<NumericVector>(el), 1, dl, strict));
+                    el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
                     n_protected++;
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
@@ -233,6 +259,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
 }
 
 SEXP dropDimension(SEXP x){
+    // return(Rf_DropDims(x));
     SEXP dim = Rf_getAttrib(x, R_DimSymbol);
     if(dim == R_NilValue){
         return x;
@@ -248,11 +275,11 @@ SEXP dropDimension(SEXP x){
     if(xlen == 0){
         return x;
     }
-    
+
     R_xlen_t ii;
-    
+
     new_dim = PROTECT(Rf_allocVector(TYPEOF(dim), ndims));
-    
+
     switch(TYPEOF(dim)){
     case INTSXP: {
         int *ptr_orig = INTEGER(dim);
@@ -281,12 +308,12 @@ SEXP dropDimension(SEXP x){
     }
     if(ii == ndims){} else if(ii >= 2){
         SETLENGTH(new_dim, ii);
-        
+
         Rf_setAttrib(x, R_DimSymbol, new_dim);
     } else {
         Rf_setAttrib(x, R_DimSymbol, R_NilValue);
     }
-    
+
     UNPROTECT(1);
     return x;
 }
@@ -465,8 +492,12 @@ List schedule(const SEXP listOrEnv,
     // std::vector<R_xlen_t> partitions(0);
     int n_protected = 0;
     
-    SEXP sliceIdx = PROTECT(locationList(listOrEnv, dim, strict));
-    n_protected++;
+    
+    SEXP sliceIdx = listOrEnv;
+    if( Rf_getAttrib(sliceIdx, wrap("_asis_")) == R_NilValue ){
+        sliceIdx = PROTECT(locationList(listOrEnv, dim, strict));
+        n_protected++;
+    }
     
     // split dim into 1:split_dim, split_dim+1: ndims
     R_xlen_t ndims = dim.length();
@@ -767,6 +798,108 @@ SEXP get_float_na(){
     return(re);
 }
 
+SEXP sub_vec(SEXP x, SEXP idx_int64){
+    R_xlen_t xlen = Rf_xlength(x);
+    R_xlen_t idxlen = Rf_xlength(idx_int64);
+    int64_t* idxptr = INTEGER64(idx_int64);
+    
+    SEXPTYPE xtype = TYPEOF(x);
+    
+    switch(xtype) {
+    case INTSXP: {
+        SEXP ret = PROTECT(Rf_allocVector(xtype, idxlen));
+        int* retptr = INTEGER(ret);
+        for(R_xlen_t ii = 0; ii < idxlen; ii++, idxptr++, retptr++){
+            if(*idxptr == NA_INTEGER64 || *idxptr <= 0 || *idxptr > xlen){
+                *retptr = NA_INTEGER;
+            } else {
+                *retptr = *(INTEGER(x) + (*idxptr - 1));
+            }
+        }
+        UNPROTECT(1);
+        return( ret );
+    }
+    case REALSXP: {
+        SEXP ret = PROTECT(Rf_allocVector(xtype, idxlen));
+        double* retptr = REAL(ret);
+        for(R_xlen_t ii = 0; ii < idxlen; ii++, idxptr++, retptr++){
+            if(*idxptr == NA_INTEGER64 || *idxptr <= 0 || *idxptr > xlen){
+                *retptr = NA_REAL;
+            } else {
+                *retptr = *(REAL(x) + (*idxptr - 1));
+            }
+        }
+        UNPROTECT(1);
+        return( ret );
+    }
+    case CPLXSXP: {
+        SEXP ret = PROTECT(Rf_allocVector(xtype, idxlen));
+        Rcomplex* retptr = COMPLEX(ret);
+        for(R_xlen_t ii = 0; ii < idxlen; ii++, idxptr++, retptr++){
+            if(*idxptr == NA_INTEGER64 || *idxptr <= 0 || *idxptr > xlen){
+                retptr->i = NA_REAL;
+                retptr->r = NA_REAL;
+            } else {
+                *retptr = *(COMPLEX(x) + (*idxptr - 1));
+            }
+        }
+        UNPROTECT(1);
+        return( ret );
+    }
+    case RAWSXP: {
+        SEXP ret = PROTECT(Rf_allocVector(xtype, idxlen));
+        Rbyte* retptr = RAW(ret);
+        for(R_xlen_t ii = 0; ii < idxlen; ii++, idxptr++, retptr++){
+            if(*idxptr == NA_INTEGER64 || *idxptr <= 0 || *idxptr > xlen){
+                *retptr = 0;
+            } else {
+                *retptr = *(RAW(x) + (*idxptr - 1));
+            }
+        }
+        UNPROTECT(1);
+        return( ret );
+    }
+    case STRSXP: 
+    default: {
+        SEXP x_ = x;
+        int nprot = 0;
+        if( xtype != STRSXP )
+        {
+            x_ = PROTECT(Rf_coerceVector(x, STRSXP));
+            nprot = 1;
+        }
+        StringVector ret = StringVector(idxlen);
+        StringVector::iterator retptr = ret.begin();
+        for(R_xlen_t ii = 0; ii < idxlen; ii++, idxptr++, retptr++){
+            if(*idxptr == NA_INTEGER64 || *idxptr <= 0 || *idxptr > xlen){
+                *retptr = NA_STRING;
+            } else {
+                *retptr = STRING_ELT(x_, *idxptr - 1);
+            }
+        }
+        if(nprot > 0){
+            UNPROTECT( nprot );
+        }
+        return( ret );
+    }
+    };
+    
+    // SEXP ret = 
+    return(R_NilValue);
+}
+
+std::string correct_filebase(const std::string& filebase){
+#ifdef Win32
+    std::string filesep = "\\";
+#else
+    std::string filesep = "/";
+#endif
+    if(filebase.compare(filebase.length() - 1, 1, filesep) != 0){
+        return( filebase + filesep );
+    } else {
+        return( filebase );
+    }
+}
 
 /*** R
 # realToCplx2(cplxToReal2(0.1 + 2i))

@@ -30,6 +30,7 @@ We mainly test the performance of `double` and `float` data type. The dimensions
 ```{r setup}
 library(filearray)
 
+options(digits = 3)
 filearray_threads()
 #> [1] 8
 
@@ -83,9 +84,9 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>    expr       min        lq     mean    median       uq      max neval
-#>  double 1.4115227 1.5130041 1.695382 1.6144855 1.837312 2.060138     3
-#>   float 0.9400064 0.9661546 1.056188 0.9923029 1.114279 1.236255     3
+#>    expr   min    lq  mean median   uq  max neval
+#>  double 1.100 1.117 1.200  1.134 1.25 1.37     3
+#>   float 0.799 0.892 0.944  0.984 1.02 1.05     3
 ```
 
 2. Write along fast margin
@@ -105,9 +106,9 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>    expr      min       lq     mean   median       uq      max neval
-#>  double 1.553554 1.618782 3.233683 1.684009 4.073747 6.463485     3
-#>   float 1.297981 1.302451 1.385429 1.306921 1.429154 1.551386     3
+#>    expr  min   lq mean median   uq  max neval
+#>  double 1.54 1.59 2.81   1.64 3.44 5.24     3
+#>   float 1.32 1.35 1.38   1.37 1.40 1.44     3
 ```
 
 3. Writing along slow margin
@@ -121,7 +122,7 @@ system.time({
   }
 }) * 10
 #>    user  system elapsed 
-#>   20.09  312.84   53.89
+#>    20.1   312.8    53.9
 ```
 
 
@@ -148,9 +149,9 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>    expr       min        lq      mean    median       uq      max neval
-#>  double 1.1543086 1.1656411 1.1777855 1.1769736 1.189524 1.202074     3
-#>   float 0.8987737 0.9232518 0.9699052 0.9477298 1.005471 1.063212     3
+#>    expr   min    lq  mean median    uq   max neval
+#>  double 1.015 1.052 1.115  1.088 1.165 1.241     3
+#>   float 0.716 0.739 0.747  0.763 0.763 0.763     3
 ```
 
 2. Write along fast margin
@@ -172,9 +173,9 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>    expr      min       lq     mean   median       uq      max neval
-#>  double 1.866938 1.889742 1.903477 1.912545 1.921747 1.930949     3
-#>   float 1.148298 1.218198 1.258743 1.288098 1.313966 1.339833     3
+#>    expr   min   lq  mean median    uq   max neval
+#>  double 0.991 1.02 1.040  1.049 1.064 1.079     3
+#>   float 0.712 0.76 0.778  0.809 0.812 0.814     3
 ```
 
 3. Writing along slow margin
@@ -195,9 +196,9 @@ microbenchmark::microbenchmark(
   }, unit = 's', times = 3
 )
 #> Unit: seconds
-#>    expr      min       lq     mean  median       uq      max neval
-#>  double 6.216564 6.305727 6.495289 6.39489 6.634652 6.874414     3
-#>   float 3.755463 3.801041 3.856988 3.84662 3.907751 3.968882     3
+#>    expr  min   lq mean median   uq  max neval
+#>  double 6.48 6.67 6.94   6.86 7.17 7.48     3
+#>   float 3.45 3.78 3.93   4.11 4.17 4.22     3
 ```
 
 Note: always avoid writing along the first margin (like `x[i,,,] <- ...`). It's slow.
@@ -216,9 +217,9 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>    expr       min        lq      mean    median        uq       max neval
-#>  double 0.1255119 0.1825065 0.2082074 0.2395010 0.2495552 0.2596094     3
-#>   float 0.1182873 0.1566398 0.1827462 0.1949923 0.2149756 0.2349589     3
+#>    expr    min     lq  mean median    uq   max neval
+#>  double 0.0973 0.0988 0.164 0.1002 0.198 0.296     3
+#>   float 0.0893 0.0898 0.133 0.0904 0.155 0.220     3
 ```
 
 ### 2. Read along margins
@@ -238,16 +239,16 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: milliseconds
-#>                          expr       min        lq      mean    median        uq        max neval
-#>  farr_double_partition_margin  1.792438  2.308669  5.369872  2.711576  3.744694 195.816943   100
-#>       farr_double_fast_margin  1.404045  1.699532  3.620348  2.021320  3.628787  93.920340   100
-#>       farr_double_slow_margin 22.748686 23.529387 37.885944 24.545593 26.726116 299.898108   100
-#>   farr_float_partition_margin  1.226761  2.018533  3.364908  2.463833  3.448735  22.872424   100
-#>        farr_float_fast_margin  1.267064  1.627638  5.287114  1.990550  3.370815 218.804741   100
-#>        farr_float_slow_margin 13.349108 14.117899 26.336786 15.020063 17.870629 220.553145   100
-#>       native_partition_margin  3.535594  4.034790  4.469297  4.152910  4.642656   8.365107   100
-#>            native_fast_margin  3.519645  4.035281  4.431636  4.111726  4.660654   9.594041   100
-#>            native_slow_margin 21.322911 22.716686 28.260453 23.391484 25.876576 102.389341   100
+#>                          expr   min    lq  mean median    uq   max neval
+#>  farr_double_partition_margin  2.97  3.17  4.17   3.39  4.27  31.7   100
+#>       farr_double_fast_margin  1.57  1.87  3.22   2.04  3.01  75.7   100
+#>       farr_double_slow_margin 22.27 23.88 28.80  24.86 26.56 143.1   100
+#>   farr_float_partition_margin  2.65  2.89  4.05   3.05  4.32  33.6   100
+#>        farr_float_fast_margin  1.34  1.80  3.73   2.01  2.66  38.6   100
+#>        farr_float_slow_margin 13.71 14.61 17.74  15.68 17.61  49.8   100
+#>       native_partition_margin  3.74  3.97  4.34   4.09  4.34  10.1   100
+#>            native_fast_margin  3.86  3.94  4.35   4.06  4.22  10.0   100
+#>            native_slow_margin 21.41 22.13 23.81  22.54 23.68  82.1   100
 ```
 
 The file array indexing is tied or even faster than native arrays in R!
@@ -269,10 +270,10 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: milliseconds
-#>         expr       min       lq     mean   median       uq      max neval
-#>  farr_double 14.009085 15.27236 23.24250 15.69168 17.29390 136.5074   100
-#>   farr_float  8.916229 10.09071 15.33173 10.67378 11.47514 162.7953   100
-#>       native 31.193948 32.37274 36.27889 32.89500 33.75403 105.6884   100
+#>         expr   min   lq mean median   uq  max neval
+#>  farr_double 14.47 15.6 18.8   16.5 17.6 99.9   100
+#>   farr_float  9.54 10.9 15.8   11.6 12.4 83.0   100
+#>       native 33.22 34.3 37.1   35.0 35.6 84.3   100
 ```
 
 Random access could be faster than base R (also much less memory!)
@@ -292,12 +293,12 @@ microbenchmark::microbenchmark(
 )
 
 #> Unit: seconds
-#>         expr       min        lq      mean    median        uq       max neval
-#>  farr_double 0.6731775 0.6958329 0.9363764 0.9568852 1.1093089 1.2466774     5
-#>   farr_float 0.6653586 0.6669888 0.7580738 0.7696540 0.7878815 0.9004861     5
-#>       native 1.3795231 1.4347390 1.4967604 1.4747100 1.5183895 1.6764403     5
-#>      dipsaus 0.1991483 0.2097805 0.2609299 0.2138676 0.3054480 0.3764052     5
+#>         expr   min    lq  mean median    uq   max neval
+#>  farr_double 0.679 0.797 0.881  0.815 1.004 1.111     5
+#>   farr_float 0.651 0.741 0.795  0.788 0.812 0.981     5
+#>       native 1.344 1.391 1.516  1.506 1.659 1.680     5
+#>      dipsaus 0.206 0.209 0.233  0.241 0.246 0.264     5
 ```
 
-The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7x` as fast as base R. File array is `1.5~2x` as fast as base R. Both `dipsaus` and `filearray` use little extra memories.
+The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7~8x` as fast as base R. File array is `1.5~2x` as fast as base R. Both `dipsaus` and `filearray` have little memory over-heads.
 

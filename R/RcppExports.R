@@ -25,8 +25,8 @@ kinda_sorted <- function(idx, min_, buffer_count) {
     .Call(`_filearray_kinda_sorted`, idx, min_, buffer_count)
 }
 
-realToUint64 <- function(x, min_, max_, strict) {
-    .Call(`_filearray_realToUint64`, x, min_, max_, strict)
+realToInt64 <- function(x, min_, max_, strict) {
+    .Call(`_filearray_realToInt64`, x, min_, max_, strict)
 }
 
 locationList <- function(listOrEnv, dim, strict) {
@@ -65,8 +65,16 @@ get_float_na <- function() {
     .Call(`_filearray_get_float_na`)
 }
 
-FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL, half_size = FALSE) {
-    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames, half_size)
+FARR_meta <- function(filebase) {
+    .Call(`_filearray_FARR_meta`, filebase)
+}
+
+FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_dimnames = TRUE, thread_buffer = 2097152L, split_dim = 0L, strict = 1L) {
+    .Call(`_filearray_FARR_subset2`, filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict)
+}
+
+FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames) {
+    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames)
 }
 
 FARR_buffer_mapreduce <- function(filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type) {
@@ -89,3 +97,7 @@ FARR_subset_assign <- function(filebase, listOrEnv, dim, cum_part_sizes, split_d
     .Call(`_filearray_FARR_subset_assign`, filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_)
 }
 
+# Register entry points for exported C++ functions
+methods::setLoadAction(function(ns) {
+    .Call('_filearray_RcppExport_registerCCallable', PACKAGE = 'filearray')
+})

@@ -118,3 +118,133 @@ write_seq = function(fid, start, value, total_len, size, type){
     return(invisible())
 }
 
+#' @describeIn S3-filearray get element by position
+#' @export
+`[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE) {
+    if(!x$valid()){
+        stop("Invalid file array")
+    }
+    drop <- isTRUE(drop)
+    # file <- tempfile(); x <- filearray_create(file, c(300, 400, 100, 1))
+    filebase <- paste0(x$.filebase, x$.sep)
+    arglen <- ...length()
+    elem_size <- x$element_size()
+    dim <- x$dimension()
+    
+    listOrEnv <- list()
+    if(arglen == 1){
+        tmp <- tryCatch({
+            ...elt(1)
+        }, error = function(e){
+            NULL
+        })
+        if(length(tmp)){
+            stop("Subset FileArray only allows x[] or x[i,j,...] (single index like x[i] is not allowed, use x[[i]] instead)")
+        }
+        
+        
+    } else if(arglen > 1){
+        if(arglen != length(dim)){
+            stop("Subset FileArray dimension mismatch.")
+        }
+        missing_args <- check_missing_dots(environment())
+        
+        for(ii in seq_len(arglen)){
+            if( missing_args[[ii]] ){
+                listOrEnv[[ii]] <- seq_len(dim[[ii]])
+            } else {
+                tmp <- ...elt(ii)
+                if(!length(tmp)){
+                    tmp <- integer(0L)
+                } else if(is.logical(tmp)){
+                    if(length(tmp) > dim[[ii]]){
+                        stop("(subscript) logical subscript too long")
+                    }
+                    tmp <- rep(tmp, ceiling(dim[[ii]] / length(tmp)))
+                    tmp <- tmp[seq_len(dim[[ii]])]
+                    tmp <- seq_along(tmp)[tmp]
+                }
+                listOrEnv[[ii]] <- tmp
+            }
+        }
+    }
+    
+    # guess split dim
+    max_buffer <- max_buffer_size() / elem_size
+    
+    if(length(listOrEnv) == length(dim)){
+        idxrange <- sapply(listOrEnv, function(x){
+            if(!length(x) || all(is.na(x))){ return(1L) }
+            rg <- range(x, na.rm = TRUE)
+            return(rg[2] - rg[1] + 1)
+        })
+    } else {
+        idxrange <- dim
+    }
+    
+    # sapply(seq_len(length(dim) - 1), function(split_dim){
+    #     idx1dim <- dim[seq_len(split_dim)]
+    #     idx1dim[[split_dim]] <- idxrange[[split_dim]]
+    #     idx1len <- prod(idx1dim)
+    #     idx2len <- prod(dim[-seq_len(split_dim)])
+    #     nloops <- ceiling(idx1len / max_buffer)
+    #     (idx1len * nloops) * idx2len
+    # })
+    
+    # worst-case time-complexity
+    time_complexity <-
+        sapply(seq_len(length(dim) - 1), function(split_dim) {
+            dim[[length(dim)]] <- 1
+            idx1dim <- dim[seq_len(split_dim)]
+            idx1dim[[split_dim]] <- idxrange[[split_dim]]
+            idx1len <- prod(idx1dim)
+            idx2len <- prod(dim[-seq_len(split_dim)])
+            buffer_sz <-
+                ifelse(idx1len > max_buffer, max_buffer, idx1len)
+            nloops <- ceiling(idx1len / buffer_sz)
+            (idx1len * nloops + idx2len) * idx2len
+        })
+    split_dim <- which.min(time_complexity)
+    split_dim <- split_dim[[length(split_dim)]]
+    
+    # set buffer size
+    idx1len <- prod(dim[seq_len(split_dim)])
+    buffer_sz <- idx1len * elem_size
+    buffer_sz <- ifelse(buffer_sz > max_buffer, max_buffer, buffer_sz)
+    
+    current_bsz <- get_buffer_size()
+    on.exit({
+        set_buffer_size(current_bsz)
+    })
+    set_buffer_size(buffer_sz)
+    
+    dnames <- NULL
+    if(is.null(reshape)){
+        dnames <- x$dimnames()
+        if(length(dnames)){
+            dnames <- structure(
+                lapply(seq_along(dnames), function(ii){
+                    if(length(dnames[[ii]])){
+                        dnames[[ii]][listOrEnv[[ii]]]
+                    } else {
+                        NULL
+                    }
+                }),
+                names = names(dnames)
+            )
+        }
+    }
+    
+    re <- FARR_subset(
+        filebase = filebase,
+        type = x$sexp_type(),
+        listOrEnv = listOrEnv,
+        dim = dim,
+        cum_part_sizes = x$.partition_info[, 3],
+        reshape = reshape,
+        drop = drop,
+        strict = strict, 
+        split_dim = split_dim,
+        dimnames = dnames
+    )
+}

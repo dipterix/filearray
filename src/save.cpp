@@ -597,6 +597,7 @@ SEXP FARR_subset_assign(
         SEXP value_){
     List sch = schedule(listOrEnv, dim, cum_part_sizes,
                         split_dim, 1);
+    std::string fbase = correct_filebase(filebase);
     
     int n_protected = 0;
     SEXP value = value_;
@@ -608,22 +609,22 @@ SEXP FARR_subset_assign(
     
     switch(type) {
     case INTSXP:
-        FARR_subset_assign_integer(filebase, sch, value);
+        FARR_subset_assign_integer(fbase, sch, value);
         break;
     case REALSXP:
-        FARR_subset_assign_double(filebase, sch, value);
+        FARR_subset_assign_double(fbase, sch, value);
         break;
     case FLTSXP:
-        FARR_subset_assign_float(filebase, sch, value);
+        FARR_subset_assign_float(fbase, sch, value);
         break;
     case RAWSXP:
-        FARR_subset_assign_raw(filebase, sch, value);
+        FARR_subset_assign_raw(fbase, sch, value);
         break;
     case LGLSXP:
-        FARR_subset_assign_logical(filebase, sch, value);
+        FARR_subset_assign_logical(fbase, sch, value);
         break;
     case CPLXSXP:
-        FARR_subset_assign_complex(filebase, sch, value);
+        FARR_subset_assign_complex(fbase, sch, value);
         break;
     default:
         stop("SEXP type not supported.");

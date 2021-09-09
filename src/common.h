@@ -14,13 +14,19 @@ using namespace Rcpp;
 #endif
 
 /**********************************************************
- * Float type
+ * Extended types
  ***********************************************************/
 
 #define FLTSXP 26
 #define FLOAT(x) ((float*) INTEGER(x))
 
 const static float NA_FLOAT = NAN;
+
+
+#define INT64SXP REALSXP
+#define INTEGER64(x) ((int64_t*) REAL(x))
+
+
 
 /**********************************************************
  * Buffer size
@@ -64,10 +70,15 @@ void floatToReal(float* x, double* y, size_t nelem);
 
 double na_cplx_dbl();
 
+SEXP sub_vec(SEXP x, SEXP idx_int64);
+
+std::string correct_filebase(const std::string& filebase);
+
 /**********************************************************
  * Converts locations [A, B, C] to vector indices
  ***********************************************************/
-SEXP realToUint64(NumericVector x, const double min_, const double max_, const int strict);
+SEXP realToInt64(NumericVector x, const double min_ = NA_REAL, const double max_ = NA_REAL, const int strict = 1);
+SEXP realToInt64_inplace(SEXP x, const double min_ = NA_REAL, const double max_ = NA_REAL, const int strict = 1);
 
 SEXP seq_len_int64(const R_xlen_t len);
 

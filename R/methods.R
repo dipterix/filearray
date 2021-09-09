@@ -15,13 +15,12 @@ NULL
 
 #' @describeIn S3-filearray get element by position
 #' @export
-`[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE) {
+`[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE) {
     if(!x$valid()){
         stop("Invalid file array")
     }
     drop <- isTRUE(drop)
     # file <- tempfile(); x <- filearray_create(file, c(300, 400, 100, 1))
-    filebase <- paste0(x$.filebase, x$.sep)
     arglen <- ...length()
     elem_size <- x$element_size()
     dim <- x$dimension()
@@ -76,16 +75,6 @@ NULL
     } else {
         idxrange <- dim
     }
-    
-    # sapply(seq_len(length(dim) - 1), function(split_dim){
-    #     idx1dim <- dim[seq_len(split_dim)]
-    #     idx1dim[[split_dim]] <- idxrange[[split_dim]]
-    #     idx1len <- prod(idx1dim)
-    #     idx2len <- prod(dim[-seq_len(split_dim)])
-    #     nloops <- ceiling(idx1len / max_buffer)
-    #     (idx1len * nloops) * idx2len
-    # })
-    
     # worst-case time-complexity
     time_complexity <-
         sapply(seq_len(length(dim) - 1), function(split_dim) {
@@ -102,45 +91,16 @@ NULL
     split_dim <- which.min(time_complexity)
     split_dim <- split_dim[[length(split_dim)]]
     
-    # set buffer size
-    idx1len <- prod(dim[seq_len(split_dim)])
-    buffer_sz <- idx1len * elem_size
-    buffer_sz <- ifelse(buffer_sz > max_buffer, max_buffer, buffer_sz)
-    
-    current_bsz <- get_buffer_size()
-    on.exit({
-        set_buffer_size(current_bsz)
-    })
-    set_buffer_size(buffer_sz)
-    
-    dnames <- NULL
-    if(is.null(reshape)){
-        dnames <- x$dimnames()
-        if(length(dnames)){
-            dnames <- structure(
-                lapply(seq_along(dnames), function(ii){
-                    if(length(dnames[[ii]])){
-                        dnames[[ii]][listOrEnv[[ii]]]
-                    } else {
-                        NULL
-                    }
-                }),
-                names = names(dnames)
-            )
-        }
-    }
-    
-    re <- FARR_subset(
-        filebase = filebase,
-        type = x$sexp_type(),
+
+    FARR_subset2(
+        filebase = x$.filebase,
         listOrEnv = listOrEnv,
-        dim = dim,
-        cum_part_sizes = x$.partition_info[, 3],
         reshape = reshape,
         drop = drop,
-        strict = strict, 
+        use_dimnames = isTRUE(dimnames),
+        thread_buffer = max_buffer_size(), 
         split_dim = split_dim,
-        dimnames = dnames
+        strict = isTRUE(strict)
     )
 }
 

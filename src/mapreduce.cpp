@@ -235,6 +235,7 @@ SEXP FARR_buffer_mapreduce(
     const int bufferlen, const SEXPTYPE x_type
 ){
     int nprot = 0;
+    std::string fbase = correct_filebase(filebase);
     int64_t count = 1;
     int64_t count2 = 1;
     R_xlen_t nparts = partition_cumlens.length();
@@ -253,8 +254,8 @@ SEXP FARR_buffer_mapreduce(
     
     List ret = List::create();
     
-    SEXP dim_ = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1)); nprot++;
-    SEXP pcumlens = PROTECT(realToUint64(partition_cumlens, 0, 1200000000000000000, 1)); nprot++;
+    SEXP dim_ = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1)); nprot++;
+    SEXP pcumlens = PROTECT(realToInt64(partition_cumlens, 0, 1200000000000000000, 1)); nprot++;
     int64_t* dimptr = (int64_t*) REAL(dim_);
     int64_t plen = 1;
     for(R_xlen_t ii = 0; ii < dim.length() - 1; ii++, dimptr++){
@@ -266,7 +267,7 @@ SEXP FARR_buffer_mapreduce(
     std::string partition_path = "";
     FILE* conn = NULL;
     for(R_xlen_t part = 0; part < nparts; part++){
-        partition_path = filebase + std::to_string(part) + ".farr";
+        partition_path = fbase + std::to_string(part) + ".farr";
         
         if(part == 0){
             count = count2;

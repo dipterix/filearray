@@ -117,8 +117,9 @@ SEXP FARR_collapse(
         bool remove_na = false,
         double scale = 1.0
 ){
+    std::string fbase = correct_filebase(filebase);
     int ndims = dim.length();
-    SEXP dim_int64 = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1));
+    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1));
     
     // 1. check if keep has lastdim
     // 2. calculate ret size
@@ -142,7 +143,7 @@ SEXP FARR_collapse(
     
     int64_t* last_dimptr = ((int64_t*) REAL(dim_int64)) + (ndims - 1);
     
-    SEXP cum_part64 = PROTECT(realToUint64(cum_part, 0, 1200000000000000000, 1));
+    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, 1200000000000000000, 1));
     int64_t* cum_part64ptr = (int64_t*) REAL(cum_part64);
     R_xlen_t nparts = Rf_xlength(cum_part64);
     
@@ -189,7 +190,7 @@ SEXP FARR_collapse(
         last_size += part_size;
         
         *last_dimptr = part_size;
-        partition_path = filebase + std::to_string(part) + ".farr";
+        partition_path = fbase + std::to_string(part) + ".farr";
         
         conn = fopen(partition_path.c_str(), "rb"); 
         
@@ -380,6 +381,7 @@ SEXP FARR_collapse_complex(
         double scale = 1.0
 ){
     int nprot = 0;
+    std::string fbase = correct_filebase(filebase);
     int ndims = dim.length();
     
     // 1. check if keep has lastdim
@@ -401,10 +403,10 @@ SEXP FARR_collapse_complex(
     SEXP ret_cplx = PROTECT(Rf_allocVector(CPLXSXP, retlen)); 
     Rf_setAttrib(ret_cplx, R_DimSymbol, dim[keep - 1]);
     
-    SEXP dim_int64 = PROTECT(realToUint64(dim, 0, 1200000000000000000, 1)); nprot++;
+    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1)); nprot++;
     int64_t* last_dimptr = ((int64_t*) REAL(dim_int64)) + (ndims - 1);
     
-    SEXP cum_part64 = PROTECT(realToUint64(cum_part, 0, 1200000000000000000, 1)); nprot++;
+    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, 1200000000000000000, 1)); nprot++;
     int64_t* cum_part64ptr = (int64_t*) REAL(cum_part64);
     R_xlen_t nparts = Rf_xlength(cum_part64);
     
@@ -435,7 +437,7 @@ SEXP FARR_collapse_complex(
         last_size += part_size;
         
         *last_dimptr = part_size;
-        partition_path = filebase + std::to_string(part) + ".farr";
+        partition_path = fbase + std::to_string(part) + ".farr";
         
         conn = fopen(partition_path.c_str(), "rb"); 
         

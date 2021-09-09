@@ -1,5 +1,6 @@
 #include "openmp.h"
 #include "common.h"
+#include "load.h"
 using namespace Rcpp;
 
 SEXP FARR_subset_integer(const std::string& filebase, const List sch){
@@ -833,11 +834,11 @@ SEXP FARR_subset(const std::string& filebase,
                 const NumericVector& dim, 
                 const NumericVector& cum_part_sizes,
                 const int split_dim, 
-                const SEXP reshape = R_NilValue, 
-                const bool drop = false,
-                const int strict = 1,
-                const SEXP dimnames = R_NilValue,
-                const bool half_size = false){
+                const SEXP reshape, 
+                const bool drop,
+                const int strict,
+                const SEXP dimnames){
+    std::string fbase = correct_filebase(filebase);
     List sch = schedule(listOrEnv, dim, cum_part_sizes, 
                         split_dim, strict);
     
@@ -846,22 +847,22 @@ SEXP FARR_subset(const std::string& filebase,
     
     switch(type){
     case INTSXP:
-        ret = PROTECT(FARR_subset_integer(filebase, sch));
+        ret = PROTECT(FARR_subset_integer(fbase, sch));
         break;
     case REALSXP: 
-        ret = PROTECT(FARR_subset_double(filebase, sch));
+        ret = PROTECT(FARR_subset_double(fbase, sch));
         break;
     case FLTSXP:
-        ret = PROTECT(FARR_subset_float(filebase, sch));
+        ret = PROTECT(FARR_subset_float(fbase, sch));
         break;
     case RAWSXP: 
-        ret = PROTECT(FARR_subset_raw(filebase, sch));
+        ret = PROTECT(FARR_subset_raw(fbase, sch));
         break;
     case LGLSXP: 
-        ret = PROTECT(FARR_subset_logical(filebase, sch));
+        ret = PROTECT(FARR_subset_logical(fbase, sch));
         break;
     case CPLXSXP: 
-        ret = PROTECT(FARR_subset_complex(filebase, sch));
+        ret = PROTECT(FARR_subset_complex(fbase, sch));
         break;
     default:
         stop("Unsupported SEXP type");
@@ -880,6 +881,8 @@ SEXP FARR_subset(const std::string& filebase,
     
     return(ret);
 }
+
+
 
 /*** R
 # devtools::load_all()
@@ -913,7 +916,7 @@ write_partition(file, 1, c(3,4,2), as.double(37:60), "double")
 # # unlink(file)
 
 
-# re <- structure(realToUint64(c(1L,2L,NA_integer_), 1, 3), class = 'integer64')
+# re <- structure(realToInt64(c(1L,2L,NA_integer_), 1, 3), class = 'integer64')
 # re
 # 
 # a <- bit64::as.integer64.double(c(1,2,NA))

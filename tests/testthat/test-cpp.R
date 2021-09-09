@@ -1,5 +1,5 @@
 as_int64 <- function(x){
-    realToUint64(x, -2L^30, 2L^30, 0L)
+    realToInt64(x, -2L^30, 2L^30, 0L)
 }
 
 test_that("C++: Utils", {

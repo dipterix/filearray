@@ -17,7 +17,7 @@
 \alias{subset.FileArray}
 \title{'S3' methods for 'FileArray'}
 \usage{
-\method{[}{FileArray}(x, ..., drop = TRUE, reshape = NULL, strict = TRUE)
+\method{[}{FileArray}(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE)
 
 \method{[}{FileArray}(x, ...) <- value
 
