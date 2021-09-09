@@ -7,7 +7,7 @@
 [![Develop](https://dipterix.r-universe.dev/badges/filearray)](https://dipterix.r-universe.dev/ui#builds)
 <!-- badges: end -->
 
-Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, integer, complex, logical and raw).
+Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, float, integer, complex, logical and raw).
 
 ## Installation
 
@@ -111,9 +111,15 @@ For complex numbers, `transform` is a little bit different:
 * `sqrt`: `|x|` (modulus)
 * `normalize`: `x / |x|` (unit length)
 
-Note: when array data range is large (say `x[[1]]=1`, but `x[[2]]=10^20`), `collapse` method might lose precision. This is `double` only uses 8 bytes of memory space. When calculating summations, R internally uses `long double` to prevent precision loss, but current `filearray` implementation does not, causing floating error around 16 decimal place. However, the relative difference to the native implementation is marginal (by floating number).
+## Notes on precision
 
-## Notes on `Complex` type
+1. `complex` numbers: In native `R`, complex numbers are combination of two `double` numbers - real and imaginary (total 16 bytes). In `filearray`, complex numbers are coerced to two `float` numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, `1.0000001` will be store as `1`, or `123456789` will be stored as `123456792` (first 7 digits are accurate).
 
-In native `R`, complex numbers are combination of two `double` numbers - real and imaginary (total 16 bytes). In `filearray`, complex numbers are coerced to two `float` numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, `1.0000001` will be store as `1`, or `123456789` will be stored as `123456792` (first 7 digits are accurate).
-Please be aware of this "feature" when choosing complex data type.
+2. `float` type: Native R does not have float type. All numeric values are stored in double precision. Since float numbers use half of the space, float arrays can be faster when hard drive speed is the bottle-neck (see [performance comparisons](https://dipterix.org/filearray/articles/performance.html)). However coercing double to float comes at costs:
+  a). float number has less precision 
+  b). float number has smaller range ($3.4\times 10^{38}$) than double ($1.7\times 10^{308}$)
+hence use with caution when data needs high precision or the max is super large.
+
+3. `collapse` function: when data range is large (say `x[[1]]=1`, but `x[[2]]=10^20`), `collapse` method might lose precision. This is `double` only uses 8 bytes of memory space. When calculating summations, R internally uses `long double` to prevent precision loss, but current `filearray` implementation uses `double`, causing floating error around 16 decimal place. 
+
+

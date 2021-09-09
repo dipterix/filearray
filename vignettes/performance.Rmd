@@ -51,14 +51,16 @@ y <- array(rnorm(length(x_dbl)), dim(x_dbl))
 
 The simulation contains
 
-* Write speed
-  - Writing along margin
-  - Writing chunks of data
-* Real speed
-  - Read all the data
-  - Read along margins
-  - Random subset
-* Collapse
+* [Write speed](#write)
+  - [Writing along margin](#write-along-margin)
+  - [Writing chunks of data](#write-chunks-of-data)
+* [Read speed](#read)
+  - [Read all the data](#read-the-whole-array)
+  - [Read along margins](#read-along-margins)
+  - [Random access](#random-access)
+* [Collapse](#collapse)
+
+## Write
 
 ### 1. Write along margin
 
@@ -289,17 +291,13 @@ microbenchmark::microbenchmark(
   unit = "s", times = 5
 )
 
-#> Unit: milliseconds
-#>                          expr       min        lq      mean    median        uq        max neval
-#>  farr_double_partition_margin  1.792438  2.308669  5.369872  2.711576  3.744694 195.816943   100
-#>       farr_double_fast_margin  1.404045  1.699532  3.620348  2.021320  3.628787  93.920340   100
-#>       farr_double_slow_margin 22.748686 23.529387 37.885944 24.545593 26.726116 299.898108   100
-#>   farr_float_partition_margin  1.226761  2.018533  3.364908  2.463833  3.448735  22.872424   100
-#>        farr_float_fast_margin  1.267064  1.627638  5.287114  1.990550  3.370815 218.804741   100
-#>        farr_float_slow_margin 13.349108 14.117899 26.336786 15.020063 17.870629 220.553145   100
-#>       native_partition_margin  3.535594  4.034790  4.469297  4.152910  4.642656   8.365107   100
-#>            native_fast_margin  3.519645  4.035281  4.431636  4.111726  4.660654   9.594041   100
-#>            native_slow_margin 21.322911 22.716686 28.260453 23.391484 25.876576 102.389341   100
+#> Unit: seconds
+#>         expr       min        lq      mean    median        uq       max neval
+#>  farr_double 0.6731775 0.6958329 0.9363764 0.9568852 1.1093089 1.2466774     5
+#>   farr_float 0.6653586 0.6669888 0.7580738 0.7696540 0.7878815 0.9004861     5
+#>       native 1.3795231 1.4347390 1.4967604 1.4747100 1.5183895 1.6764403     5
+#>      dipsaus 0.1991483 0.2097805 0.2609299 0.2138676 0.3054480 0.3764052     5
 ```
 
-The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `6x` as fast as base R. File array is `2x` as fast as base R.
+The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7x` as fast as base R. File array is `1.5~2x` as fast as base R. Both `dipsaus` and `filearray` use little extra memories.
+
