@@ -14,8 +14,8 @@
 <script src="pkgdown.js"></script><meta property="og:title" content="File-Backed Array for Out-of-Memory Computation">
 <meta property="og:description" content="Stores large arrays in files to avoid occupying large
     memories. Implemented with super fast gigabyte-level multi-threaded 
-    reading/writing via OpenMP. Supports multiple 
-    non-character data types (double, integer, logical and raw).">
+    reading/writing via OpenMP. Supports multiple non-character data 
+    types (double, float, complex, integer, logical, and raw).">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -89,7 +89,7 @@
 <a href="#file-backed-array-for-out-of-memory-computation" class="anchor"></a>File-Backed Array for Out-of-memory Computation</h1></div>
 <!-- badges: start -->
 
-<p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, integer, complex, logical and raw).</p>
+<p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -194,13 +194,16 @@ a[1] - b[1]</code></pre>
 <li>
 <code>normalize</code>: <code>x / |x|</code> (unit length)</li>
 </ul>
-<p>Note: when array data range is large (say <code>x[[1]]=1</code>, but <code>x[[2]]=10^20</code>), <code>collapse</code> method might lose precision. This is <code>double</code> only uses 8 bytes of memory space. When calculating summations, R internally uses <code>long double</code> to prevent precision loss, but current <code>filearray</code> implementation does not, causing floating error around 16 decimal place. However, the relative difference to the native implementation is marginal (by floating number).</p>
 </div>
 </div>
-<div id="notes-on-complex-type" class="section level2">
+<div id="notes-on-precision" class="section level2">
 <h2 class="hasAnchor">
-<a href="#notes-on-complex-type" class="anchor"></a>Notes on <code>Complex</code> type</h2>
-<p>In native <code>R</code>, complex numbers are combination of two <code>double</code> numbers - real and imaginary (total 16 bytes). In <code>filearray</code>, complex numbers are coerced to two <code>float</code> numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, <code>1.0000001</code> will be store as <code>1</code>, or <code>123456789</code> will be stored as <code>123456792</code> (first 7 digits are accurate). Please be aware of this “feature” when choosing complex data type.</p>
+<a href="#notes-on-precision" class="anchor"></a>Notes on precision</h2>
+<ol>
+<li><p><code>complex</code> numbers: In native <code>R</code>, complex numbers are combination of two <code>double</code> numbers - real and imaginary (total 16 bytes). In <code>filearray</code>, complex numbers are coerced to two <code>float</code> numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, <code>1.0000001</code> will be store as <code>1</code>, or <code>123456789</code> will be stored as <code>123456792</code> (first 7 digits are accurate).</p></li>
+<li><p><code>float</code> type: Native R does not have float type. All numeric values are stored in double precision. Since float numbers use half of the space, float arrays can be faster when hard drive speed is the bottle-neck (see <a href="https://dipterix.org/filearray/articles/performance.html">performance comparisons</a>). However coercing double to float comes at costs: a). float number has less precision b). float number has smaller range (<span class="math inline">3.4 × 10<sup>38</sup></span>) than double (<span class="math inline">1.7 × 10<sup>308</sup></span>) hence use with caution when data needs high precision or the max is super large.</p></li>
+<li><p><code>collapse</code> function: when data range is large (say <code>x[[1]]=1</code>, but <code>x[[2]]=10^20</code>), <code>collapse</code> method might lose precision. This is <code>double</code> only uses 8 bytes of memory space. When calculating summations, R internally uses <code>long double</code> to prevent precision loss, but current <code>filearray</code> implementation uses <code>double</code>, causing floating error around 16 decimal place.</p></li>
+</ol>
 </div>
 </div>
   </div>

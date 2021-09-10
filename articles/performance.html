@@ -126,21 +126,27 @@
 <a href="#simulation" class="anchor"></a>Simulation</h2>
 <p>The simulation contains</p>
 <ul>
-<li>Write speed
+<li>
+<a href="#write">Write speed</a>
 <ul>
-<li>Writing along margin</li>
-<li>Writing chunks of data</li>
+<li><a href="#write-along-margin">Writing along margin</a></li>
+<li><a href="#write-chunks-of-data">Writing chunks of data</a></li>
 </ul>
 </li>
-<li>Real speed
+<li>
+<a href="#read">Read speed</a>
 <ul>
-<li>Read all the data</li>
-<li>Read along margins</li>
-<li>Random subset</li>
+<li><a href="#read-the-whole-array">Read all the data</a></li>
+<li><a href="#read-along-margins">Read along margins</a></li>
+<li><a href="#random-access">Random access</a></li>
 </ul>
 </li>
-<li>Collapse</li>
+<li><a href="#collapse">Collapse</a></li>
 </ul>
+</div>
+<div id="write" class="section level2">
+<h2 class="hasAnchor">
+<a href="#write" class="anchor"></a>Write</h2>
 <div id="write-along-margin" class="section level3">
 <h3 class="hasAnchor">
 <a href="#write-along-margin" class="anchor"></a>1. Write along margin</h3>
@@ -362,18 +368,13 @@
   unit <span class="op">=</span> <span class="st">"s"</span>, times <span class="op">=</span> <span class="fl">5</span>
 <span class="op">)</span>
 
-<span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;                          expr       min        lq      mean    median        uq        max neval</span>
-<span class="co">#&gt;  farr_double_partition_margin  1.792438  2.308669  5.369872  2.711576  3.744694 195.816943   100</span>
-<span class="co">#&gt;       farr_double_fast_margin  1.404045  1.699532  3.620348  2.021320  3.628787  93.920340   100</span>
-<span class="co">#&gt;       farr_double_slow_margin 22.748686 23.529387 37.885944 24.545593 26.726116 299.898108   100</span>
-<span class="co">#&gt;   farr_float_partition_margin  1.226761  2.018533  3.364908  2.463833  3.448735  22.872424   100</span>
-<span class="co">#&gt;        farr_float_fast_margin  1.267064  1.627638  5.287114  1.990550  3.370815 218.804741   100</span>
-<span class="co">#&gt;        farr_float_slow_margin 13.349108 14.117899 26.336786 15.020063 17.870629 220.553145   100</span>
-<span class="co">#&gt;       native_partition_margin  3.535594  4.034790  4.469297  4.152910  4.642656   8.365107   100</span>
-<span class="co">#&gt;            native_fast_margin  3.519645  4.035281  4.431636  4.111726  4.660654   9.594041   100</span>
-<span class="co">#&gt;            native_slow_margin 21.322911 22.716686 28.260453 23.391484 25.876576 102.389341   100</span></code></pre></div>
-<p>The <code>dipsaus</code> package uses multiple threads to collapse arrays in-memory. It is <code>6x</code> as fast as base R. File array is <code>2x</code> as fast as base R.</p>
+<span class="co">#&gt; Unit: seconds</span>
+<span class="co">#&gt;         expr       min        lq      mean    median        uq       max neval</span>
+<span class="co">#&gt;  farr_double 0.6731775 0.6958329 0.9363764 0.9568852 1.1093089 1.2466774     5</span>
+<span class="co">#&gt;   farr_float 0.6653586 0.6669888 0.7580738 0.7696540 0.7878815 0.9004861     5</span>
+<span class="co">#&gt;       native 1.3795231 1.4347390 1.4967604 1.4747100 1.5183895 1.6764403     5</span>
+<span class="co">#&gt;      dipsaus 0.1991483 0.2097805 0.2609299 0.2138676 0.3054480 0.3764052     5</span></code></pre></div>
+<p>The <code>dipsaus</code> package uses multiple threads to collapse arrays in-memory. It is <code>7x</code> as fast as base R. File array is <code>1.5~2x</code> as fast as base R. Both <code>dipsaus</code> and <code>filearray</code> use little extra memories.</p>
 </div>
   </div>
 
