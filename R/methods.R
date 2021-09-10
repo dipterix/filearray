@@ -8,6 +8,7 @@
 #' @param drop whether to drop dimensions; see topic \code{\link[base]{Extract}}
 #' @param reshape a new dimension to set before returning subset results; default is \code{NULL} (use default dimensions)
 #' @param strict whether to allow indices to exceed bound; currently only accept \code{TRUE}
+#' @param dimnames whether to preserve \code{\link[base]{dimnames}}
 #' @param value value to substitute or set
 #' @param na.rm whether to remove \code{NA} values during the calculation
 #' @param i,... index set, or passed to other methods

@@ -52,6 +52,8 @@
 
 \item{strict}{whether to allow indices to exceed bound; currently only accept \code{TRUE}}
 
+\item{dimnames}{whether to preserve \code{\link[base]{dimnames}}}
+
 \item{value}{value to substitute or set}
 
 \item{i, ...}{index set, or passed to other methods}
