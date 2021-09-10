@@ -254,8 +254,8 @@ SEXP FARR_buffer_mapreduce(
     
     List ret = List::create();
     
-    SEXP dim_ = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1)); nprot++;
-    SEXP pcumlens = PROTECT(realToInt64(partition_cumlens, 0, 1200000000000000000, 1)); nprot++;
+    SEXP dim_ = PROTECT(realToInt64(dim, 0, NA_REAL, 1)); nprot++;
+    SEXP pcumlens = PROTECT(realToInt64(partition_cumlens, 0, NA_REAL, 1)); nprot++;
     int64_t* dimptr = (int64_t*) REAL(dim_);
     int64_t plen = 1;
     for(R_xlen_t ii = 0; ii < dim.length() - 1; ii++, dimptr++){

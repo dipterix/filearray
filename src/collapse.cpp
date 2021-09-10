@@ -119,7 +119,7 @@ SEXP FARR_collapse(
 ){
     std::string fbase = correct_filebase(filebase);
     int ndims = dim.length();
-    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1));
+    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, NA_REAL, 1));
     
     // 1. check if keep has lastdim
     // 2. calculate ret size
@@ -143,7 +143,7 @@ SEXP FARR_collapse(
     
     int64_t* last_dimptr = ((int64_t*) REAL(dim_int64)) + (ndims - 1);
     
-    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, 1200000000000000000, 1));
+    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, NA_REAL, 1));
     int64_t* cum_part64ptr = (int64_t*) REAL(cum_part64);
     R_xlen_t nparts = Rf_xlength(cum_part64);
     
@@ -403,10 +403,10 @@ SEXP FARR_collapse_complex(
     SEXP ret_cplx = PROTECT(Rf_allocVector(CPLXSXP, retlen)); 
     Rf_setAttrib(ret_cplx, R_DimSymbol, dim[keep - 1]);
     
-    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, 1200000000000000000, 1)); nprot++;
+    SEXP dim_int64 = PROTECT(realToInt64(dim, 0, NA_REAL, 1)); nprot++;
     int64_t* last_dimptr = ((int64_t*) REAL(dim_int64)) + (ndims - 1);
     
-    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, 1200000000000000000, 1)); nprot++;
+    SEXP cum_part64 = PROTECT(realToInt64(cum_part, 0, NA_REAL, 1)); nprot++;
     int64_t* cum_part64ptr = (int64_t*) REAL(cum_part64);
     R_xlen_t nparts = Rf_xlength(cum_part64);
     
