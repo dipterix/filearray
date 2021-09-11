@@ -26,9 +26,10 @@ SEXP each_partition_integer(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     return( ret );
@@ -62,9 +63,10 @@ SEXP each_partition_float(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     return( ret );
@@ -96,9 +98,10 @@ SEXP each_partition_double(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     return( ret );
@@ -130,9 +133,10 @@ SEXP each_partition_raw(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     return( ret );
@@ -174,9 +178,10 @@ SEXP each_partition_logical(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     UNPROTECT(1);
@@ -216,9 +221,10 @@ SEXP each_partition_complex(
         if( rest_len > bufferlen ){
             rest_len = bufferlen;
         }
-        ret.push_back( fun(buffer_cplx, wrap(rest_len), wrap(*count)) );
+        ret.push_back( PROTECT(fun(buffer_cplx, wrap(rest_len), wrap(*count))) );
         current_pos += rest_len;
         *count += rest_len;
+        UNPROTECT(1);
     }
     
     return( ret );

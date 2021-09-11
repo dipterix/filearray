@@ -1,5 +1,5 @@
 as_int64 <- function(x){
-    realToInt64(x, -2L^30, 2L^30, 0L)
+    realToInt64(x, NA_real_, NA_real_, 0L)
 }
 
 test_that("C++: Utils", {
@@ -51,7 +51,6 @@ test_that("C++: Utils", {
     expect_equal(loc2idx(locs, dim), as_int64(re1))
     
 })
-
 
 test_that("C++: IO - subset/assign", {
     bsz <- get_buffer_size()
@@ -320,7 +319,6 @@ test_that("C++: IO - subset/assign - float", {
     
     unlink(file, recursive = TRUE)
 })
-
 
 test_that("C++: IO - type conversion", {
     

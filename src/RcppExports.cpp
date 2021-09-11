@@ -216,43 +216,21 @@ END_RCPP
 }
 // FARR_meta
 List FARR_meta(const std::string& filebase);
-static SEXP _filearray_FARR_meta_try(SEXP filebaseSEXP) {
+RcppExport SEXP _filearray_FARR_meta(SEXP filebaseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_meta(filebase));
     return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _filearray_FARR_meta(SEXP filebaseSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_filearray_FARR_meta_try(filebaseSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
+END_RCPP
 }
 // FARR_subset2
 SEXP FARR_subset2(const std::string& filebase, const SEXP listOrEnv, const SEXP reshape, const bool drop, const bool use_dimnames, const size_t thread_buffer, int split_dim, const int strict);
-static SEXP _filearray_FARR_subset2_try(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP use_dimnamesSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP, SEXP strictSEXP) {
+RcppExport SEXP _filearray_FARR_subset2(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP use_dimnamesSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP, SEXP strictSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type listOrEnv(listOrEnvSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type reshape(reshapeSEXP);
@@ -262,50 +240,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type split_dim(split_dimSEXP);
     Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_subset2(filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _filearray_FARR_subset2(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP use_dimnamesSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP, SEXP strictSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_filearray_FARR_subset2_try(filebaseSEXP, listOrEnvSEXP, reshapeSEXP, dropSEXP, use_dimnamesSEXP, thread_bufferSEXP, split_dimSEXP, strictSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// FARR_subset
-SEXP FARR_subset(const std::string& filebase, const SEXPTYPE type, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXP reshape, const bool drop, const int strict, const SEXP dimnames);
-RcppExport SEXP _filearray_FARR_subset(SEXP filebaseSEXP, SEXP typeSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP strictSEXP, SEXP dimnamesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const SEXPTYPE >::type type(typeSEXP);
-    Rcpp::traits::input_parameter< const SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_part_sizes(cum_part_sizesSEXP);
-    Rcpp::traits::input_parameter< const int >::type split_dim(split_dimSEXP);
-    Rcpp::traits::input_parameter< const SEXP >::type reshape(reshapeSEXP);
-    Rcpp::traits::input_parameter< const bool >::type drop(dropSEXP);
-    Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
-    Rcpp::traits::input_parameter< const SEXP >::type dimnames(dimnamesSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -359,20 +293,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// FARR_subset_assign
-SEXP FARR_subset_assign(const std::string& filebase, const SEXP listOrEnv, const NumericVector& dim, const NumericVector& cum_part_sizes, const int split_dim, const SEXPTYPE type, SEXP value_);
-RcppExport SEXP _filearray_FARR_subset_assign(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP cum_part_sizesSEXP, SEXP split_dimSEXP, SEXP typeSEXP, SEXP value_SEXP) {
+// FARR_subset_assign2
+SEXP FARR_subset_assign2(const std::string& filebase, SEXP value_, const SEXP listOrEnv, const size_t thread_buffer, int split_dim);
+RcppExport SEXP _filearray_FARR_subset_assign2(SEXP filebaseSEXP, SEXP value_SEXP, SEXP listOrEnvSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
-    Rcpp::traits::input_parameter< const SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_part_sizes(cum_part_sizesSEXP);
-    Rcpp::traits::input_parameter< const int >::type split_dim(split_dimSEXP);
-    Rcpp::traits::input_parameter< const SEXPTYPE >::type type(typeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type value_(value_SEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign(filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_));
+    Rcpp::traits::input_parameter< const SEXP >::type listOrEnv(listOrEnvSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type thread_buffer(thread_bufferSEXP);
+    Rcpp::traits::input_parameter< int >::type split_dim(split_dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign2(filebase, value_, listOrEnv, thread_buffer, split_dim));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -381,16 +313,12 @@ END_RCPP
 static int _filearray_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("List(*FARR_meta)(const std::string&)");
-        signatures.insert("SEXP(*FARR_subset2)(const std::string&,const SEXP,const SEXP,const bool,const bool,const size_t,int,const int)");
     }
     return signatures.find(sig) != signatures.end();
 }
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _filearray_RcppExport_registerCCallable() { 
-    R_RegisterCCallable("filearray", "_filearray_FARR_meta", (DL_FUNC)_filearray_FARR_meta_try);
-    R_RegisterCCallable("filearray", "_filearray_FARR_subset2", (DL_FUNC)_filearray_FARR_subset2_try);
     R_RegisterCCallable("filearray", "_filearray_RcppExport_validate", (DL_FUNC)_filearray_RcppExport_validate);
     return R_NilValue;
 }
@@ -414,12 +342,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_get_float_na", (DL_FUNC) &_filearray_get_float_na, 0},
     {"_filearray_FARR_meta", (DL_FUNC) &_filearray_FARR_meta, 1},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
-    {"_filearray_FARR_subset", (DL_FUNC) &_filearray_FARR_subset, 10},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 7},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
     {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
-    {"_filearray_FARR_subset_assign", (DL_FUNC) &_filearray_FARR_subset_assign, 7},
+    {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
     {"_filearray_RcppExport_registerCCallable", (DL_FUNC) &_filearray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

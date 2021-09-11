@@ -208,16 +208,22 @@ NULL
         split_dim <- max(which(cprod <= buffer_sz))
     }
     
-    filebase <- paste0(x$.filebase, x$.sep)
-    FARR_subset_assign(
-        filebase,
+    # filebase <- paste0(x$.filebase, x$.sep)
+    # FARR_subset_assign(
+    #     filebase,
+    #     listOrEnv = locs,
+    #     dim = x$dimension(),
+    #     cum_part_sizes = x$.partition_info[, 3],
+    #     split_dim = split_dim,
+    #     type = x$sexp_type(),
+    #     value_ = value
+    # )
+    FARR_subset_assign2(
+        filebase = x$.filebase, 
+        value_ = value,
         listOrEnv = locs,
-        dim = x$dimension(),
-        cum_part_sizes = x$.partition_info[, 3],
-        split_dim = split_dim,
-        type = x$sexp_type(),
-        value_ = value
-    )
+        split_dim = split_dim
+    ) 
     invisible(x)
 }
 

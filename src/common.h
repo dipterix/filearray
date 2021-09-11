@@ -29,7 +29,7 @@ const static float NA_FLOAT = NAN;
 
 
 /**********************************************************
- * Buffer size
+ * Buffer
  ***********************************************************/
 
 int system_buffer_size();
@@ -39,6 +39,10 @@ int set_buffer_size(int size);
 int get_buffer_size();
 
 int kinda_sorted(SEXP idx, int64_t min_, int64_t buffer_count);
+
+void set_buffer(SEXP dim, int elem_size, size_t buffer_bytes, int split_dim);
+
+SEXPTYPE file_buffer_sxptype(SEXPTYPE array_type);
 
 /**********************************************************
  * Endianess
@@ -74,6 +78,12 @@ SEXP sub_vec(SEXP x, SEXP idx_int64);
 
 std::string correct_filebase(const std::string& filebase);
 
+SEXP reshape_or_drop(SEXP x, SEXP reshape, bool drop);
+
+SEXP subset_dimnames(SEXP dimnames, SEXP sliceIdx);
+
+SEXP convert_as(SEXP x, SEXPTYPE type);
+
 /**********************************************************
  * Converts locations [A, B, C] to vector indices
  ***********************************************************/
@@ -88,8 +98,6 @@ SEXP addCycle(SEXP x, SEXP ret, const R_xlen_t step = 1, const R_xlen_t mag = 1)
 
 SEXP loc2idx(const List sliceIdx, const NumericVector& dim);
 
-SEXP reshape_or_drop(SEXP x, SEXP reshape, bool drop);
-
 /**********************************************************
  * Schedule reading
  ***********************************************************/
@@ -98,138 +106,7 @@ List schedule(const SEXP listOrEnv,
               const NumericVector& cum_part_sizes,
               const int split_dim, const int strict = 1);
 
-/**********************************************************
- * Read partition
- ***********************************************************/
-template <typename T,  typename B>
-inline void subset_partition(
-        FILE* conn, B* buffer, int buffer_bytes, 
-        T* retptr, const R_xlen_t block_size, 
-        SEXP idx1, int64_t idx1_start, int64_t idx1_end,
-        SEXP idx2, int64_t idx2_start, int64_t idx2_end,
-        int idx1_sorted, int idx2_sorted,
-        B na_stored, T na_actual,
-        int swap_endian = 0
-) {
-    double content_size = 0;
-    int elem_size = sizeof(B);
-    R_xlen_t buffer_size = buffer_bytes / elem_size;
-    if( buffer_size > block_size ){
-        buffer_size = block_size;
-    }
-    B* bufferptr = (B*) buffer;
-    B* bufferptr2 = bufferptr;
-    
-    fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-    lendian_fread(&(content_size), 8, 1, conn);
-    
-    int64_t start_idx = idx1_start;
-    int64_t end_idx = 0;
-    int64_t conn_pos = 0;
-    
-    int64_t* idx1ptr = (int64_t*) REAL(idx1);
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    int64_t* idx2ptr = (int64_t*) REAL(idx2);
-    R_xlen_t idx2len = Rf_xlength(idx2);
-    
-    R_xlen_t ii = 0, jj = 0, ll = 0, ii_idx1 = 0;
-    T* retptr2 = retptr;
-    T* retptr3 = retptr;
-    
-    // Rcout << idx2_start << "---\n";
-    
-    for(int64_t block = idx2_start; block <= idx2_end; block++){
-        // find block in idx2
-        for(ii_idx1 = 0, idx2ptr = (int64_t*) REAL(idx2);
-            ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                break;
-            }
-        }
-        if( *idx2ptr != block ){ continue; }
-        
-        // Rcout << block << "\n";
-        
-        // read current block!
-        retptr2 = retptr + ii_idx1 * idx1len;
-        start_idx = (idx1_start + block_size * block);
-        end_idx = start_idx - idx1_start + idx1_end + 1;
-        
-        if( start_idx >= content_size ){
-            if( idx2_sorted ){
-                break;
-            }
-            continue;
-        }
-        if( end_idx > content_size ){
-            end_idx = content_size;
-        }
-        
-        // Rcout << block << " " << ii_idx1 <<  " " << start_idx <<  " " << end_idx << "\n";
-        
-        // fseek is somehow slow, read to buffer without using it seems faster
-        while( conn_pos < start_idx ){
-            ii = start_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
-            conn_pos += ii;
-        }
-        // fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-        // fseek(conn, (start_idx - conn_pos) * elem_size, SEEK_CUR);
-        // conn_pos = start_idx;
-        
-        
-        idx1ptr = (int64_t*) REAL(idx1);
-        jj = 0;
-        while( conn_pos < end_idx ){
-            ii = end_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
-            
-            if( !idx1_sorted ){
-                idx1ptr = (int64_t*) REAL(idx1);
-                jj = 0;
-            }
-            for(; jj < idx1len; jj++, idx1ptr++) {
-                if(*idx1ptr == NA_INTEGER64){ continue; }
-                // ll should be [conn_pos, conn_pos + ii)
-                
-                ll = *idx1ptr - idx1_start + start_idx - conn_pos;
-                if( ll < 0 ){ continue; }
-                if( ll >= ii ){
-                    if( idx1_sorted ) {
-                        break;
-                    }
-                    continue;
-                }
-                bufferptr2 = bufferptr + ll;
-                if(ISNAN(*bufferptr2) || *bufferptr2 == na_stored){
-                    *(retptr2 + jj) = na_actual;
-                } else {
-                    *(retptr2 + jj) = (T) *bufferptr2;
-                }
-                // *(retptr2 + jj) = (T) *(bufferptr + ll);
-            }
-            
-            conn_pos += ii;
-        }
-        
-        retptr2 = retptr + ii_idx1 * idx1len;
-        ii_idx1++;
-        idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
-        // Rcout << "1\n";
-        for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                retptr3 = retptr + ii_idx1 * idx1len;
-                memcpy(retptr3, retptr2, sizeof(T) * idx1len);
-            } else if( idx2_sorted && *idx2ptr > block ){
-                break;
-            }
-        }
-        // Rcout << "2\n";
-    }
-}
+int guess_splitdim(SEXP dim, int elem_size, size_t buffer_bytes);
 
 
 
@@ -237,15 +114,15 @@ inline void subset_partition(
  * Write partition
  * Assuming partition has been initialized
  ***********************************************************/
-template <typename T, typename B>
+template <typename T>
 inline void subset_assign_partition(
         FILE* conn, T* value, const R_xlen_t block_size, 
         int64_t* idx1ptr0, R_xlen_t idx1len, 
         int64_t idx1_start, int64_t idx1_end, 
         int64_t* idx2ptr0, R_xlen_t idx2len,
-        B* buffer, B na_store, T na_actual ) {
+        T* buffer ) {
     // TODO: swap_endian
-    int elem_size = sizeof(B);
+    int elem_size = sizeof(T);
     
     fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
     
@@ -259,7 +136,7 @@ inline void subset_assign_partition(
     int64_t* idx2ptr = idx2ptr0;
     
     T* valptr2 = value;
-    B* buf = buffer;
+    T* buf = buffer;
     int64_t buf_size = idx1_end - idx1_start + 1;
     if( buf_size > block_size ){
         buf_size = block_size;
@@ -290,11 +167,7 @@ inline void subset_assign_partition(
             // calculate pointer location in the file
             // no check here, but tmp_loc should be >=0
             if(*idx1ptr != NA_INTEGER64){
-                if( ISNAN(*valptr2) || *valptr2 == na_actual ) {
-                    *(buffer + (*idx1ptr - idx1_start)) = na_store;
-                } else {
-                    *(buffer + (*idx1ptr - idx1_start)) = (B) (*valptr2);
-                }
+                *(buffer + (*idx1ptr - idx1_start)) = (*valptr2);
             }
         }
         fseek(conn, start_loc * elem_size + FARR_HEADER_LENGTH, SEEK_SET);

@@ -196,10 +196,15 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
         }
         break;
     }
-    case VECSXP:
-        sliceIdx = listOrEnv;
-        idx_size = Rf_xlength(sliceIdx);
+    case VECSXP: {
+        if( Rf_getAttrib(listOrEnv, wrap("_asis_")) == R_NilValue ){
+            sliceIdx = listOrEnv;
+            idx_size = Rf_xlength(sliceIdx);
+        } else {
+            return( listOrEnv );
+        }
         break;
+    }
     default:
         Rcpp::stop("Input `listOrEnv` must be either a list of indices or an environment");
     }
@@ -251,7 +256,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
             n_protected++;
         }
     }
-    
+    Rf_setAttrib(sliceIdx, Shield<SEXP>(wrap("_asis_")), Shield<SEXP>(wrap(true)));
     
     UNPROTECT(n_protected); // sliceIdx
     
@@ -484,6 +489,79 @@ SEXP loc2idx(const List sliceIdx, const NumericVector& dim){
     return( re );
 }
 
+void set_buffer(SEXP dim, int elem_size, size_t buffer_bytes, int split_dim){
+    int buf_bytes = elem_size;
+    for(int ii = 0; ii < split_dim; ii++){
+        buf_bytes *= (int) (*(REAL(dim) + ii));
+        if( buf_bytes > buffer_bytes ){
+            buf_bytes = buffer_bytes;
+            break;
+        }
+    }
+    if(buf_bytes == NA_INTEGER || buf_bytes <= 16){
+        buf_bytes = 65536;
+    }
+    set_buffer_size(buf_bytes);
+}
+
+
+SEXP subset_dimnames(SEXP dimnames, SEXP sliceIdx){
+    if( TYPEOF(dimnames) != VECSXP ) {
+        stop("`subset_dimnames` dimnames must be a list");
+    }
+    int ndims = Rf_length(dimnames);
+    
+    if( ndims > Rf_length(sliceIdx) ){
+        stop("`subset_dimnames` dimnames is larger than array margins?");
+    }
+    for(int ii = 0; ii < ndims; ii++){
+        SEXP dn = VECTOR_ELT(dimnames, ii);
+        if( dn == R_NilValue ){
+            continue;
+        }
+        SEXP idx = VECTOR_ELT(sliceIdx, ii);
+        SEXP sub_el = PROTECT(sub_vec(dn, idx));
+        SET_VECTOR_ELT(dimnames, ii, sub_el);
+        UNPROTECT(1);
+    }
+    return(dimnames);
+}
+
+
+int guess_splitdim(SEXP dim, int elem_size, size_t buffer_bytes){
+    R_len_t ndims = Rf_length(dim);
+    
+    // calculate split_dim
+    int ii;
+    int dim_ii;
+    double idx1len, idx2len, nloops, buffer_sz;
+    double nops, min_ops = -1.0;
+    int split_dim = 1;
+    for(dim_ii = 1; dim_ii <= ndims - 1; dim_ii++){
+        idx1len = 1.0;
+        idx2len = 1.0;
+        for(ii = 0; ii < dim_ii; ii++){
+            idx1len *= *(REAL(dim) + ii);
+        }
+        for(ii = dim_ii; ii < ndims - 1; ii++ ){
+            idx2len *= *(REAL(dim) + ii);
+        }
+        if( idx1len * elem_size - (double) buffer_bytes > 0.0 ){
+            buffer_sz = (double) (buffer_bytes / elem_size);
+        } else {
+            buffer_sz = idx1len;
+        }
+        nloops = std::ceil(idx1len / buffer_sz);
+        nops = (idx1len * nloops + idx2len) * idx2len;
+        if( min_ops <= 0 || min_ops >= nops ){
+            min_ops = nops;
+            split_dim = dim_ii;
+        }
+    }
+    
+    return( split_dim );
+}
+
 // [[Rcpp::export]]
 List schedule(const SEXP listOrEnv, 
               const NumericVector& dim,
@@ -636,6 +714,10 @@ List schedule(const SEXP listOrEnv,
         }
     }
     
+    SEXP result_length = PROTECT(Rf_allocVector(INT64SXP, 1)); n_protected++;
+    Rf_setAttrib(result_length, R_ClassSymbol, wrap("integer64"));
+    *(INTEGER64(result_length)) = idx1len * idx2lens[part_size];
+    
     List re = List::create(
         _["idx1"] = idx1,
         _["idx2s"] = idx2s,
@@ -643,7 +725,8 @@ List schedule(const SEXP listOrEnv,
         _["partitions"] = partitions[seq(0, part_size)],
         _["idx2lens"] = idx2lens[seq(0, part_size)],
         _["result_dim"] = result_dim,
-        _["idx1range"] = idx1range
+        _["idx1range"] = idx1range,
+        _["result_length"] = result_length
     );
     
     UNPROTECT(n_protected); // sliceIdx, result_dim, sliceIdx1, sliceIdx2, idx1, idx1range, (maybe) tmp, tmp1idx
@@ -899,6 +982,142 @@ std::string correct_filebase(const std::string& filebase){
     } else {
         return( filebase );
     }
+}
+
+
+SEXPTYPE file_buffer_sxptype(SEXPTYPE array_type) {
+    SEXPTYPE buf_sexp_type = array_type;
+    switch(array_type) {
+    case FLTSXP:
+        buf_sexp_type = INTSXP;
+        break;
+    case LGLSXP:
+        buf_sexp_type = RAWSXP;
+        break;
+    case CPLXSXP:
+        buf_sexp_type = REALSXP;
+        break;
+    }
+    return( buf_sexp_type );
+}
+
+SEXP convert_as(SEXP x, SEXPTYPE type) {
+    SEXPTYPE xtype = TYPEOF(x);
+    
+    if( type == FLTSXP && xtype == INTSXP ){
+        if( Rf_getAttrib(x, wrap("_float_")) != R_NilValue ){
+            return(x);
+        }
+    }
+    R_xlen_t xlen = Rf_xlength(x);
+    if( type == FLTSXP ){
+        SEXP y = PROTECT(Rf_allocVector(INTSXP, xlen));
+        Rf_setAttrib(y, Shield<SEXP>(wrap("_float_")), Shield<SEXP>(wrap(true)));
+        
+        switch(xtype) {
+        case RAWSXP: {
+            Rbyte* xptr = RAW(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                *yptr = (float) *xptr;
+            }
+            break;
+        }
+        case INTSXP: {
+            int* xptr = INTEGER(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_INTEGER){
+                    *yptr = NA_FLOAT;
+                } else {
+                    *yptr = *xptr;
+                }
+            }
+            break;
+        }
+        case LGLSXP: {
+            int* xptr = LOGICAL(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = NA_FLOAT;
+                } else {
+                    *yptr = *xptr;
+                }
+            }
+            break;
+        }
+        case REALSXP: {
+            realToFloat(REAL(x), FLOAT(y), xlen);
+            break;
+        }
+        default: {
+            SEXP z = PROTECT(Rf_coerceVector(x, REALSXP));
+            realToFloat(REAL(z), FLOAT(y), xlen);
+            UNPROTECT(1);
+        }
+        }
+        UNPROTECT(1);
+        return(y);
+        
+    }
+    
+    if( type == CPLXSXP ){
+        SEXP y = PROTECT(Rf_allocVector(REALSXP, xlen));
+        if( xtype != CPLXSXP ){
+            SEXP z = PROTECT(Rf_coerceVector(x, CPLXSXP));
+            cplxToReal(COMPLEX(z), REAL(y), xlen);
+            UNPROTECT(1);
+        } else {
+            cplxToReal(COMPLEX(x), REAL(y), xlen);
+        }
+        UNPROTECT(1);
+        return(y);
+    }
+    
+    if( type == LGLSXP ){
+        if( xtype == RAWSXP ){
+            return(x);
+        }
+        SEXP y = PROTECT(Rf_allocVector(RAWSXP, xlen));
+        if( xtype != LGLSXP ){
+            SEXP z = PROTECT(Rf_coerceVector(x, LGLSXP));
+            int* xptr = LOGICAL(z);
+            Rbyte* yptr = RAW(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = 2;
+                } else if (*xptr == TRUE){
+                    *yptr = 1;
+                } else {
+                    *yptr = 0;
+                }
+            }
+            UNPROTECT(1);
+        } else {
+            int* xptr = LOGICAL(x);
+            Rbyte* yptr = RAW(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = 2;
+                } else if (*xptr == TRUE){
+                    *yptr = 1;
+                } else {
+                    *yptr = 0;
+                }
+            }
+        }
+        UNPROTECT(1);
+        return(y);
+    }
+    
+    if( xtype == type ){
+        return(x);
+    }
+    
+    SEXP y = PROTECT(Rf_coerceVector(x, type));
+    UNPROTECT(1);
+    return(y);
 }
 
 /*** R

@@ -73,10 +73,6 @@ FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_
     .Call(`_filearray_FARR_subset2`, filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict)
 }
 
-FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames) {
-    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames)
-}
-
 FARR_buffer_mapreduce <- function(filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type) {
     .Call(`_filearray_FARR_buffer_mapreduce`, filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type)
 }
@@ -93,8 +89,8 @@ hasOpenMP <- function() {
     .Call(`_filearray_hasOpenMP`)
 }
 
-FARR_subset_assign <- function(filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_) {
-    .Call(`_filearray_FARR_subset_assign`, filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_)
+FARR_subset_assign2 <- function(filebase, value_, listOrEnv, thread_buffer = 2097152L, split_dim = 0L) {
+    .Call(`_filearray_FARR_subset_assign2`, filebase, value_, listOrEnv, thread_buffer, split_dim)
 }
 
 # Register entry points for exported C++ functions

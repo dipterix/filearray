@@ -1,10 +1,13 @@
 #include "common.h"
 #include "openmp.h"
+#include "core.h"
 using namespace Rcpp;
 
-SEXP FARR_subset_assign_integer(
+template <typename T>
+SEXP FARR_subset_assign_template(
         const std::string& filebase, 
-        const List& sch, SEXP value){
+        const List& sch, T* value_ptr,
+        const std::vector<T*>& buff_ptrs){
     
     SEXP idx1 = sch["idx1"];
     SEXP idx1range = sch["idx1range"];
@@ -16,6 +19,8 @@ SEXP FARR_subset_assign_integer(
     int has_error = -1;
     
     R_xlen_t idx1len = Rf_xlength(idx1);
+    
+    // Check whether indices are valid
     int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
     
@@ -24,318 +29,11 @@ SEXP FARR_subset_assign_integer(
     }
     
     
-    
-    int ncores = getThreads();
+    int ncores = buff_ptrs.size();
     if(ncores > idx2s.length()){
         ncores = idx2s.length();
     }
-    // ncores = 1;
     
-    std::vector<SEXP> buff_pool(ncores);
-    std::vector<int*> buff_ptrs(ncores);
-    for(int i = 0; i < ncores; i++){
-        // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, idx1_end - idx1_start + 1));
-        buff_ptrs[i] = INTEGER(buff_pool[i]);
-    }
-    
-    int* value_ptr = INTEGER(value);
-    int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
-    
-    // std::vector<int64_t*> idx2_ptrs(idx2s.length());
-    // for(R_xlen_t ii = 0; ii < idx2s.length(); ii++){
-    //     idx2_ptrs[ii] = (int64_t*) REAL(idx2s[ii]);
-    // }
-    
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
-        R_xlen_t part = partitions[iter];
-        int64_t skips = 0;
-        if(iter > 0){
-            skips = idx2lens[iter - 1];
-        }
-        
-        std::string file = filebase + std::to_string(part) + ".farr";
-        FILE* conn = fopen( file.c_str(), "r+b" );
-        if (conn) {
-            // get current buffer
-            int thread = iter % ncores;
-            try{
-                SEXP idx2 = idx2s[iter];
-                
-                // TODO: change
-                // subset_assign_partition_old(
-                //     conn, REAL(value) + (idx1len * skips),
-                //     block_size, idx1, idx2, REAL(buff_pool[thread]));
-                
-                int64_t* idx2_ptr = (int64_t*) REAL(idx2);
-                R_xlen_t idx2_len = Rf_xlength(idx2);
-                int* value_ptr2 = value_ptr + (idx1len * skips);
-                int64_t* idx1ptr = idx1ptr0;
-                subset_assign_partition(
-                    conn, value_ptr2,
-                    block_size, idx1ptr, idx1len, 
-                    idx1_start, idx1_end, 
-                    idx2_ptr, idx2_len,
-                    buff_ptrs[thread], NA_INTEGER, NA_INTEGER );
-                fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            } catch(...){
-                fclose(conn);
-                conn = NULL;
-                has_error = part;
-            }
-            if( conn != NULL ){
-                fclose(conn);
-            }
-        }
-    }
-}
-
-    UNPROTECT(ncores);
-    if( has_error >= 0 ){
-        stop("Cannot write to partition " + std::to_string(has_error + 1));
-    }
-    
-    return( R_NilValue );
-}
-
-SEXP FARR_subset_assign_double(
-        const std::string& filebase, 
-        const List& sch, SEXP value){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    
-    int has_error = -1;
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
-        return( R_NilValue );
-    }
-    
-    int ncores = getThreads();
-    if(ncores > idx2s.length()){
-        ncores = idx2s.length();
-    }
-    // ncores = 1;
-    
-    std::vector<SEXP> buff_pool(ncores);
-    std::vector<double*> buff_ptrs(ncores);
-    for(int i = 0; i < ncores; i++){
-        // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(REALSXP, idx1_end - idx1_start + 1));
-        buff_ptrs[i] = REAL(buff_pool[i]);
-    }
-    
-    double* value_ptr = REAL(value);
-    int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
-    
-    // std::vector<int64_t*> idx2_ptrs(idx2s.length());
-    // for(R_xlen_t ii = 0; ii < idx2s.length(); ii++){
-    //     idx2_ptrs[ii] = (int64_t*) REAL(idx2s[ii]);
-    // }
-    
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
-        R_xlen_t part = partitions[iter];
-        int64_t skips = 0;
-        if(iter > 0){
-            skips = idx2lens[iter - 1];
-        }
-        
-        std::string file = filebase + std::to_string(part) + ".farr";
-        FILE* conn = fopen( file.c_str(), "r+b" );
-        if (conn) {
-            // get current buffer
-            int thread = iter % ncores;
-            try{
-                SEXP idx2 = idx2s[iter];
-                
-                // TODO: change
-                // subset_assign_partition_old(
-                //     conn, REAL(value) + (idx1len * skips),
-                //     block_size, idx1, idx2, REAL(buff_pool[thread]));
-                
-                int64_t* idx2_ptr = (int64_t*) REAL(idx2);
-                R_xlen_t idx2_len = Rf_xlength(idx2);
-                double* value_ptr2 = value_ptr + (idx1len * skips);
-                int64_t* idx1ptr = idx1ptr0;
-                subset_assign_partition(
-                    conn, value_ptr2,
-                    block_size, idx1ptr, idx1len, 
-                    idx1_start, idx1_end, 
-                    idx2_ptr, idx2_len,
-                    buff_ptrs[thread], NA_REAL, NA_REAL );
-                fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            } catch(...){
-                fclose(conn);
-                conn = NULL;
-                has_error = part;
-            }
-            if( conn != NULL ){
-                fclose(conn);
-            }
-        }
-    }
-}
-    
-    UNPROTECT(ncores);
-    if( has_error >= 0 ){
-        stop("Cannot write to partition " + std::to_string(has_error + 1));
-    }
-
-    return( R_NilValue );
-}
-
-SEXP FARR_subset_assign_float(
-        const std::string& filebase, 
-        const List& sch, SEXP value){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    
-    int has_error = -1;
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
-        return( R_NilValue );
-    }
-    
-    int ncores = getThreads();
-    if(ncores > idx2s.length()){
-        ncores = idx2s.length();
-    }
-    // ncores = 1;
-    
-    std::vector<SEXP> buff_pool(ncores);
-    std::vector<float*> buff_ptrs(ncores);
-    for(int i = 0; i < ncores; i++){
-        // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(INTSXP, (idx1_end - idx1_start + 1)));
-        buff_ptrs[i] = FLOAT(buff_pool[i]);
-    }
-    
-    double* value_ptr = REAL(value);
-    int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
-    
-    // std::vector<int64_t*> idx2_ptrs(idx2s.length());
-    // for(R_xlen_t ii = 0; ii < idx2s.length(); ii++){
-    //     idx2_ptrs[ii] = (int64_t*) REAL(idx2s[ii]);
-    // }
-    
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
-        R_xlen_t part = partitions[iter];
-        int64_t skips = 0;
-        if(iter > 0){
-            skips = idx2lens[iter - 1];
-        }
-        
-        std::string file = filebase + std::to_string(part) + ".farr";
-        FILE* conn = fopen( file.c_str(), "r+b" );
-        if (conn) {
-            // get current buffer
-            int thread = iter % ncores;
-            try{
-                SEXP idx2 = idx2s[iter];
-                
-                // TODO: change
-                // subset_assign_partition_old(
-                //     conn, REAL(value) + (idx1len * skips),
-                //     block_size, idx1, idx2, REAL(buff_pool[thread]));
-                
-                int64_t* idx2_ptr = (int64_t*) REAL(idx2);
-                R_xlen_t idx2_len = Rf_xlength(idx2);
-                double* value_ptr2 = value_ptr + (idx1len * skips);
-                int64_t* idx1ptr = idx1ptr0;
-                subset_assign_partition(
-                    conn, value_ptr2,
-                    block_size, idx1ptr, idx1len, 
-                    idx1_start, idx1_end, 
-                    idx2_ptr, idx2_len,
-                    buff_ptrs[thread], NA_FLOAT, NA_REAL );
-                fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            } catch(...){
-                fclose(conn);
-                conn = NULL;
-                has_error = part;
-            }
-            if( conn != NULL ){
-                fclose(conn);
-            }
-        }
-    }
-}
-
-    UNPROTECT(ncores);
-    if( has_error >= 0 ){
-        stop("Cannot write to partition " + std::to_string(has_error + 1));
-    }
-    
-    return( R_NilValue );
-}
-
-SEXP FARR_subset_assign_raw(
-        const std::string& filebase, 
-        const List& sch, SEXP value){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    
-    Rbyte na_raw = 0;
-    
-    int has_error = -1;
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
-        return( R_NilValue );
-    }
-    
-    int ncores = getThreads();
-    if(ncores > idx2s.length()){
-        ncores = idx2s.length();
-    }
-    // ncores = 1;
-    
-    std::vector<SEXP> buff_pool(ncores);
-    std::vector<Rbyte*> buff_ptrs(ncores);
-    for(int i = 0; i < ncores; i++){
-        // TODO: change
-        buff_pool[i] = PROTECT(Rf_allocVector(RAWSXP, idx1_end - idx1_start + 1));
-        buff_ptrs[i] = RAW(buff_pool[i]);
-    }
-    
-    Rbyte* value_ptr = RAW(value);
     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
     
 #pragma omp parallel num_threads(ncores)
@@ -363,14 +61,14 @@ SEXP FARR_subset_assign_raw(
                 
                 int64_t* idx2_ptr = (int64_t*) REAL(idx2);
                 R_xlen_t idx2_len = Rf_xlength(idx2);
-                Rbyte* value_ptr2 = value_ptr + (idx1len * skips);
+                T* value_ptr2 = value_ptr + (idx1len * skips);
                 int64_t* idx1ptr = idx1ptr0;
                 subset_assign_partition(
                     conn, value_ptr2,
                     block_size, idx1ptr, idx1len, 
                     idx1_start, idx1_end, 
                     idx2_ptr, idx2_len,
-                    buff_ptrs[thread], na_raw, na_raw );
+                    buff_ptrs[thread] );
                 fflush(conn);
                 fclose(conn);
                 conn = NULL;
@@ -386,38 +84,267 @@ SEXP FARR_subset_assign_raw(
     }
 }
 
-    UNPROTECT(ncores);
+    // UNPROTECT(ncores);
     if( has_error >= 0 ){
         stop("Cannot write to partition " + std::to_string(has_error + 1));
     }
     
     return( R_NilValue );
 }
-
-SEXP FARR_subset_assign_logical(
-        const std::string& filebase,
-        const List& sch, SEXP value){
-
-    R_xlen_t len = Rf_xlength(value);
-
-    SEXP value_raw = PROTECT(Rf_allocVector(RAWSXP, len));
-    int* valenptr = LOGICAL(value);
-    Rbyte* rawptr = RAW(value_raw);
-    for(R_xlen_t ii = 0; ii < len; ii++, valenptr++, rawptr++){
-        if(*valenptr == NA_LOGICAL){
-            *rawptr = 2;
-        } else if (*valenptr == TRUE){
-            *rawptr = 1;
-        } else {
-            *rawptr = 0;
-        }
-    }
-    FARR_subset_assign_raw(filebase, sch, value_raw);
-
-    UNPROTECT(1);
-
-    return R_NilValue;
-}
+// 
+// SEXP FARR_subset_assign_double(
+//         const std::string& filebase, 
+//         const List& sch, SEXP value,
+//         const std::vector<double*>& buff_ptrs){
+//     
+//     SEXP idx1 = sch["idx1"];
+//     SEXP idx1range = sch["idx1range"];
+//     List idx2s = sch["idx2s"];
+//     int64_t block_size = (int64_t) (sch["block_size"]);
+//     IntegerVector partitions = sch["partitions"];
+//     IntegerVector idx2lens = sch["idx2lens"];
+//     
+//     int has_error = -1;
+//     R_xlen_t idx1len = Rf_xlength(idx1);
+//     int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+//     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+//     
+//     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+//         return( R_NilValue );
+//     }
+//     
+//     int ncores = buff_ptrs.size();
+//     if(ncores > idx2s.length()){
+//         ncores = idx2s.length();
+//     }
+//     
+//     double* value_ptr = REAL(value);
+//     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
+//     
+// #pragma omp parallel num_threads(ncores)
+// {
+// #pragma omp for schedule(static, 1) nowait
+//     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
+//         R_xlen_t part = partitions[iter];
+//         int64_t skips = 0;
+//         if(iter > 0){
+//             skips = idx2lens[iter - 1];
+//         }
+//         
+//         std::string file = filebase + std::to_string(part) + ".farr";
+//         FILE* conn = fopen( file.c_str(), "r+b" );
+//         if (conn) {
+//             // get current buffer
+//             int thread = iter % ncores;
+//             try{
+//                 SEXP idx2 = idx2s[iter];
+//                 
+//                 // TODO: change
+//                 // subset_assign_partition_old(
+//                 //     conn, REAL(value) + (idx1len * skips),
+//                 //     block_size, idx1, idx2, REAL(buff_pool[thread]));
+//                 
+//                 int64_t* idx2_ptr = (int64_t*) REAL(idx2);
+//                 R_xlen_t idx2_len = Rf_xlength(idx2);
+//                 double* value_ptr2 = value_ptr + (idx1len * skips);
+//                 int64_t* idx1ptr = idx1ptr0;
+//                 subset_assign_partition(
+//                     conn, value_ptr2,
+//                     block_size, idx1ptr, idx1len, 
+//                     idx1_start, idx1_end, 
+//                     idx2_ptr, idx2_len,
+//                     buff_ptrs[thread], NA_REAL, NA_REAL );
+//                 fflush(conn);
+//                 fclose(conn);
+//                 conn = NULL;
+//             } catch(...){
+//                 fclose(conn);
+//                 conn = NULL;
+//                 has_error = part;
+//             }
+//             if( conn != NULL ){
+//                 fclose(conn);
+//             }
+//         }
+//     }
+// }
+//     
+//     if( has_error >= 0 ){
+//         stop("Cannot write to partition " + std::to_string(has_error + 1));
+//     }
+// 
+//     return( R_NilValue );
+// }
+// 
+// SEXP FARR_subset_assign_float(
+//         const std::string& filebase, 
+//         const List& sch, SEXP value,
+//         const std::vector<float*>& buff_ptrs){
+//     
+//     SEXP idx1 = sch["idx1"];
+//     SEXP idx1range = sch["idx1range"];
+//     List idx2s = sch["idx2s"];
+//     int64_t block_size = (int64_t) (sch["block_size"]);
+//     IntegerVector partitions = sch["partitions"];
+//     IntegerVector idx2lens = sch["idx2lens"];
+//     
+//     int has_error = -1;
+//     R_xlen_t idx1len = Rf_xlength(idx1);
+//     int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+//     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+//     
+//     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+//         return( R_NilValue );
+//     }
+//     
+//     int ncores = getThreads();
+//     if(ncores > idx2s.length()){
+//         ncores = idx2s.length();
+//     }
+//     
+//     double* value_ptr = REAL(value);
+//     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
+//     
+// #pragma omp parallel num_threads(ncores)
+// {
+// #pragma omp for schedule(static, 1) nowait
+//     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
+//         R_xlen_t part = partitions[iter];
+//         int64_t skips = 0;
+//         if(iter > 0){
+//             skips = idx2lens[iter - 1];
+//         }
+//         
+//         std::string file = filebase + std::to_string(part) + ".farr";
+//         FILE* conn = fopen( file.c_str(), "r+b" );
+//         if (conn) {
+//             // get current buffer
+//             int thread = iter % ncores;
+//             try{
+//                 SEXP idx2 = idx2s[iter];
+//                 
+//                 // TODO: change
+//                 // subset_assign_partition_old(
+//                 //     conn, REAL(value) + (idx1len * skips),
+//                 //     block_size, idx1, idx2, REAL(buff_pool[thread]));
+//                 
+//                 int64_t* idx2_ptr = (int64_t*) REAL(idx2);
+//                 R_xlen_t idx2_len = Rf_xlength(idx2);
+//                 double* value_ptr2 = value_ptr + (idx1len * skips);
+//                 int64_t* idx1ptr = idx1ptr0;
+//                 subset_assign_partition(
+//                     conn, value_ptr2,
+//                     block_size, idx1ptr, idx1len, 
+//                     idx1_start, idx1_end, 
+//                     idx2_ptr, idx2_len,
+//                     buff_ptrs[thread], NA_FLOAT, NA_REAL );
+//                 fflush(conn);
+//                 fclose(conn);
+//                 conn = NULL;
+//             } catch(...){
+//                 fclose(conn);
+//                 conn = NULL;
+//                 has_error = part;
+//             }
+//             if( conn != NULL ){
+//                 fclose(conn);
+//             }
+//         }
+//     }
+// }
+// 
+//     if( has_error >= 0 ){
+//         stop("Cannot write to partition " + std::to_string(has_error + 1));
+//     }
+//     
+//     return( R_NilValue );
+// }
+// 
+// SEXP FARR_subset_assign_raw(
+//         const std::string& filebase, 
+//         const List& sch, SEXP value,
+//         const std::vector<Rbyte*>& buff_ptrs){
+//     
+//     SEXP idx1 = sch["idx1"];
+//     SEXP idx1range = sch["idx1range"];
+//     List idx2s = sch["idx2s"];
+//     int64_t block_size = (int64_t) (sch["block_size"]);
+//     IntegerVector partitions = sch["partitions"];
+//     IntegerVector idx2lens = sch["idx2lens"];
+//     
+//     Rbyte na_raw = 0;
+//     
+//     int has_error = -1;
+//     R_xlen_t idx1len = Rf_xlength(idx1);
+//     int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+//     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+//     
+//     if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+//         return( R_NilValue );
+//     }
+//     
+//     int ncores = getThreads();
+//     if(ncores > idx2s.length()){
+//         ncores = idx2s.length();
+//     }
+//     
+//     Rbyte* value_ptr = RAW(value);
+//     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
+//     
+// #pragma omp parallel num_threads(ncores)
+// {
+// #pragma omp for schedule(static, 1) nowait
+//     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
+//         R_xlen_t part = partitions[iter];
+//         int64_t skips = 0;
+//         if(iter > 0){
+//             skips = idx2lens[iter - 1];
+//         }
+//         
+//         std::string file = filebase + std::to_string(part) + ".farr";
+//         FILE* conn = fopen( file.c_str(), "r+b" );
+//         if (conn) {
+//             // get current buffer
+//             int thread = iter % ncores;
+//             try{
+//                 SEXP idx2 = idx2s[iter];
+//                 
+//                 // TODO: change
+//                 // subset_assign_partition_old(
+//                 //     conn, REAL(value) + (idx1len * skips),
+//                 //     block_size, idx1, idx2, REAL(buff_pool[thread]));
+//                 
+//                 int64_t* idx2_ptr = (int64_t*) REAL(idx2);
+//                 R_xlen_t idx2_len = Rf_xlength(idx2);
+//                 Rbyte* value_ptr2 = value_ptr + (idx1len * skips);
+//                 int64_t* idx1ptr = idx1ptr0;
+//                 subset_assign_partition(
+//                     conn, value_ptr2,
+//                     block_size, idx1ptr, idx1len, 
+//                     idx1_start, idx1_end, 
+//                     idx2_ptr, idx2_len,
+//                     buff_ptrs[thread], na_raw, na_raw );
+//                 fflush(conn);
+//                 fclose(conn);
+//                 conn = NULL;
+//             } catch(...){
+//                 fclose(conn);
+//                 conn = NULL;
+//                 has_error = part;
+//             }
+//             if( conn != NULL ){
+//                 fclose(conn);
+//             }
+//         }
+//     }
+// }
+// 
+//     if( has_error >= 0 ){
+//         stop("Cannot write to partition " + std::to_string(has_error + 1));
+//     }
+//     
+//     return( R_NilValue );
+// }
 
 void subset_assign_partition_complex(
         FILE* conn, Rcomplex* value, 
@@ -441,7 +368,6 @@ void subset_assign_partition_complex(
         buf_size = block_size;
     }
     
-    // Rcout << idx2_start << "---\n";
     R_xlen_t idx2ii = 0;
     R_xlen_t idx1ii = 0;
     int64_t start_loc = 0;
@@ -586,66 +512,137 @@ SEXP FARR_subset_assign_complex(
     return( R_NilValue );
 }
 
-// [[Rcpp::export]]
-SEXP FARR_subset_assign(
-        const std::string& filebase,
-        const SEXP listOrEnv,
-        const NumericVector& dim,
-        const NumericVector& cum_part_sizes,
-        const int split_dim,
+
+SEXP FARR_subset_assign_internal(
+        const std::string& fbase,
+        const List sch, 
         const SEXPTYPE type,
-        SEXP value_){
-    List sch = schedule(listOrEnv, dim, cum_part_sizes,
-                        split_dim, 1);
-    std::string fbase = correct_filebase(filebase);
+        std::vector<SEXP>& buff_pool,
+        SEXP value){
     
-    int n_protected = 0;
-    SEXP value = value_;
-    SEXPTYPE type_ = type == FLTSXP ? REALSXP : type;
-    if( TYPEOF(value) != type_ ){
-        value = PROTECT(Rf_coerceVector(value, type_));
-        n_protected = 1;
-    }
+    int ncores = buff_pool.size();
+    
     
     switch(type) {
-    case INTSXP:
-        FARR_subset_assign_integer(fbase, sch, value);
+    case INTSXP: {
+        std::vector<int*> buff_ptrs(ncores);
+        for(int i = 0; i < ncores; i++){
+            buff_ptrs[i] = INTEGER(buff_pool[i]);
+        }
+        FARR_subset_assign_template(fbase, sch, INTEGER(value), buff_ptrs);
         break;
-    case REALSXP:
-        FARR_subset_assign_double(fbase, sch, value);
-        break;
-    case FLTSXP:
-        FARR_subset_assign_float(fbase, sch, value);
-        break;
-    case RAWSXP:
-        FARR_subset_assign_raw(fbase, sch, value);
-        break;
-    case LGLSXP:
-        FARR_subset_assign_logical(fbase, sch, value);
-        break;
+    }
     case CPLXSXP:
-        FARR_subset_assign_complex(fbase, sch, value);
+    case REALSXP: {
+        std::vector<double*> buff_ptrs(ncores);
+        for(int i = 0; i < ncores; i++){
+            buff_ptrs[i] = REAL(buff_pool[i]);
+        }
+        FARR_subset_assign_template(fbase, sch, REAL(value), buff_ptrs);
         break;
+    }
+    case FLTSXP: {
+        std::vector<float*> buff_ptrs(ncores);
+        for(int i = 0; i < ncores; i++){
+            buff_ptrs[i] = FLOAT(buff_pool[i]);
+        }
+        FARR_subset_assign_template(fbase, sch, FLOAT(value), buff_ptrs);
+        break;
+    }
+    case LGLSXP:
+    case RAWSXP: {
+        std::vector<Rbyte*> buff_ptrs(ncores);
+        for(int i = 0; i < ncores; i++){
+            buff_ptrs[i] = RAW(buff_pool[i]);
+        }
+        FARR_subset_assign_template(fbase, sch, RAW(value), buff_ptrs);
+        break;
+    }
     default:
         stop("SEXP type not supported.");
     }
-    if( n_protected ){
-        UNPROTECT(n_protected);
-    }
-    return(R_NilValue);
+    return( R_NilValue );
 }
+
+// [[Rcpp::export]]
+SEXP FARR_subset_assign2(
+        const std::string& filebase,
+        SEXP value_,
+        const SEXP listOrEnv,
+        const size_t thread_buffer = 2097152,
+        int split_dim = 0
+) {
+    // Get meta information
+    const std::string fbase = correct_filebase(filebase);
+    List meta = FARR_meta(fbase);
+    const int elem_size = meta["elem_size"];
+    const SEXPTYPE sexp_type = meta["sexp_type"];
+    SEXP dim = meta["dimension"]; // double
+    SEXP cum_part_size = meta["cumsum_part_sizes"];
+    
+    // calculate split_dim
+    R_len_t ndims = Rf_length(dim);
+    if( split_dim == NA_INTEGER || split_dim == 0 ){
+        split_dim = guess_splitdim(dim, elem_size, thread_buffer);
+    } else if (split_dim < 1 || split_dim > ndims-1 ){
+        stop("Incorrect `split_dim`: must be an integer from 1 to ndims-1 ");
+    }
+    set_buffer(dim, elem_size, thread_buffer, split_dim);
+    
+    // schedule indices
+    List sch = schedule(listOrEnv, dim, cum_part_size,
+                        split_dim, 1);
+    
+    // Check whether indices are valid
+    SEXP idx1range = sch["idx1range"];
+    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
+    
+    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+        return( R_NilValue );
+    }
+    
+    // coerce vector to desired SEXP type
+    SEXP value = PROTECT(convert_as(value_, sexp_type));
+    SEXPTYPE valtype = TYPEOF(value);
+    
+    // allocate buffers
+    int ncores = getThreads();
+    std::vector<SEXP> buff_pool(ncores);
+    for(int i = 0; i < ncores; i++){
+        buff_pool[i] = PROTECT(Rf_allocVector(
+            valtype, idx1_end - idx1_start + 1));
+    }
+    
+    FARR_subset_assign_internal(fbase, sch, sexp_type, buff_pool, value);
+    
+    UNPROTECT( 1 + ncores );
+    return(R_NilValue);
+    
+}
+
+
+
 
 
 /*** R
 devtools::load_all()
-dim <- c(100,100,100,100)
 set.seed(1); file <- tempfile(); unlink(file, recursive = TRUE)
-x <- filearray_create(file, dim, type = 'double')
-tmp <- as.double(seq_len(1e8))
-setThreads(3)
-system.time({
-    x[] <- tmp
-}, gcFirst = TRUE)
-identical(as.vector(x[]), as.double(tmp))
-pryr::object_size(x)
+x <- filearray_create(file, 3:5, partition_size = 2, type = "complex")
+x$initialize_partition()
+FARR_subset_assign2(
+    filebase = x$.filebase,
+    1:60 + 1i,
+    listOrEnv = list()
+)
+
+# dim <- c(100,100,100,100)
+# x <- filearray_create(file, dim, type = 'double')
+# tmp <- as.double(seq_len(1e8))
+# setThreads(3)
+# system.time({
+#     x[] <- tmp
+# }, gcFirst = TRUE)
+# identical(as.vector(x[]), as.double(tmp))
+# pryr::object_size(x)
 */

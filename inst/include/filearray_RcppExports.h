@@ -24,48 +24,6 @@ namespace filearray {
         }
     }
 
-    inline List FARR_meta(const std::string& filebase) {
-        typedef SEXP(*Ptr_FARR_meta)(SEXP);
-        static Ptr_FARR_meta p_FARR_meta = NULL;
-        if (p_FARR_meta == NULL) {
-            validateSignature("List(*FARR_meta)(const std::string&)");
-            p_FARR_meta = (Ptr_FARR_meta)R_GetCCallable("filearray", "_filearray_FARR_meta");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_FARR_meta(Shield<SEXP>(Rcpp::wrap(filebase)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<List >(rcpp_result_gen);
-    }
-
-    inline SEXP FARR_subset2(const std::string& filebase, const SEXP listOrEnv, const SEXP reshape = R_NilValue, const bool drop = false, const bool use_dimnames = true, const size_t thread_buffer = 2097152, int split_dim = 0, const int strict = 1) {
-        typedef SEXP(*Ptr_FARR_subset2)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_FARR_subset2 p_FARR_subset2 = NULL;
-        if (p_FARR_subset2 == NULL) {
-            validateSignature("SEXP(*FARR_subset2)(const std::string&,const SEXP,const SEXP,const bool,const bool,const size_t,int,const int)");
-            p_FARR_subset2 = (Ptr_FARR_subset2)R_GetCCallable("filearray", "_filearray_FARR_subset2");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_FARR_subset2(Shield<SEXP>(Rcpp::wrap(filebase)), Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)), Shield<SEXP>(Rcpp::wrap(use_dimnames)), Shield<SEXP>(Rcpp::wrap(thread_buffer)), Shield<SEXP>(Rcpp::wrap(split_dim)), Shield<SEXP>(Rcpp::wrap(strict)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<SEXP >(rcpp_result_gen);
-    }
-
 }
 
 #endif // RCPP_filearray_RCPPEXPORTS_H_GEN_
