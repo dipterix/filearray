@@ -1,6 +1,8 @@
 #include "openmp.h"
-#include "common.h"
+#include "serialize.h"
 #include "core.h"
+#include "utils.h"
+#include "conversion.h"
 #include "load.h"
 using namespace Rcpp;
 
@@ -440,12 +442,12 @@ SEXP FARR_subset(const std::string& filebase,
 SEXP FARR_subset2(
         const std::string& filebase,
         const SEXP listOrEnv,
-        const SEXP reshape = R_NilValue,
-        const bool drop = false,
-        const bool use_dimnames = true,
-        const size_t thread_buffer = 2097152,
-        int split_dim = 0,
-        const int strict = 1
+        const SEXP reshape,
+        const bool drop,
+        const bool use_dimnames,
+        const size_t thread_buffer,
+        int split_dim,
+        const int strict
 ) {
     const std::string fbase = correct_filebase(filebase);
     List meta = FARR_meta(fbase);
@@ -485,7 +487,6 @@ SEXP FARR_subset2(
     for(int ii = 0; ii < ncores; ii++){
         buffer_pool[ii] = PROTECT(Rf_allocVector(buffer_type, buffer_nelems));
     }
-    
     // allocate for returns
     int64_t retlen = *INTEGER64(sch["result_length"]);
     // const SEXP idx1 = sch["idx1"];

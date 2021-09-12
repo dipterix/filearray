@@ -1,4 +1,6 @@
-#include "common.h"
+#include "core.h"
+#include "conversion.h"
+#include "serialize.h"
 using namespace Rcpp;
 
 template <typename T>

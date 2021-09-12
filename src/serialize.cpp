@@ -1,5 +1,4 @@
-#include "common.h"
-#include "unserialize.h"
+#include "serialize.h"
 using namespace Rcpp;
 
 int read_byte(R_inpstream_t stream){
@@ -63,3 +62,43 @@ SEXP unserialize_connection(FILE* conn, size_t len) {
     UNPROTECT(2);
     return(re);
 }
+
+bool isLittleEndian(){
+    int x = 1;
+    bool is_little = *((char*)&x) == 1;
+    return ( is_little );
+    // DEBUG test big endianess
+    // return(!is_little);
+}
+
+
+void swap_endianess(void *ptr, size_t size, size_t nmemb){
+    unsigned char *buffer_src = (unsigned char*)ptr;
+    unsigned char *buffer_dst = new unsigned char[size];
+    size_t ix = 0;
+    for (size_t i = 0; i < nmemb; i++, buffer_src += size) {
+        for (ix = 0; ix < size; ix++) {
+            *(buffer_dst + (size - 1 - ix)) = *(buffer_src + ix);
+        }
+        memcpy(buffer_src, buffer_dst, size);
+    }
+    delete[] buffer_dst;
+}
+
+size_t lendian_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    const size_t len = fread(ptr, size, nmemb, stream);
+    if( !isLittleEndian() ){
+        // little endian to big endian
+        swap_endianess(ptr, size, nmemb);
+    }
+    return( len );
+}
+
+size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    if( !isLittleEndian() ){
+        // big endian to little endian
+        swap_endianess(ptr, size, nmemb);
+    }
+    return( fwrite(ptr, size, nmemb, stream) );
+}
+

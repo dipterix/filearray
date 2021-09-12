@@ -103,6 +103,7 @@ NULL
         split_dim = split_dim,
         strict = isTRUE(strict)
     )
+    
 }
 
 #' @describeIn S3-filearray assign array values
@@ -220,9 +221,10 @@ NULL
     # )
     FARR_subset_assign2(
         filebase = x$.filebase, 
-        value_ = value,
+        value = value,
         listOrEnv = locs,
-        split_dim = split_dim
+        split_dim = split_dim,
+        thread_buffer = max_buffer_size()
     ) 
     invisible(x)
 }
