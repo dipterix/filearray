@@ -4,33 +4,6 @@
 #include "utils.h"
 using namespace Rcpp;
 
-template <typename T>
-void transform_asis(const T* x, T* y, const int& nelem){
-    memcpy(y, x, nelem * sizeof(T));
-}
-
-void transform_floats(const float* x, double* y, const int& nelem){
-    double* y2 = y;
-    for(int i = 0; i < nelem; i++, y2++){
-        if(ISNAN(*(x + i))){
-            *y2 = NA_REAL;
-        } else {
-            *y2 = *(x + i);
-        }
-    }
-}
-void transform_logicals(const Rbyte* x, int* y, const int& nelem){
-    int* y2 = y;
-    for(int i = 0; i < nelem; i++, y2++){
-        *y2 = *(x + i);
-        if( *y2 == 2 ){
-            *y2 = NA_LOGICAL;
-        }
-    }
-}
-void transform_cplxs(const double* x, Rcomplex* y, const int& nelem){
-    realToCplx(x, y, nelem);
-}
 
 template <typename T, typename B>
 SEXP each_partition_template(
@@ -143,37 +116,37 @@ SEXP FARR_buffer_mapreduce(
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         INTEGER(filebuffer), INTEGER(argbuffer), argbuffer,
-                        transform_asis);
+                        transforms_asis);
                     break;
                 case REALSXP:
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         REAL(filebuffer), REAL(argbuffer), argbuffer,
-                        transform_asis);
+                        transforms_asis);
                     break;
                 case FLTSXP:
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         FLOAT(filebuffer), REAL(argbuffer), argbuffer,
-                        transform_floats);
+                        transforms_float);
                     break;
                 case RAWSXP:
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         RAW(filebuffer), RAW(argbuffer), argbuffer,
-                        transform_asis);
+                        transforms_asis);
                     break;
                 case LGLSXP:
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         RAW(filebuffer), LOGICAL(argbuffer), argbuffer,
-                        transform_logicals);
+                        transforms_logical);
                     break;
                 case CPLXSXP:
                     each_partition_template(
                         conn, psize * plen, map, &(count), ret,
                         REAL(filebuffer), COMPLEX(argbuffer), argbuffer,
-                        transform_cplxs);
+                        transforms_complex);
                     break;
                 default: 
                     fclose(conn);

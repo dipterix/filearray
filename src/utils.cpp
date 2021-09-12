@@ -66,6 +66,11 @@ SEXPTYPE file_buffer_sxptype(SEXPTYPE array_type) {
     return( buf_sexp_type );
 }
 
+SEXPTYPE array_memory_sxptype(SEXPTYPE array_type){
+    if( array_type == FLTSXP ){ return (REALSXP); }
+    return (array_type);
+}
+
 // [[Rcpp::export]]
 int kinda_sorted(SEXP idx, int64_t min_, int64_t buffer_count){
     int64_t* ptr = (int64_t*) REAL(idx);

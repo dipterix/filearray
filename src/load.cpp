@@ -6,11 +6,6 @@
 #include "load.h"
 using namespace Rcpp;
 
-SEXPTYPE get_read_type(SEXPTYPE type){
-    if( type == FLTSXP ){ return (REALSXP); }
-    return (type);
-}
-
 int get_buffer_nelem(SEXPTYPE type){
     int buffer_bytes = get_buffer_size();
     switch(type){
@@ -28,36 +23,6 @@ int get_buffer_nelem(SEXPTYPE type){
         return( buffer_bytes / sizeof(Rcomplex) );
     default:
         stop("Unsupported SEXP type");
-    }
-}
-
-
-/**********************************************************
- * Transform functions
- ***********************************************************/
-
-template <typename T>
-void transform_asis(const T* x, T* y){
-    *y = *x;
-}
-void transform_float(const float* x, double* y){
-    *y = *x;
-}
-void transform_logical(const Rbyte* x, int* y){
-    if(*x == 0){
-        *y = FALSE;
-    } else if (*x == 1){
-        *y = TRUE;
-    } else {
-        *y = NA_LOGICAL;
-    }
-}
-void transform_cplx(const double* x, Rcomplex* y){
-    y->r = *((float*) x);
-    y->i = *(((float*) x) + 1);
-    if( ISNAN(y->r) || ISNAN(y->i) ){
-        y->r = NA_REAL;
-        y->i = NA_REAL;
     }
 }
 
@@ -337,7 +302,7 @@ SEXP FARR_subset(const std::string& filebase,
     // R_xlen_t idx1len = Rf_xlength(idx1);
     // R_xlen_t retlen = idx1len * idx2lens[niter - 1];
     // 
-    // SEXPTYPE ret_type = get_read_type(type);
+    // SEXPTYPE ret_type = array_memory_sxptype(type);
     // SEXP ret = PROTECT(Rf_allocVector(ret_type, retlen));
     
     R_xlen_t retlen = Rf_xlength(ret);
@@ -428,7 +393,7 @@ SEXP FARR_subset(const std::string& filebase,
         FARR_subset_template(
             fbase, sch, COMPLEX(ret), na_cplx, retlen,
             buffer_ptrs, buffer_nelems, 
-            &transform_cplx);
+            &transform_complex);
         break;
     }
     default:
@@ -494,7 +459,7 @@ SEXP FARR_subset2(
     // R_xlen_t idx1len = Rf_xlength(idx1);
     // R_xlen_t retlen = idx1len * idx2lens[Rf_length(cum_part_size) - 1];
     // 
-    SEXPTYPE ret_type = get_read_type(sexp_type);
+    SEXPTYPE ret_type = array_memory_sxptype(sexp_type);
     SEXP res = PROTECT(Rf_allocVector(ret_type, retlen));
     
     FARR_subset(fbase, sch, sexp_type, buffer_pool, res);

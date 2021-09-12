@@ -10,6 +10,7 @@ int guess_splitdim(SEXP dim, int elem_size, size_t buffer_bytes);
 void set_buffer(SEXP dim, int elem_size, size_t buffer_bytes, int split_dim);
 
 SEXPTYPE file_buffer_sxptype(SEXPTYPE array_type);
+SEXPTYPE array_memory_sxptype(SEXPTYPE array_type);
 
 int kinda_sorted(SEXP idx, int64_t min_, int64_t buffer_count);
 

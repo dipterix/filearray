@@ -299,3 +299,53 @@ SEXP get_float_na(){
     UNPROTECT(1);
     return(re);
 }
+
+
+
+/**********************************************************
+ * Transform functions
+ ***********************************************************/
+
+void transform_float(const float* x, double* y){
+    *y = *x;
+}
+void transform_logical(const Rbyte* x, int* y){
+    if(*x == 0){
+        *y = FALSE;
+    } else if (*x == 1){
+        *y = TRUE;
+    } else {
+        *y = NA_LOGICAL;
+    }
+}
+void transform_complex(const double* x, Rcomplex* y){
+    y->r = *((float*) x);
+    y->i = *(((float*) x) + 1);
+    if( ISNAN(y->r) || ISNAN(y->i) ){
+        y->r = NA_REAL;
+        y->i = NA_REAL;
+    }
+}
+
+void transforms_float(const float* x, double* y, const int& nelem){
+    double* y2 = y;
+    for(int i = 0; i < nelem; i++, y2++){
+        if(ISNAN(*(x + i))){
+            *y2 = NA_REAL;
+        } else {
+            *y2 = *(x + i);
+        }
+    }
+}
+void transforms_logical(const Rbyte* x, int* y, const int& nelem){
+    int* y2 = y;
+    for(int i = 0; i < nelem; i++, y2++){
+        *y2 = *(x + i);
+        if( *y2 == 2 ){
+            *y2 = NA_LOGICAL;
+        }
+    }
+}
+void transforms_complex(const double* x, Rcomplex* y, const int& nelem){
+    realToCplx(x, y, nelem);
+}
