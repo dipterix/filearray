@@ -185,7 +185,143 @@ SEXP convert_as(SEXP x, SEXPTYPE type) {
     return(y);
 }
 
-
+SEXP convert_as2(SEXP x, SEXP y, SEXPTYPE type) {
+    SEXPTYPE xtype = TYPEOF(x);
+    
+    R_xlen_t xlen = Rf_xlength(x);
+    R_xlen_t ylen = Rf_xlength(y);
+    if( xlen > ylen ){
+        xlen = ylen;
+    }
+    
+    if( type == FLTSXP ){
+        if( TYPEOF(y) != INTSXP ){ stop("`convert_as2` inconsistent y type"); }
+        switch(xtype) {
+        case RAWSXP: {
+            Rbyte* xptr = RAW(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                *yptr = (float) *xptr;
+            }
+            break;
+        }
+        case INTSXP: {
+            int* xptr = INTEGER(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_INTEGER){
+                    *yptr = NA_FLOAT;
+                } else {
+                    *yptr = *xptr;
+                }
+            }
+            break;
+        }
+        case LGLSXP: {
+            int* xptr = LOGICAL(x);
+            float* yptr = FLOAT(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = NA_FLOAT;
+                } else {
+                    *yptr = *xptr;
+                }
+            }
+            break;
+        }
+        case REALSXP: {
+            realToFloat(REAL(x), FLOAT(y), xlen);
+            break;
+        }
+        default: {
+            SEXP z = PROTECT(Rf_coerceVector(x, REALSXP));
+            realToFloat(REAL(z), FLOAT(y), xlen);
+            UNPROTECT(1);
+        }
+        }
+        return(y);
+    }
+    
+    if( type == CPLXSXP ){
+        if( TYPEOF(y) != REALSXP ){ stop("`convert_as2` inconsistent y type"); }
+        if( xtype != CPLXSXP ){
+            SEXP z = PROTECT(Rf_coerceVector(x, CPLXSXP));
+            cplxToReal(COMPLEX(z), REAL(y), xlen);
+            UNPROTECT(1);
+        } else {
+            cplxToReal(COMPLEX(x), REAL(y), xlen);
+        }
+        return(y);
+    }
+    
+    if( type == LGLSXP ){
+        if( TYPEOF(y) != RAWSXP ){ stop("`convert_as2` inconsistent y type"); }
+        if( xtype == RAWSXP ){
+            memcpy(RAW(y), RAW(x), xlen);
+            return(y);
+        }
+        if( xtype != LGLSXP ){
+            SEXP z = PROTECT(Rf_coerceVector(x, LGLSXP));
+            int* xptr = LOGICAL(z);
+            Rbyte* yptr = RAW(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = 2;
+                } else if (*xptr == TRUE){
+                    *yptr = 1;
+                } else {
+                    *yptr = 0;
+                }
+            }
+            UNPROTECT(1);
+        } else {
+            int* xptr = LOGICAL(x);
+            Rbyte* yptr = RAW(y);
+            for(R_xlen_t ii = 0; ii < xlen; ii++, xptr++, yptr++){
+                if(*xptr == NA_LOGICAL){
+                    *yptr = 2;
+                } else if (*xptr == TRUE){
+                    *yptr = 1;
+                } else {
+                    *yptr = 0;
+                }
+            }
+        }
+        return(y);
+    }
+    
+    if( TYPEOF(y) != type ){
+        stop("`convert_as2` inconsistent y type"); 
+    }
+    
+    if( type == REALSXP ){
+        if( xtype == type ){
+            memcpy(REAL(y), REAL(x), sizeof(double) * xlen );
+        } else {
+            SEXP z = PROTECT(Rf_coerceVector(x, type));
+            memcpy(REAL(y), REAL(z), sizeof(double) * xlen );
+            UNPROTECT(1);
+        }
+    } else if( type == INTSXP ){
+        if( xtype == type ){
+            memcpy(INTEGER(y), INTEGER(x), sizeof(int) * xlen );
+        } else {
+            SEXP z = PROTECT(Rf_coerceVector(x, type));
+            memcpy(INTEGER(y), INTEGER(z), sizeof(int) * xlen );
+            UNPROTECT(1);
+        }
+    } else if( type == RAWSXP ){
+        if( xtype == type ){
+            memcpy(RAW(y), RAW(x), sizeof(Rbyte) * xlen );
+        } else {
+            SEXP z = PROTECT(Rf_coerceVector(x, type));
+            memcpy(RAW(y), RAW(z), sizeof(Rbyte) * xlen );
+            UNPROTECT(1);
+        }
+    }
+    
+    return(y);
+}
 
 void cplxToReal(Rcomplex* x, double* y, size_t nelem){
     double* yptr = y;

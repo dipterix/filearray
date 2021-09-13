@@ -97,6 +97,10 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
         stop("Invalid file array")
     }
     
+    current_bsz <- get_buffer_size()
+    on.exit({
+        set_buffer_size(current_bsz)
+    })
     set_buffer_size(max_buffer_size())
     
     argnames <- names(formals(map))

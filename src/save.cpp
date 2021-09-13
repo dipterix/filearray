@@ -6,6 +6,148 @@
 #include "save.h"
 using namespace Rcpp;
 
+SEXP FARR_subset_assign_sequential_bare(
+        const std::string& filebase, 
+        const int64_t& unit_partlen, 
+        SEXP cum_partsizes, 
+        SEXPTYPE array_type,
+        SEXP value_, 
+        const int64_t from
+) {
+    R_xlen_t len = Rf_xlength(value_);
+    
+    // print(value_);
+    
+    int file_buffer_elemsize = file_element_size(array_type);
+    std::string fbase = correct_filebase(filebase);
+    R_len_t nparts = Rf_length(cum_partsizes);
+    
+    // calculate the first partition
+    int64_t slice_idx1 = 0;
+    int64_t slice_idx2 = 0;
+    int64_t tmp = 0;
+    for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
+    for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    
+    int part_start = 0;
+    int part_end = 0;
+    int64_t skip_start = 0;
+    int64_t skip_end = 0;
+    
+    int64_t* cum_part = INTEGER64(cum_partsizes);
+    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
+    if( part_start == 0 ){
+        skip_start = from;
+    } else {
+        skip_start = from - (*(cum_part - 1)) * unit_partlen;
+    }
+    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
+    skip_end = (*cum_part) * unit_partlen - (from + len);
+    
+    int64_t read_start = 0;
+    int64_t write_len = 0;
+    int64_t part_nelem = 0;
+    int64_t last_part_nelem = 0;
+    cum_part = INTEGER64(cum_partsizes);
+    
+    int64_t nwrite = 0;
+    FILE* conn = NULL;
+    
+    // Rcout << slice_idx1 << "  -  " << slice_idx2 << "\n";
+    // Rcout << part_start << "  -  " << part_end << "\n";
+    // Rcout << skip_start << "  -  " << skip_end << "\n";
+    
+    for(int part = part_start; part <= part_end; part++, cum_part++, nwrite += write_len){
+        // Rcout << part << "\n";
+        if( part >= nparts ){
+            continue;
+        }
+        // get partition n_elems
+        part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
+        last_part_nelem = (*cum_part) * unit_partlen;
+        
+        // skip read_start elements
+        read_start = 0;
+        if( part == part_start ) {
+            read_start = skip_start;
+        }
+        // Rcout << part_nelem << "--\n";
+        // then read read_len elements
+        write_len = part_nelem - read_start;
+        if( part == part_end ){
+            write_len -= skip_end;
+        }
+        
+        std::string part_file = fbase + std::to_string(part) + ".farr";
+        conn = fopen(part_file.c_str(), "r+b");
+        
+        if(conn == NULL){ continue; }
+        // Rcout << part << " " << read_start << " " << write_len << "\n";
+        
+        // Rcout << part << " " << read_start << " " << read_len << "\n";
+        fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
+        
+        switch(array_type) {
+        case REALSXP: {
+            lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case INTSXP: {
+            lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case RAWSXP: {
+            lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case FLTSXP: {
+            lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case LGLSXP: {
+            lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case CPLXSXP: {
+            lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        default: {
+            fclose(conn);
+            conn = NULL;
+            stop("Unsupported SEXP type");
+        }
+        }
+        // nread += read_len;
+        
+        // fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
+        fflush(conn);
+        fclose(conn);
+        conn = NULL;
+    }
+    
+    return(R_NilValue);
+}
+
+SEXP FARR_subset_assign_sequential(
+        const std::string& filebase, 
+        const int64_t& unit_partlen, 
+        SEXP cum_partsizes, 
+        SEXPTYPE array_type,
+        SEXP value, 
+        const int64_t from
+) {
+    SEXP value_ = PROTECT(convert_as(value, array_type));
+    FARR_subset_assign_sequential_bare(
+        filebase, unit_partlen,
+        cum_partsizes, array_type,
+        value_, from
+    );
+    UNPROTECT(1);
+    return(R_NilValue);
+}
+
+
 template <typename T>
 void subset_assign_partition(
         FILE* conn, T* value, const R_xlen_t block_size, 
@@ -214,8 +356,8 @@ SEXP FARR_subset_assign2(
         const std::string& filebase,
         SEXP value,
         const SEXP listOrEnv,
-        const size_t thread_buffer,
-        int split_dim
+        const size_t thread_buffer = 2097152,
+        int split_dim = 0
 ) {
     // Get meta information
     const std::string fbase = correct_filebase(filebase);

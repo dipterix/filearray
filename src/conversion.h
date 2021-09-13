@@ -8,6 +8,7 @@ double na_cplx_dbl();
 SEXP realToInt64(Rcpp::NumericVector x, const double min_ = NA_REAL, const double max_ = NA_REAL, const int strict = 1);
 SEXP realToInt64_inplace(SEXP x, const double min_ = NA_REAL, const double max_ = NA_REAL, const int strict = 1);
 SEXP convert_as(SEXP x, SEXPTYPE type);
+SEXP convert_as2(SEXP x, SEXP y, SEXPTYPE type);
 
 // void realToCplx(double* x, Rcomplex* y, size_t nelem);
 void realToCplx(const double* x, Rcomplex* y, const size_t& nelem);

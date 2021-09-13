@@ -224,6 +224,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FARR_subset_sequential
+SEXP FARR_subset_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP file_buffer, SEXP ret, const int64_t from, const int64_t len);
+RcppExport SEXP _filearray_FARR_subset_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP file_bufferSEXP, SEXP retSEXP, SEXP fromSEXP, SEXP lenSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
+    Rcpp::traits::input_parameter< const int64_t& >::type unit_partlen(unit_partlenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type cum_partsizes(cum_partsizesSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type file_buffer(file_bufferSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type ret(retSEXP);
+    Rcpp::traits::input_parameter< const int64_t >::type from(fromSEXP);
+    Rcpp::traits::input_parameter< const int64_t >::type len(lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_sequential(filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from, len));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_subset2
 SEXP FARR_subset2(const std::string& filebase, const SEXP listOrEnv, const SEXP reshape, const bool drop, const bool use_dimnames, const size_t thread_buffer, int split_dim, const int strict);
 RcppExport SEXP _filearray_FARR_subset2(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP use_dimnamesSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP, SEXP strictSEXP) {
@@ -239,6 +257,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type split_dim(split_dimSEXP);
     Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_subset2(filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_buffer_map
+SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, const int& buffer_nelems, int result_nelems);
+RcppExport SEXP _filearray_FARR_buffer_map(SEXP input_filebasesSEXP, SEXP output_filebaseSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP, SEXP result_nelemsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type output_filebase(output_filebaseSEXP);
+    Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
+    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    Rcpp::traits::input_parameter< int >::type result_nelems(result_nelemsSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_buffer_map(input_filebases, output_filebase, map, buffer_nelems, result_nelems));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -360,7 +393,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_filearray_meta", (DL_FUNC) &_filearray_filearray_meta, 1},
     {"_filearray_filearray_assign", (DL_FUNC) &_filearray_filearray_assign, 3},
     {"_filearray_filearray_subset", (DL_FUNC) &_filearray_filearray_subset, 5},
+    {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 8},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
+    {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},

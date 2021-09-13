@@ -71,6 +71,43 @@ SEXPTYPE array_memory_sxptype(SEXPTYPE array_type){
     return (array_type);
 }
 
+int file_element_size(SEXPTYPE array_type) {
+    switch(array_type) {
+    case FLTSXP:
+        return(sizeof(float));
+    case LGLSXP:
+        return(sizeof(Rbyte));
+    case CPLXSXP:
+        return(sizeof(double));
+    case REALSXP:
+        return(sizeof(double));
+    case INTSXP:
+        return(sizeof(int));
+    case RAWSXP:
+        return(sizeof(Rbyte));
+    default:
+        stop("Unsupported sexptype");
+    }
+}
+int memory_element_size(SEXPTYPE array_type) {
+    switch(array_type) {
+    case FLTSXP:
+        return(sizeof(double));
+    case LGLSXP:
+        return(sizeof(int));
+    case CPLXSXP:
+        return(sizeof(Rcomplex));
+    case REALSXP:
+        return(sizeof(double));
+    case INTSXP:
+        return(sizeof(int));
+    case RAWSXP:
+        return(sizeof(Rbyte));
+    default:
+        stop("Unsupported sexptype");
+    }
+}
+
 // [[Rcpp::export]]
 int kinda_sorted(SEXP idx, int64_t min_, int64_t buffer_count){
     int64_t* ptr = (int64_t*) REAL(idx);
