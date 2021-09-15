@@ -90,6 +90,7 @@
 <!-- badges: start -->
 
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
+<p><img src="adhoc/readme-speed.png" alt="Speed comparisons with lazyarray (zstd-compressed out-of-memory array), and in-memory operation. filearray is uniformly faster than lazyarray. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an MacBook Air (M1, 2020) with 8GB memory"></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -196,14 +197,32 @@ a[1] - b[1]</code></pre>
 </ul>
 </div>
 </div>
-<div id="notes-on-precision" class="section level2">
+<div id="notes" class="section level2">
 <h2 class="hasAnchor">
-<a href="#notes-on-precision" class="anchor"></a>Notes on precision</h2>
+<a href="#notes" class="anchor"></a>Notes</h2>
+<div id="i-openmp-support-and-number-of-threads" class="section level4">
+<h4 class="hasAnchor">
+<a href="#i-openmp-support-and-number-of-threads" class="anchor"></a>I. ‘OpenMP’ support and Number of Threads</h4>
+<p>If <code>OpenMP</code> is not detected, then only single thread will be used. This is more likely to happen on recent Apple’s system because the native support for ‘OpenMP’ was dropped. To enable ‘OpenMP’, please read <a href="https://mac.r-project.org/openmp/">this link</a>. Find your system build and replace <code>OMP</code> accordingly, then run the following commands line-by-line.</p>
+<pre><code>OMP="openmp-11.0.1-darwin20-Release.tar.gz"
+xcode-select --install
+curl -O https://mac.r-project.org/openmp/$OMP
+    sudo tar fvx $OMP -C /</code></pre>
+<p>This is a one-time configuration. After the configuration, please run</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></code></pre></div>
+<p>If <code>OpenMP</code> is detected, then the number of threads the maximum number of <code>CPU</code> cores on your machine, or <code>8</code>, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total cores.</p>
+<p>Simultaneous file read/write operations is recommended on modern <code>NVMe</code> solid-state drives or server <code>RAIDs</code>. On traditional <code>HDD</code>, it is recommended to use single thread.</p>
+</div>
+<div id="ii-notes-on-precision" class="section level4">
+<h4 class="hasAnchor">
+<a href="#ii-notes-on-precision" class="anchor"></a>II. Notes on precision</h4>
 <ol>
 <li><p><code>complex</code> numbers: In native <code>R</code>, complex numbers are combination of two <code>double</code> numbers - real and imaginary (total 16 bytes). In <code>filearray</code>, complex numbers are coerced to two <code>float</code> numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, <code>1.0000001</code> will be store as <code>1</code>, or <code>123456789</code> will be stored as <code>123456792</code> (first 7 digits are accurate).</p></li>
 <li><p><code>float</code> type: Native R does not have float type. All numeric values are stored in double precision. Since float numbers use half of the space, float arrays can be faster when hard drive speed is the bottle-neck (see <a href="https://dipterix.org/filearray/articles/performance.html">performance comparisons</a>). However coercing double to float comes at costs: a). float number has less precision b). float number has smaller range (<span class="math inline">3.4 × 10<sup>38</sup></span>) than double (<span class="math inline">1.7 × 10<sup>308</sup></span>) hence use with caution when data needs high precision or the max is super large.</p></li>
 <li><p><code>collapse</code> function: when data range is large (say <code>x[[1]]=1</code>, but <code>x[[2]]=10^20</code>), <code>collapse</code> method might lose precision. This is <code>double</code> only uses 8 bytes of memory space. When calculating summations, R internally uses <code>long double</code> to prevent precision loss, but current <code>filearray</code> implementation uses <code>double</code>, causing floating error around 16 decimal place.</p></li>
 </ol>
+</div>
 </div>
 </div>
   </div>

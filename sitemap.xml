@@ -16,7 +16,13 @@
     <loc>http://dipterix.org/filearray/reference/filearray.html</loc>
   </url>
   <url>
+    <loc>http://dipterix.org/filearray/reference/filearray_bind.html</loc>
+  </url>
+  <url>
     <loc>http://dipterix.org/filearray/reference/filearray_threads.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/filearray/reference/fmap.html</loc>
   </url>
   <url>
     <loc>http://dipterix.org/filearray/reference/fwhich.html</loc>
