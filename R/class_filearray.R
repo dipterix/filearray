@@ -53,7 +53,7 @@ load_meta <- function(path){
         seek(con = fid, where = HEADER_SIZE, origin = "start", rw = "read")
         v <- readBin(con = fid, what = 'raw', size = 1L, 
                      n = header$content_length)
-        conn = rawConnection(v, open = "rb")
+        conn <- rawConnection(v, open = "rb")
         dimnames <- readRDS(conn)
         close(conn)
         header$dimnames <- dimnames
@@ -343,7 +343,7 @@ setRefClass(
             switch (
                 type,
                 "complex" = {
-                    value <- cplxToReal2(as.complex(value));
+                    value <- cplxToReal2(as.complex(value))
                 },
                 "float" = {
                     value <- realToFloat2(as.double(value))

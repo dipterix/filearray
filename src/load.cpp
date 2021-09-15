@@ -55,27 +55,63 @@ inline void subset_partition(
     int64_t end_idx = 0;
     int64_t conn_pos = 0;
     
-    int64_t* idx1ptr = (int64_t*) REAL(idx1);
+    int64_t* idx1ptr = INTEGER64(idx1);
     R_xlen_t idx1len = Rf_xlength(idx1);
     
-    int64_t* idx2ptr = (int64_t*) REAL(idx2);
+    int64_t* idx2ptr = INTEGER64(idx2);
     R_xlen_t idx2len = Rf_xlength(idx2);
     
     R_xlen_t ii = 0, jj = 0, ll = 0, ii_idx1 = 0;
     T* retptr2 = retptr;
     T* retptr3 = retptr;
     
-    // Rcout << idx2_start << "---\n";
+    // print(idx2);
+    // Rcout << idx2_sorted << "---\n";
+    int matched = 0;
     
     for(int64_t block = idx2_start; block <= idx2_end; block++){
+        
+        /**
+         * The following commented code will bug out when
+         * running in multithread. My goal is to find
+         * the first element in idx2 that equals to `block`
+         * The issue is `block` might not exist in `idx2`,
+         * hence I added a check `*idx2ptr != block` at the end
+         * 
+         * In single thread, it seems that the compiler will
+         * check and make sure `idx2ptr` won't go beyond the
+         * end if the array. However, OpenMP compiler does not
+         * have this check. So at the end of the loop,
+         * `idx2ptr` will go beyong the array and `*idx2ptr`
+         * is not an element in `idx2`. I think this is 
+         * compiler-related and also depend on type of optimization
+         * 
+         * In my case, when block is 1, in some rare cases,
+         * this if-clause will fail, and instead of jumping
+         * to next block, the rest of code gets executed.
+         * 
+         for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
+             ii_idx1 < idx2len; 
+             ii_idx1++, idx2ptr++){
+             if( *idx2ptr == block ){
+                 break;
+             }
+         }
+         if( *idx2ptr != block ){ continue; }
+         */
+        
+        
         // find block in idx2
-        for(ii_idx1 = 0, idx2ptr = (int64_t*) REAL(idx2);
-            ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
+        matched = 0;
+        for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
+            ii_idx1 < idx2len; 
+            ii_idx1++, idx2ptr++){
             if( *idx2ptr == block ){
+                matched = 1;
                 break;
             }
         }
-        if( *idx2ptr != block ){ continue; }
+        if( matched == 0 ){ continue; }
         
         // Rcout << block << "\n";
         
@@ -199,6 +235,7 @@ bool FARR_subset_template(
     const int idx1_sorted = kinda_sorted(idx1, idx1_start, buffer_nelems);
     
     int err = -1;
+    std::string error_msg = "";
     // char* buffer[nbuffers];
     
     int ncores = buffer_ptrs.size();
@@ -272,7 +309,12 @@ bool FARR_subset_template(
                 //                  idx1, idx1_start, idx1_end,
                 //                  idx2, idx2_start, idx2_end,
                 //                  0, idx2_sorted);
-            } catch(...){
+            } catch(std::exception &ex){
+                fclose(conn);
+                conn = NULL;
+                err = part;
+                error_msg = ex.what();
+            } catch(...) {
                 fclose(conn);
                 conn = NULL;
                 err = part;
@@ -283,6 +325,12 @@ bool FARR_subset_template(
         }
     }
 }
+
+    if( err >= 0 ){
+        stop("Error while trying to read partition "+std::to_string(err+1)+
+            ". Reason: " + error_msg);
+        // Rcout << error_msg << "\n";
+    }
     return(true);
 }
 

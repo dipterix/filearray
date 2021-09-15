@@ -244,7 +244,7 @@ SEXP FARR_buffer_map(
             // );
             
             UNPROTECT(1);
-        } catch(Rcpp::exception *e){
+        } catch(std::exception &ex){
             if(conn != NULL){
                 fseek(conn, 0, SEEK_SET);
                 // fflush(conn);
@@ -252,8 +252,16 @@ SEXP FARR_buffer_map(
                 conn = NULL;
             }
             UNPROTECT(2 + narrays * 2);
-            e->copy_stack_trace_to_r();
-            stop(e->what());
+            forward_exception_to_r(ex);
+        } catch(...){
+            if(conn != NULL){
+                fseek(conn, 0, SEEK_SET);
+                // fflush(conn);
+                fclose(conn);
+                conn = NULL;
+            }
+            UNPROTECT(2 + narrays * 2);
+            stop("Unknown error.");
         }
         
         
