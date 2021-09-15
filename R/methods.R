@@ -116,6 +116,11 @@ NULL
         stop("File array is read-only")
     }
     
+    buf_bytes <- get_buffer_size()
+    on.exit({
+        set_buffer_size(buf_bytes)
+    })
+    
     # parse ...
     dim <- x$dimension()
     arglen <- ...length()
@@ -192,7 +197,7 @@ NULL
     }
     
     # decide split_dim
-    buffer_sz <- max_buffer_size() / x$element_size()
+    buffer_sz <- buf_bytes / x$element_size()
     cprod <- cumprod(dim)
     if(length(locs) == length(dim)){
         tmp <- sapply(locs, function(x){
@@ -224,7 +229,7 @@ NULL
         value = value,
         listOrEnv = locs,
         split_dim = split_dim,
-        thread_buffer = max_buffer_size()
+        thread_buffer = buf_bytes
     ) 
     invisible(x)
 }
