@@ -9,40 +9,8 @@ FARR_collapse_complex <- function(filebase, dim, keep, cum_part, method = 1L, re
     .Call(`_filearray_FARR_collapse_complex`, filebase, dim, keep, cum_part, method, remove_na, scale)
 }
 
-check_missing_dots <- function(env) {
-    .Call(`_filearray_check_missing_dots`, env)
-}
-
-set_buffer_size <- function(size) {
-    .Call(`_filearray_set_buffer_size`, size)
-}
-
-get_buffer_size <- function() {
-    .Call(`_filearray_get_buffer_size`)
-}
-
-kinda_sorted <- function(idx, min_, buffer_count) {
-    .Call(`_filearray_kinda_sorted`, idx, min_, buffer_count)
-}
-
-realToUint64 <- function(x, min_, max_, strict) {
-    .Call(`_filearray_realToUint64`, x, min_, max_, strict)
-}
-
-locationList <- function(listOrEnv, dim, strict) {
-    .Call(`_filearray_locationList`, listOrEnv, dim, strict)
-}
-
-reshape_or_drop <- function(x, reshape, drop) {
-    .Call(`_filearray_reshape_or_drop`, x, reshape, drop)
-}
-
-loc2idx <- function(sliceIdx, dim) {
-    .Call(`_filearray_loc2idx`, sliceIdx, dim)
-}
-
-schedule <- function(listOrEnv, dim, cum_part_sizes, split_dim, strict) {
-    .Call(`_filearray_schedule`, listOrEnv, dim, cum_part_sizes, split_dim, strict)
+realToInt64 <- function(x, min_, max_, strict) {
+    .Call(`_filearray_realToInt64`, x, min_, max_, strict)
 }
 
 cplxToReal2 <- function(x) {
@@ -65,12 +33,56 @@ get_float_na <- function() {
     .Call(`_filearray_get_float_na`)
 }
 
-FARR_subset <- function(filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape = NULL, drop = FALSE, strict = 1L, dimnames = NULL, half_size = FALSE) {
-    .Call(`_filearray_FARR_subset`, filebase, type, listOrEnv, dim, cum_part_sizes, split_dim, reshape, drop, strict, dimnames, half_size)
+set_buffer_size <- function(size) {
+    .Call(`_filearray_set_buffer_size`, size)
 }
 
-FARR_buffer_mapreduce <- function(filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type) {
-    .Call(`_filearray_FARR_buffer_mapreduce`, filebase, map, reduce, dim, partition_cumlens, bufferlen, x_type)
+get_buffer_size <- function() {
+    .Call(`_filearray_get_buffer_size`)
+}
+
+FARR_meta <- function(filebase) {
+    .Call(`_filearray_FARR_meta`, filebase)
+}
+
+loc2idx <- function(sliceIdx, dim) {
+    .Call(`_filearray_loc2idx`, sliceIdx, dim)
+}
+
+locationList <- function(listOrEnv, dim, strict) {
+    .Call(`_filearray_locationList`, listOrEnv, dim, strict)
+}
+
+schedule <- function(listOrEnv, dim, cum_part_sizes, split_dim, strict) {
+    .Call(`_filearray_schedule`, listOrEnv, dim, cum_part_sizes, split_dim, strict)
+}
+
+filearray_meta <- function(filebase) {
+    .Call(`_filearray_filearray_meta`, filebase)
+}
+
+filearray_assign <- function(filebase, value, position_indices) {
+    .Call(`_filearray_filearray_assign`, filebase, value, position_indices)
+}
+
+filearray_subset <- function(filebase, position_indices, drop = TRUE, use_dimnames = TRUE, reshape = NULL) {
+    .Call(`_filearray_filearray_subset`, filebase, position_indices, drop, use_dimnames, reshape)
+}
+
+FARR_subset_sequential <- function(filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from = 0L, len = 1L) {
+    .Call(`_filearray_FARR_subset_sequential`, filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from, len)
+}
+
+FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_dimnames = TRUE, thread_buffer = 2097152L, split_dim = 0L, strict = 1L) {
+    .Call(`_filearray_FARR_subset2`, filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict)
+}
+
+FARR_buffer_map <- function(input_filebases, output_filebase, map, buffer_nelems, result_nelems = 0L) {
+    .Call(`_filearray_FARR_buffer_map`, input_filebases, output_filebase, map, buffer_nelems, result_nelems)
+}
+
+FARR_buffer_mapreduce <- function(filebase, map, reduce, buffer_nelems) {
+    .Call(`_filearray_FARR_buffer_mapreduce`, filebase, map, reduce, buffer_nelems)
 }
 
 getThreads <- function(max = FALSE) {
@@ -85,7 +97,19 @@ hasOpenMP <- function() {
     .Call(`_filearray_hasOpenMP`)
 }
 
-FARR_subset_assign <- function(filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_) {
-    .Call(`_filearray_FARR_subset_assign`, filebase, listOrEnv, dim, cum_part_sizes, split_dim, type, value_)
+FARR_subset_assign2 <- function(filebase, value, listOrEnv, thread_buffer = 2097152L, split_dim = 0L) {
+    .Call(`_filearray_FARR_subset_assign2`, filebase, value, listOrEnv, thread_buffer, split_dim)
+}
+
+kinda_sorted <- function(idx, min_, buffer_count) {
+    .Call(`_filearray_kinda_sorted`, idx, min_, buffer_count)
+}
+
+check_missing_dots <- function(env) {
+    .Call(`_filearray_check_missing_dots`, env)
+}
+
+reshape_or_drop <- function(x, reshape, drop) {
+    .Call(`_filearray_reshape_or_drop`, x, reshape, drop)
 }
 

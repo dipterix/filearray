@@ -97,7 +97,10 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
         stop("Invalid file array")
     }
     
-    filebase <- paste0(x$.filebase, x$.sep)
+    current_bsz <- get_buffer_size()
+    on.exit({
+        set_buffer_size(current_bsz)
+    })
     set_buffer_size(max_buffer_size())
     
     argnames <- names(formals(map))
@@ -141,8 +144,14 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
         buffer_size <- 1
     }
     
-    FARR_buffer_mapreduce(filebase, map_, reduce, dim, 
-                          cum_partlen, buffer_size, sexp_type)
+    # filebase <- paste0(x$.filebase, x$.sep)
+    # FARR_buffer_mapreduce(filebase, map_, reduce, dim, 
+    #                       cum_partlen, buffer_size, sexp_type)
+    FARR_buffer_mapreduce(
+        x$.filebase,
+        map_, reduce,
+        buffer_size
+    )
 }
 
 #' @rdname mapreduce

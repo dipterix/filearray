@@ -9,6 +9,8 @@
 
 Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, float, integer, complex, logical and raw).
 
+![Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an `MacBook Air (M1, 2020)` with `8GB` memory](adhoc/readme-speed.png)
+
 ## Installation
 
 ```r
@@ -111,7 +113,31 @@ For complex numbers, `transform` is a little bit different:
 * `sqrt`: `|x|` (modulus)
 * `normalize`: `x / |x|` (unit length)
 
-## Notes on precision
+## Notes
+
+#### I. 'OpenMP' support and Number of Threads
+
+If `OpenMP` is not detected, then only single thread will be used. This is more likely to happen on recent Apple's system because the native support for 'OpenMP' was dropped. To enable 'OpenMP', please read [this link](https://mac.r-project.org/openmp/). Find your system build and replace `OMP` accordingly, then run the following commands line-by-line.
+
+```
+OMP="openmp-11.0.1-darwin20-Release.tar.gz"
+xcode-select --install
+curl -O https://mac.r-project.org/openmp/$OMP
+    sudo tar fvx $OMP -C /
+```
+
+This is a one-time configuration. After the configuration, please run 
+
+```r
+install.packages('filearray', type = 'source')
+```
+
+
+If `OpenMP` is detected, then the number of threads the maximum number of `CPU` cores on your machine, or `8`, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total cores. 
+
+Simultaneous file read/write operations is recommended on modern `NVMe` solid-state drives or server `RAIDs`. On traditional `HDD`, it is recommended to use single thread.
+
+#### II. Notes on precision
 
 1. `complex` numbers: In native `R`, complex numbers are combination of two `double` numbers - real and imaginary (total 16 bytes). In `filearray`, complex numbers are coerced to two `float` numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, `1.0000001` will be store as `1`, or `123456789` will be stored as `123456792` (first 7 digits are accurate).
 

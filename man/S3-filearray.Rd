@@ -17,7 +17,7 @@
 \alias{subset.FileArray}
 \title{'S3' methods for 'FileArray'}
 \usage{
-\method{[}{FileArray}(x, ..., drop = TRUE, reshape = NULL, strict = TRUE)
+\method{[}{FileArray}(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE)
 
 \method{[}{FileArray}(x, ...) <- value
 
@@ -51,6 +51,8 @@
 \item{reshape}{a new dimension to set before returning subset results; default is \code{NULL} (use default dimensions)}
 
 \item{strict}{whether to allow indices to exceed bound; currently only accept \code{TRUE}}
+
+\item{dimnames}{whether to preserve \code{\link[base]{dimnames}}}
 
 \item{value}{value to substitute or set}
 
