@@ -9,7 +9,9 @@
 
 Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, float, integer, complex, logical and raw).
 
-![Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an `MacBook Air (M1, 2020)` with 8GB memory](https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png)
+![](https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png)
+
+<small> *Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an `MacBook Air (M1, 2020)` with 8GB memory* </small>
 
 ## Installation
 
