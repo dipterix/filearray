@@ -261,11 +261,20 @@ test_that("C++: IO - subset/assign - float", {
             d2 <- c(NA, NA)
             as.double(sample(c(d1,d2)))
         })
-    expect_equal(
-        x[locs[[1]], locs[[2]], locs[[3]]],
-        y[locs[[1]], locs[[2]], locs[[3]]],
-        tolerance = eps
-    )
+    
+    a <- x[locs[[1]], locs[[2]], locs[[3]]]
+    b <- y[locs[[1]], locs[[2]], locs[[3]]]
+    expect_equal(is.na(a), is.na(b))
+    
+    sel <- !is.na(a-b) & (a-b) > eps
+    if(length(a[sel])){
+        # fail the test
+        print(a[sel])
+        print(b[sel])
+        expect_length(object = (a-b)[sel], n = 0)
+    }
+    
+    
     
     a <- x[c(1,1,2,2,1,1,2,2), 1, c(2,2)]
     b <- y[c(1,1,2,2,1,1,2,2), 1, c(2,2)]
