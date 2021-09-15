@@ -90,7 +90,7 @@
 <!-- badges: start -->
 
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
-<p><img src="adhoc/readme-speed.png" alt="Speed comparisons with lazyarray (zstd-compressed out-of-memory array), and in-memory operation. filearray is uniformly faster than lazyarray. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an MacBook Air (M1, 2020) with 8GB memory"></p>
+<p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png" alt="Speed comparisons with lazyarray (zstd-compressed out-of-memory array), and in-memory operation. filearray is uniformly faster than lazyarray. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an MacBook Air (M1, 2020) with 8GB memory"></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -211,8 +211,8 @@ curl -O https://mac.r-project.org/openmp/$OMP
 <p>This is a one-time configuration. After the configuration, please run</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></code></pre></div>
-<p>If <code>OpenMP</code> is detected, then the number of threads the maximum number of <code>CPU</code> cores on your machine, or <code>8</code>, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total cores.</p>
-<p>Simultaneous file read/write operations is recommended on modern <code>NVMe</code> solid-state drives or server <code>RAIDs</code>. On traditional <code>HDD</code>, it is recommended to use single thread.</p>
+<p>If <code>OpenMP</code> is detected, then the number of threads the maximum number of <code>CPU</code> cores on your machine, or <code>8</code>, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total processing cores.</p>
+<p>Simultaneous file read/write operation is recommended on modern <code>NVMe</code> solid-state drives or server <code>RAIDs</code>. On traditional <code>HDD</code>, it is recommended to use single thread.</p>
 </div>
 <div id="ii-notes-on-precision" class="section level4">
 <h4 class="hasAnchor">
