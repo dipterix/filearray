@@ -9,7 +9,7 @@
 
 Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, float, integer, complex, logical and raw).
 
-![Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an `MacBook Air (M1, 2020)` with `8GB` memory](adhoc/readme-speed.png)
+![Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation. The speed test was performed on an `MacBook Air (M1, 2020)` with 8GB memory](https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png)
 
 ## Installation
 
@@ -133,9 +133,9 @@ install.packages('filearray', type = 'source')
 ```
 
 
-If `OpenMP` is detected, then the number of threads the maximum number of `CPU` cores on your machine, or `8`, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total cores. 
+If `OpenMP` is detected, then the number of threads the maximum number of `CPU` cores on your machine, or `8`, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total processing cores. 
 
-Simultaneous file read/write operations is recommended on modern `NVMe` solid-state drives or server `RAIDs`. On traditional `HDD`, it is recommended to use single thread.
+Simultaneous file read/write operation is recommended on modern `NVMe` solid-state drives or server `RAIDs`. On traditional `HDD`, it is recommended to use single thread.
 
 #### II. Notes on precision
 
