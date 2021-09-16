@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "conversion.h"
 #include "save.h"
+#include "mio/mio.h"
 using namespace Rcpp;
 
 SEXP FARR_subset_assign_sequential_bare(
@@ -76,6 +77,7 @@ SEXP FARR_subset_assign_sequential_bare(
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
         std::error_code error;
+        
         
         mio::mmap_sink rw_mmap = mio::make_mmap_sink(
             part_file, 
