@@ -1,6 +1,7 @@
 #include "common.h"
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <map>
 #include <fstream>
 #include <cassert>
 #include <iostream>
@@ -62,6 +63,8 @@ SEXP FARR_subset_assign_sequential_bare(
     
     int64_t nwrite = 0;
     
+    const boost::interprocess::mode_t mode = boost::interprocess::read_write;
+    
     for(int part = part_start; part <= part_end; part++, cum_part++, nwrite += write_len){
         // Rcout << part << "\n";
         if( part >= nparts ){
@@ -85,68 +88,57 @@ SEXP FARR_subset_assign_sequential_bare(
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
         
-        
-        const boost::interprocess::mode_t mode = boost::interprocess::read_write;
-        boost::interprocess::file_mapping fm(part_file.c_str(), mode);
-        
-        boost::interprocess::mapped_region region(
-                fm, mode, 
-                FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
-                file_buffer_elemsize * write_len);
-        //region.advise(boost::interprocess::mapped_region::advice_sequential);
-        
-        unsigned char* begin = static_cast<unsigned char*>(region.get_address());
-        
-        // mio::mmap_sink rw_mmap = mio::make_mmap_sink(
-        //     part_file, 
-        //     FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
-        //     file_buffer_elemsize * write_len, error);
-        
-        if( region.get_size() != file_buffer_elemsize * write_len ){
+        try{
+            boost::interprocess::file_mapping fm(part_file.c_str(), mode);
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
+                    file_buffer_elemsize * write_len);
+            unsigned char* begin = static_cast<unsigned char*>(region.get_address());
+            switch(array_type) {
+            case REALSXP: {
+                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            case INTSXP: {
+                lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            case RAWSXP: {
+                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            case FLTSXP: {
+                lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            case LGLSXP: {
+                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            case CPLXSXP: {
+                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
+                // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+                break;
+            }
+            default: {
+                stop("Unsupported SEXP type");
+            }
+            }
+            region.flush();
+        } catch(std::exception &ex){
             stop("Error while writing sequential to partition " +
-                std::to_string(part + 1) + ".");
+                std::to_string(part + 1) + ". Reason: " + ex.what());
+        } catch(...){
+            stop("Error while writing sequential to partition " +
+                std::to_string(part + 1) + ". (Unknown error)");
         }
-        // if(conn == NULL){ continue; }
         
-        // fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
-        
-        switch(array_type) {
-        case REALSXP: {
-            lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        case INTSXP: {
-            lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        case RAWSXP: {
-            lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        case FLTSXP: {
-            lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        case LGLSXP: {
-            lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        case CPLXSXP: {
-            lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
-            // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-            break;
-        }
-        default: {
-            stop("Unsupported SEXP type");
-        }
-        }
-        region.flush();
-        // nread += read_len;
     }
     
     return(R_NilValue);
@@ -253,6 +245,9 @@ SEXP FARR_subset_assign_template(
     }
     
     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
+    const boost::interprocess::mode_t mode = boost::interprocess::read_write;
+    
+    std::map<int64_t, boost::interprocess::file_mapping> conn_map;
     
 #pragma omp parallel num_threads(ncores)
 {
@@ -292,7 +287,6 @@ SEXP FARR_subset_assign_template(
         std::string file = filebase + std::to_string(part) + ".farr";
         
         try{
-            const boost::interprocess::mode_t mode = boost::interprocess::read_write;
             boost::interprocess::file_mapping fm(file.c_str(), mode);
             int64_t region_len = elem_size * (idx1_end - idx1_start + block_size * (idx2_end - idx2_start));
             boost::interprocess::mapped_region region(
