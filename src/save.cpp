@@ -1,3 +1,4 @@
+#include "common.h"
 #include "openmp.h"
 #include "serialize.h"
 #include "core.h"
