@@ -97,10 +97,6 @@ hasOpenMP <- function() {
     .Call(`_filearray_hasOpenMP`)
 }
 
-timesTwo <- function(path) {
-    .Call(`_filearray_timesTwo`, path)
-}
-
 FARR_subset_assign2 <- function(filebase, value, listOrEnv, thread_buffer = 2097152L, split_dim = 0L) {
     .Call(`_filearray_FARR_subset_assign2`, filebase, value, listOrEnv, thread_buffer, split_dim)
 }
