@@ -18,6 +18,7 @@ Description: Stores large arrays in files to avoid occupying large
     types (double, float, complex, integer, logical, and raw).
 Imports: 
     methods, 
+    BH,
     Rcpp
 Suggests: 
     rmarkdown,
@@ -25,6 +26,7 @@ Suggests:
     testthat (>= 3.0.0)
 RoxygenNote: 7.1.1
 LinkingTo: 
+    BH,
     Rcpp
 Config/testthat/edition: 3
 VignetteBuilder: knitr

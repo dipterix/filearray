@@ -1,4 +1,13 @@
 #include "common.h"
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <fstream>
+#include <cassert>
+#include <iostream>
+#include <iterator>
+#include <algorithm>
+// [[Rcpp::depends(BH)]]
+
 #include "openmp.h"
 #include "serialize.h"
 #include "core.h"
@@ -75,17 +84,27 @@ SEXP FARR_subset_assign_sequential_bare(
         }
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
-        std::error_code error;
         
         
-        mio::mmap_sink rw_mmap = mio::make_mmap_sink(
-            part_file, 
-            FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
-            file_buffer_elemsize * write_len, error);
+        const boost::interprocess::mode_t mode = boost::interprocess::read_write;
+        boost::interprocess::file_mapping fm(part_file.c_str(), mode);
         
-        if( error ){
+        boost::interprocess::mapped_region region(
+                fm, mode, 
+                FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
+                file_buffer_elemsize * write_len);
+        //region.advise(boost::interprocess::mapped_region::advice_sequential);
+        
+        unsigned char* begin = static_cast<unsigned char*>(region.get_address());
+        
+        // mio::mmap_sink rw_mmap = mio::make_mmap_sink(
+        //     part_file, 
+        //     FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
+        //     file_buffer_elemsize * write_len, error);
+        
+        if( region.get_size() != file_buffer_elemsize * write_len ){
             stop("Error while writing sequential to partition " +
-                std::to_string(part + 1) + ". Reason: " + error.message());
+                std::to_string(part + 1) + ".");
         }
         // if(conn == NULL){ continue; }
         
@@ -93,48 +112,41 @@ SEXP FARR_subset_assign_sequential_bare(
         
         switch(array_type) {
         case REALSXP: {
-            lendian_assign(rw_mmap.begin(), REAL(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         case INTSXP: {
-            lendian_assign(rw_mmap.begin(), INTEGER(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         case RAWSXP: {
-            lendian_assign(rw_mmap.begin(), RAW(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         case FLTSXP: {
-            lendian_assign(rw_mmap.begin(), FLOAT(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         case LGLSXP: {
-            lendian_assign(rw_mmap.begin(), RAW(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         case CPLXSXP: {
-            lendian_assign(rw_mmap.begin(), REAL(value_) + nwrite, file_buffer_elemsize);
+            lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
             // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
             break;
         }
         default: {
-            rw_mmap.unmap();
             stop("Unsupported SEXP type");
         }
         }
+        region.flush();
         // nread += read_len;
-        rw_mmap.sync(error);
-        if( error ){
-            stop("Error while syncing to partition " +
-                std::to_string(part + 1) + ". Reason: " + error.message());
-        }
-        
-        rw_mmap.unmap();
     }
     
     return(R_NilValue);
@@ -246,6 +258,9 @@ SEXP FARR_subset_assign_template(
 {
 #pragma omp for schedule(static, 1) nowait
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
+        
+        if( has_error >= 0 ){ continue; }
+        
         R_xlen_t part = partitions[iter];
         int64_t skips = 0;
         if(iter > 0){
@@ -275,46 +290,37 @@ SEXP FARR_subset_assign_template(
         }
         
         std::string file = filebase + std::to_string(part) + ".farr";
-        std::error_code error;
         
-        mio::mmap_sink rw_mmap = mio::make_mmap_sink(
-            file, 
-            FARR_HEADER_LENGTH + elem_size *
-                (block_size * idx2_start + idx1_start), 
-            elem_size * 
-                (idx1_end - idx1_start +
-                block_size * (idx2_end - idx2_start)), 
-            error);
+        try{
+            const boost::interprocess::mode_t mode = boost::interprocess::read_write;
+            boost::interprocess::file_mapping fm(file.c_str(), mode);
+            int64_t region_len = elem_size * (idx1_end - idx1_start + block_size * (idx2_end - idx2_start));
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start), 
+                    region_len);
+            //region.advise(boost::interprocess::mapped_region::advice_sequential);
+            
+            char* begin = static_cast<char*>(region.get_address());
         
-        if (!error) {
-            try{
-                int64_t* idx2_ptr = INTEGER64(idx2);
-                R_xlen_t idx2_len = Rf_xlength(idx2);
-                T* value_ptr2 = value_ptr + (idx1len * skips);
-                int64_t* idx1ptr = idx1ptr0;
-                subset_assign_partition(
-                    rw_mmap.begin(), value_ptr2,
-                    block_size, idx1ptr, idx1len, 
-                    idx1_start, idx2_start, 
-                    idx2_ptr, idx2_len );
-                rw_mmap.sync(error);
-                if( !error ){
-                    rw_mmap.unmap();
-                } else {
-                    has_error = part;
-                    error_msg = error.message() + " while trying to save file.";
-                }
-            } catch(std::exception &ex){
-                rw_mmap.unmap();
-                has_error = part;
-                error_msg =  ex.what();
-                error_msg += " while trying to open file.";
-            } catch(...){
-                error_msg = "Unknown error.";
-            }
-        } else{
+            int64_t* idx2_ptr = INTEGER64(idx2);
+            R_xlen_t idx2_len = Rf_xlength(idx2);
+            T* value_ptr2 = value_ptr + (idx1len * skips);
+            int64_t* idx1ptr = idx1ptr0;
+            subset_assign_partition(
+                begin, value_ptr2,
+                block_size, idx1ptr, idx1len, 
+                idx1_start, idx2_start, 
+                idx2_ptr, idx2_len );
+            
+            region.flush();
+        } catch(std::exception &ex){
             has_error = part;
-            error_msg = error.message() + " while trying to open file.";
+            error_msg =  ex.what();
+            error_msg += " while trying to open file.";
+        } catch(...){
+            has_error = part;
+            error_msg = "Unknown error.";
         }
     }
 }
@@ -418,7 +424,7 @@ SEXP FARR_subset_assign2(
 devtools::load_all()
 set.seed(1); file <- tempfile(); unlink(file, recursive = TRUE)
 x <- filearray_create(file, 3:5, partition_size = 2, type = "complex")
-x$initialize_partition()
+# x$initialize_partition()
 FARR_subset_assign2(
     filebase = x$.filebase,
     1:60 + 1i,
