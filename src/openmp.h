@@ -11,7 +11,7 @@
 #define FARR_HAS_OPENMP false
 #endif
 
-#include <Rcpp.h>
+#include "common.h"
 #include <algorithm>
 
 

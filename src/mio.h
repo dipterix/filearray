@@ -51,6 +51,9 @@
 # include <unistd.h>
 #endif
 
+// Include vector and mio.h before Rcpp to avoid conflict
+#include <vector>
+
 namespace mio {
 
 /**
