@@ -1,7 +1,7 @@
 #ifndef FARR_CONVERSION_H
 #define FARR_CONVERSION_H
 
-#include <Rcpp.h>
+#include "common.h"
 #include "defs.h"
 
 double na_cplx_dbl();

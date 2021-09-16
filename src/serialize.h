@@ -1,7 +1,7 @@
 #ifndef FARR_UNSERIALIZE_H
 #define FARR_UNSERIALIZE_H
 
-#include <Rcpp.h>
+#include "common.h"
 
 // buffer type
 typedef struct {

@@ -1,7 +1,7 @@
 #ifndef FARR_CORE_H
 #define FARR_CORE_H
 
-#include <Rcpp.h>
+#include "common.h"
 #include "defs.h"
 
 /**********************************************************

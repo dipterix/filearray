@@ -1,7 +1,7 @@
 #ifndef FARR_UTILS_H
 #define FARR_UTILS_H
 
-#include <Rcpp.h>
+#include "common.h"
 #include "defs.h"
 #include "core.h"
 

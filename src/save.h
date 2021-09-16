@@ -1,7 +1,7 @@
 #ifndef FARR_SAVE_H
 #define FARR_SAVE_H
 
-#include <Rcpp.h>
+#include "common.h"
 /**
  * @param filebase root path of array, must be absolute and "corrected" (ends with "/" or "\\", depending on system)
  * @param sch returned from `schedule`, scheduled indices

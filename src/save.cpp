@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "conversion.h"
 #include "save.h"
-#include "mio.hpp"
 using namespace Rcpp;
 
 SEXP FARR_subset_assign_sequential_bare(
