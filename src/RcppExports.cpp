@@ -322,6 +322,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// timesTwo
+SEXP timesTwo(std::string path);
+RcppExport SEXP _filearray_timesTwo(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(timesTwo(path));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_subset_assign2
 SEXP FARR_subset_assign2(const std::string& filebase, SEXP value, const SEXP listOrEnv, const size_t thread_buffer, int split_dim);
 RcppExport SEXP _filearray_FARR_subset_assign2(SEXP filebaseSEXP, SEXP valueSEXP, SEXP listOrEnvSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP) {
@@ -400,6 +411,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
     {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
+    {"_filearray_timesTwo", (DL_FUNC) &_filearray_timesTwo, 1},
     {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
     {"_filearray_kinda_sorted", (DL_FUNC) &_filearray_kinda_sorted, 3},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},

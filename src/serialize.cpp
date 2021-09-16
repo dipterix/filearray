@@ -102,3 +102,16 @@ size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return( fwrite(ptr, size, nmemb, stream) );
 }
 
+
+void lendian_assign(void* dst, const void* src, const size_t& size){
+    if( !isLittleEndian() ){
+        const unsigned char *buffer_src = (const unsigned char*)src;
+        unsigned char *buffer_dst = (unsigned char*)dst;
+        for(size_t i = 1; i <= size; i++){
+            *buffer_dst++ = *(buffer_src + (size-i));
+        }
+    } else {
+        memcpy(dst, src, size);
+    }
+}
+

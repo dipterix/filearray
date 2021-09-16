@@ -9,23 +9,24 @@ filex$initialize_partition()
 set.seed(1)
 tmp <- rnorm(4e7)
 res1 <- microbenchmark::microbenchmark(
-    lazyarray = {
-        for(i in 1:10){
-            lazyx[,,,(i-1)*10 +1:10] <- tmp
-        }
-    },
+    # lazyarray = {
+    #     for(i in 1:10){
+    #         lazyx[,,,(i-1)*10 +1:10] <- tmp
+    #     }
+    # },
     filearray = {
         for(i in 1:10){
             filex[,,,(i-1)*10 +1:10] <- tmp
         }
-    }, times = 5
+    }, times = 1
 ); res1
+
 
 
 speed1 <- sapply(split(res1, res1$expr), function(res){
     speed <- matrix(800*4 / res$time, nrow = 10) * 1e9
     c(mean(speed), sd(speed) / 2)
-})
+}); speed1
 
 
 res2 <- microbenchmark::microbenchmark(
@@ -89,9 +90,9 @@ speed3 <- matrix(nrow = 1, prod(sapply(locs, length)) / 1e8 * 800 / c(
 tmp <- rnorm(prod(sapply(locs, length)))
 rm(z); gc()
 res4 <- microbenchmark::microbenchmark(
-    lazyarray = {
-        lazyx[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
-    },
+    # lazyarray = {
+    #     lazyx[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
+    # },
     filearray = {
         filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
     }, times = 10, setup = quote(gc())

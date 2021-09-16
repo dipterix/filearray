@@ -8,12 +8,6 @@
  * @param value value to set, must be coerced
  * @param buff_ptrs buffer points: length of `buff_ptrs` are the number of cores; each element must be at least buffer size in bytes (get_buffer_size())
  */
-SEXP FARR_subset_assign_internal(
-        const std::string& fbase,
-        const Rcpp::List sch, 
-        const SEXPTYPE type,
-        std::vector<SEXP>& buff_pool,
-        SEXP value);
 
 SEXP FARR_subset_assign2(
         const std::string& filebase,
