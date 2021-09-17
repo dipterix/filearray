@@ -1,3 +1,13 @@
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <map>
+#include <fstream>
+#include <cassert>
+#include <iostream>
+#include <iterator>
+#include <algorithm>
+// [[Rcpp::depends(BH)]]
+
 #include "openmp.h"
 #include "serialize.h"
 #include "core.h"
@@ -31,15 +41,15 @@ int get_buffer_nelem(SEXPTYPE type){
  ***********************************************************/
 
 template <typename T,  typename B>
-inline void subset_partition(
-        FILE* conn, B* buffer, int buffer_size, 
+void subset_partition(
+        const std::string& file, B* buffer, int buffer_size, 
         T* retptr, const R_xlen_t block_size, 
         SEXP idx1, int64_t idx1_start, int64_t idx1_end,
         SEXP idx2, int64_t idx2_start, int64_t idx2_end,
         int idx1_sorted, int idx2_sorted,
         void (*transform) (const B*, T*)
 ) {
-    double content_size = 0;
+    // double content_size = 0;
     int elem_size = sizeof(B);
     // R_xlen_t buffer_size = buffer_bytes / elem_size;
     if( buffer_size > block_size ){
@@ -47,9 +57,6 @@ inline void subset_partition(
     }
     B* bufferptr = (B*) buffer;
     B* bufferptr2 = bufferptr;
-    
-    fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-    lendian_fread(&(content_size), 8, 1, conn);
     
     int64_t start_idx = idx1_start;
     int64_t end_idx = 0;
@@ -69,126 +76,149 @@ inline void subset_partition(
     // Rcout << idx2_sorted << "---\n";
     int matched = 0;
     
-    for(int64_t block = idx2_start; block <= idx2_end; block++){
+    // fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
+    // lendian_fread(&(content_size), 8, 1, conn);
+    
+    // load file_map
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    bool is_open = false;
+    try {
+        boost::interprocess::file_mapping fm(file.c_str(), mode);
         
-        /**
-         * The following commented code will bug out when
-         * running in multithread. My goal is to find
-         * the first element in idx2 that equals to `block`
-         * The issue is `block` might not exist in `idx2`,
-         * hence I added a check `*idx2ptr != block` at the end
-         * 
-         * In single thread, it seems that the compiler will
-         * check and make sure `idx2ptr` won't go beyond the
-         * end if the array. However, OpenMP compiler does not
-         * have this check. So at the end of the loop,
-         * `idx2ptr` will go beyong the array and `*idx2ptr`
-         * is not an element in `idx2`. I think this is 
-         * compiler-related and also depend on type of optimization
-         * 
-         * In my case, when block is 1, in some rare cases,
-         * this if-clause will fail, and instead of jumping
-         * to next block, the rest of code gets executed.
-         * 
-         for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
+        for(int64_t block = idx2_start; block <= idx2_end; block++){
+            
+            /**
+             * The following commented code will bug out when
+             * running in multithread. My goal is to find
+             * the first element in idx2 that equals to `block`
+             * The issue is `block` might not exist in `idx2`,
+             * hence I added a check `*idx2ptr != block` at the end
+             * 
+             * In single thread, it seems that the compiler will
+             * check and make sure `idx2ptr` won't go beyond the
+             * end if the array. However, OpenMP compiler does not
+             * have this check. So at the end of the loop,
+             * `idx2ptr` will go beyong the array and `*idx2ptr`
+             * is not an element in `idx2`. I think this is 
+             * compiler-related and also depend on type of optimization
+             * 
+             * In my case, when block is 1, in some rare cases,
+             * this if-clause will fail, and instead of jumping
+             * to next block, the rest of code gets executed.
+             * 
+             for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
              ii_idx1 < idx2len; 
              ii_idx1++, idx2ptr++){
              if( *idx2ptr == block ){
-                 break;
+             break;
              }
-         }
-         if( *idx2ptr != block ){ continue; }
-         */
-        
-        
-        // find block in idx2
-        matched = 0;
-        for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
-            ii_idx1 < idx2len; 
-            ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                matched = 1;
-                break;
-            }
-        }
-        if( matched == 0 ){ continue; }
-        
-        // Rcout << block << "\n";
-        
-        // read current block!
-        retptr2 = retptr + ii_idx1 * idx1len;
-        start_idx = (idx1_start + block_size * block);
-        end_idx = start_idx - idx1_start + idx1_end + 1;
-        
-        if( start_idx >= content_size ){
-            if( idx2_sorted ){
-                break;
-            }
-            continue;
-        }
-        if( end_idx > content_size ){
-            end_idx = content_size;
-        }
-        
-        // Rcout << block << " " << ii_idx1 <<  " " << start_idx <<  " " << end_idx << "\n";
-        
-        // fseek is somehow slow, read to buffer without using it seems faster
-        while( conn_pos < start_idx ){
-            ii = start_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
-            conn_pos += ii;
-        }
-        // fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-        // fseek(conn, (start_idx - conn_pos) * elem_size, SEEK_CUR);
-        // conn_pos = start_idx;
-        
-        
-        idx1ptr = (int64_t*) REAL(idx1);
-        jj = 0;
-        while( conn_pos < end_idx ){
-            ii = end_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
+             }
+             if( *idx2ptr != block ){ continue; }
+             */
             
-            if( !idx1_sorted ){
-                idx1ptr = (int64_t*) REAL(idx1);
-                jj = 0;
-            }
-            for(; jj < idx1len; jj++, idx1ptr++) {
-                if(*idx1ptr == NA_INTEGER64){ continue; }
-                // ll should be [conn_pos, conn_pos + ii)
-                
-                ll = *idx1ptr - idx1_start + start_idx - conn_pos;
-                if( ll < 0 ){ continue; }
-                if( ll >= ii ){
-                    if( idx1_sorted ) {
-                        break;
-                    }
-                    continue;
+            
+            // find block in idx2
+            matched = 0;
+            for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
+                ii_idx1 < idx2len; 
+                ii_idx1++, idx2ptr++){
+                if( *idx2ptr == block ){
+                    matched = 1;
+                    break;
                 }
-                bufferptr2 = bufferptr + ll;
-                transform(bufferptr2, retptr2 + jj);
-                // *(retptr2 + jj) = (T) *(bufferptr + ll);
+            }
+            if( matched == 0 ){ continue; }
+            
+            // Rcout << block << "\n";
+            
+            // read current block!
+            retptr2 = retptr + ii_idx1 * idx1len;
+            start_idx = (idx1_start + block_size * block);
+            end_idx = start_idx - idx1_start + idx1_end + 1;
+            
+            // if( start_idx >= content_size ){
+            //     if( idx2_sorted ){
+            //         break;
+            //     }
+            //     continue;
+            // }
+            // if( end_idx > content_size ){
+            //     end_idx = content_size;
+            // }
+            
+            
+            // while( conn_pos < start_idx ){
+            //     ii = start_idx - conn_pos;
+            //     ii = ii > buffer_size ? buffer_size : ii;
+            //     lendian_fread(bufferptr, elem_size, ii, conn);
+            //     conn_pos += ii;
+            // }
+            
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + elem_size * start_idx, 
+                    elem_size * (idx1_end - idx1_start + 1));
+            end_idx = region.get_size() / elem_size;
+            // Rcout << file << " | " << block << " " << start_idx << "~" << end_idx << "\n";
+            
+            const B* begin = static_cast<const B*>(region.get_address());
+            
+            // Rcout << file << " | " << block << " " << start_idx << "~" 
+            //       << end_idx << ": " << "\n";
+            
+            idx1ptr = (int64_t*) REAL(idx1);
+            jj = 0;
+            conn_pos = 0;
+            while( conn_pos < end_idx ){
+                ii = end_idx - conn_pos;
+                ii = ii > buffer_size ? buffer_size : ii;
+                
+                memcpy(bufferptr, begin + conn_pos, elem_size * ii);
+                // lendian_fread(bufferptr, elem_size, ii, conn);
+                
+                if( !idx1_sorted ){
+                    idx1ptr = (int64_t*) REAL(idx1);
+                    jj = 0;
+                }
+                for(; jj < idx1len; jj++, idx1ptr++) {
+                    if(*idx1ptr == NA_INTEGER64){ continue; }
+                    // ll should be [conn_pos, conn_pos + ii)
+                    
+                    ll = *idx1ptr - idx1_start - conn_pos;
+                    if( ll < 0 ){ continue; }
+                    if( ll >= ii ){
+                        if( idx1_sorted ) {
+                            break;
+                        }
+                        continue;
+                    }
+                    bufferptr2 = bufferptr + ll;
+                    transform(bufferptr2, retptr2 + jj);
+                    // *(retptr2 + jj) = (T) *(bufferptr + ll);
+                }
+                
+                conn_pos += ii;
             }
             
-            conn_pos += ii;
-        }
-        
-        retptr2 = retptr + ii_idx1 * idx1len;
-        ii_idx1++;
-        idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
-        // Rcout << "1\n";
-        for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                retptr3 = retptr + ii_idx1 * idx1len;
-                memcpy(retptr3, retptr2, sizeof(T) * idx1len);
-            } else if( idx2_sorted && *idx2ptr > block ){
-                break;
+            retptr2 = retptr + ii_idx1 * idx1len;
+            ii_idx1++;
+            idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
+            // Rcout << "1\n";
+            for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
+                if( *idx2ptr == block ){
+                    retptr3 = retptr + ii_idx1 * idx1len;
+                    memcpy(retptr3, retptr2, sizeof(T) * idx1len);
+                } else if( idx2_sorted && *idx2ptr > block ){
+                    break;
+                }
             }
+            // Rcout << "2\n";
         }
-        // Rcout << "2\n";
+    } catch(...){
     }
+    
+    if(!is_open){ return; }
+    
 }
 
 /**********************************************************
@@ -289,40 +319,24 @@ bool FARR_subset_template(
         const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
         std::string file = filebase + std::to_string(part) + ".farr";
         
-        FILE* conn = fopen( file.c_str(), "rb" );
-        if (conn) {
-            
-            std::string s = "";
-            
-            // TODO: change
-            // int* buffer = INTEGER(buf);
-            B* buffer = buffer_ptrs[thread];
-            
-            try{
-                subset_partition(conn, buffer, buffer_nelems, 
-                                 retptr, block_size,
-                                 idx1, idx1_start, idx1_end,
-                                 idx2, idx2_start, idx2_end,
-                                 idx1_sorted, idx2_sorted,
-                                 transform);
-                // subset_partition(conn, buffer, nbuffers, retptr, block_size, 
-                //                  idx1, idx1_start, idx1_end,
-                //                  idx2, idx2_start, idx2_end,
-                //                  0, idx2_sorted);
-            } catch(std::exception &ex){
-                fclose(conn);
-                conn = NULL;
-                err = part;
-                error_msg = ex.what();
-            } catch(...) {
-                fclose(conn);
-                conn = NULL;
-                err = part;
-            }
-            if( conn != NULL ){
-                fclose(conn);
-            }
+        B* buffer = buffer_ptrs[thread];
+        
+        try{
+            subset_partition(file, buffer, buffer_nelems, 
+                             retptr, block_size,
+                             idx1, idx1_start, idx1_end,
+                             idx2, idx2_start, idx2_end,
+                             idx1_sorted, idx2_sorted,
+                             transform);
+            // subset_partition(conn, buffer, nbuffers, retptr, block_size, 
+            //                  idx1, idx1_start, idx1_end,
+            //                  idx2, idx2_start, idx2_end,
+            //                  0, idx2_sorted);
+        } catch(...) {
+            // Debug use
+            // err = part;
         }
+        
     }
 }
 

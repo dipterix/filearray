@@ -418,7 +418,7 @@ SEXP FARR_subset_assign2(
 devtools::load_all()
 set.seed(1); file <- tempfile(); unlink(file, recursive = TRUE)
 x <- filearray_create(file, 3:5, partition_size = 2, type = "complex")
-# x$initialize_partition()
+x$initialize_partition()
 FARR_subset_assign2(
     filebase = x$.filebase,
     1:60 + 1i,
