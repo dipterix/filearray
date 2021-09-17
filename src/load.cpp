@@ -66,6 +66,7 @@ void subset_partition(
     R_xlen_t idx1len = Rf_xlength(idx1);
     
     int64_t* idx2ptr = INTEGER64(idx2);
+    int64_t* idx2ptr2 = idx2ptr;
     R_xlen_t idx2len = Rf_xlength(idx2);
     
     R_xlen_t ii = 0, jj = 0, ll = 0, ii_idx1 = 0;
@@ -81,59 +82,22 @@ void subset_partition(
     
     // load file_map
     const boost::interprocess::mode_t mode = boost::interprocess::read_only;
-    bool is_open = false;
     try {
         boost::interprocess::file_mapping fm(file.c_str(), mode);
         
-        for(int64_t block = idx2_start; block <= idx2_end; block++){
+        for(idx2ptr = INTEGER64(idx2), ii_idx1= 0 ;
+            ii_idx1 < idx2len; 
+            ii_idx1++, idx2ptr++) {
             
-            /**
-             * The following commented code will bug out when
-             * running in multithread. My goal is to find
-             * the first element in idx2 that equals to `block`
-             * The issue is `block` might not exist in `idx2`,
-             * hence I added a check `*idx2ptr != block` at the end
-             * 
-             * In single thread, it seems that the compiler will
-             * check and make sure `idx2ptr` won't go beyond the
-             * end if the array. However, OpenMP compiler does not
-             * have this check. So at the end of the loop,
-             * `idx2ptr` will go beyong the array and `*idx2ptr`
-             * is not an element in `idx2`. I think this is 
-             * compiler-related and also depend on type of optimization
-             * 
-             * In my case, when block is 1, in some rare cases,
-             * this if-clause will fail, and instead of jumping
-             * to next block, the rest of code gets executed.
-             * 
-             for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
-             ii_idx1 < idx2len; 
-             ii_idx1++, idx2ptr++){
-             if( *idx2ptr == block ){
-             break;
-             }
-             }
-             if( *idx2ptr != block ){ continue; }
-             */
-            
-            
-            // find block in idx2
-            matched = 0;
-            for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
-                ii_idx1 < idx2len; 
-                ii_idx1++, idx2ptr++){
-                if( *idx2ptr == block ){
-                    matched = 1;
-                    break;
-                }
+            if ( *idx2ptr == NA_INTEGER64 ){
+                continue;
             }
-            if( matched == 0 ){ continue; }
             
             // Rcout << block << "\n";
             
             // read current block!
             retptr2 = retptr + ii_idx1 * idx1len;
-            start_idx = (idx1_start + block_size * block);
+            start_idx = (idx1_start + block_size * *idx2ptr);
             end_idx = start_idx - idx1_start + idx1_end + 1;
             
             // if( start_idx >= content_size ){
@@ -166,7 +130,7 @@ void subset_partition(
             // Rcout << file << " | " << block << " " << start_idx << "~" 
             //       << end_idx << ": " << "\n";
             
-            idx1ptr = (int64_t*) REAL(idx1);
+            idx1ptr = INTEGER64(idx1);
             jj = 0;
             conn_pos = 0;
             while( conn_pos < end_idx ){
@@ -177,7 +141,7 @@ void subset_partition(
                 // lendian_fread(bufferptr, elem_size, ii, conn);
                 
                 if( !idx1_sorted ){
-                    idx1ptr = (int64_t*) REAL(idx1);
+                    idx1ptr = INTEGER64(idx1);
                     jj = 0;
                 }
                 for(; jj < idx1len; jj++, idx1ptr++) {
@@ -200,24 +164,23 @@ void subset_partition(
                 conn_pos += ii;
             }
             
-            retptr2 = retptr + ii_idx1 * idx1len;
-            ii_idx1++;
-            idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
-            // Rcout << "1\n";
-            for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
-                if( *idx2ptr == block ){
-                    retptr3 = retptr + ii_idx1 * idx1len;
-                    memcpy(retptr3, retptr2, sizeof(T) * idx1len);
-                } else if( idx2_sorted && *idx2ptr > block ){
-                    break;
-                }
-            }
+            // retptr2 = retptr + ii_idx1 * idx1len;
+            // ii_idx1++;
+            // idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
+            // // Rcout << "1\n";
+            // for(ii = ; ii < idx2len; ii_idx1++, idx2ptr++){
+            //     if( *idx2ptr == block ){
+            //         retptr3 = retptr + ii_idx1 * idx1len;
+            //         memcpy(retptr3, retptr2, sizeof(T) * idx1len);
+            //     } else if( idx2_sorted && *idx2ptr > block ){
+            //         break;
+            //     }
+            // }
             // Rcout << "2\n";
         }
     } catch(...){
     }
     
-    if(!is_open){ return; }
     
 }
 
