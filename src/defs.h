@@ -17,7 +17,7 @@
 #define FLOAT(x) ((float*) INTEGER(x))
 
 const static float NA_FLOAT = NAN;
-
+const static Rbyte NA_RBYTE = 2;
 
 #define INT64SXP REALSXP
 #define INTEGER64(x) ((int64_t*) REAL(x))

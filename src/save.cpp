@@ -94,6 +94,7 @@ SEXP FARR_subset_assign_sequential_bare(
                     fm, mode, 
                     FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
                     file_buffer_elemsize * write_len);
+            region.advise(boost::interprocess::mapped_region::advice_sequential);
             unsigned char* begin = static_cast<unsigned char*>(region.get_address());
             switch(array_type) {
             case REALSXP: {
@@ -293,7 +294,7 @@ SEXP FARR_subset_assign_template(
                     fm, mode, 
                     FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start), 
                     region_len);
-            //region.advise(boost::interprocess::mapped_region::advice_sequential);
+            region.advise(boost::interprocess::mapped_region::advice_sequential);
             
             char* begin = static_cast<char*>(region.get_address());
         
