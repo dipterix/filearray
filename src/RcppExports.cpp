@@ -225,8 +225,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_subset_sequential
-SEXP FARR_subset_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP file_buffer, SEXP ret, const int64_t from, const int64_t len);
-RcppExport SEXP _filearray_FARR_subset_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP file_bufferSEXP, SEXP retSEXP, SEXP fromSEXP, SEXP lenSEXP) {
+SEXP FARR_subset_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP ret, const int64_t from, const int64_t len);
+RcppExport SEXP _filearray_FARR_subset_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP retSEXP, SEXP fromSEXP, SEXP lenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -234,11 +234,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int64_t& >::type unit_partlen(unit_partlenSEXP);
     Rcpp::traits::input_parameter< SEXP >::type cum_partsizes(cum_partsizesSEXP);
     Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type file_buffer(file_bufferSEXP);
     Rcpp::traits::input_parameter< SEXP >::type ret(retSEXP);
     Rcpp::traits::input_parameter< const int64_t >::type from(fromSEXP);
     Rcpp::traits::input_parameter< const int64_t >::type len(lenSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_sequential(filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from, len));
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_sequential(filebase, unit_partlen, cum_partsizes, array_type, ret, from, len));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -393,7 +392,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_filearray_meta", (DL_FUNC) &_filearray_filearray_meta, 1},
     {"_filearray_filearray_assign", (DL_FUNC) &_filearray_filearray_assign, 3},
     {"_filearray_filearray_subset", (DL_FUNC) &_filearray_filearray_subset, 5},
-    {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 8},
+    {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 7},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
     {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},

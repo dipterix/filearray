@@ -72,10 +72,8 @@ SEXP FARR_buffer_map(
     
     
     // allocate buffers
-    std::vector<SEXP> filebuffers(narrays);
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        filebuffers[ii] = PROTECT(Rf_allocVector(file_buffer_types[ii], buffer_nelems));
         SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems)));
     }
     
@@ -152,7 +150,6 @@ SEXP FARR_buffer_map(
                 in_unit_partlen,
                 cumparts[ii],
                 arr_types[ii],
-                filebuffers[ii],
                 VECTOR_ELT(argbuffers, ii),
                 current_pos, buffer_nelems
             );
@@ -274,12 +271,10 @@ SEXP FARR_buffer_map(
         conn = NULL;
     }
     
-    UNPROTECT(2 + narrays * 2);
+    UNPROTECT(2 + narrays);
     
     return(R_NilValue);
 }
-
-
 
 
 /*** R

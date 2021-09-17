@@ -1,3 +1,7 @@
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+// [[Rcpp::depends(BH)]]
+
 #include "core.h"
 #include "conversion.h"
 #include "serialize.h"
@@ -5,14 +9,20 @@ using namespace Rcpp;
 
 template <typename T>
 void collapse(
-        FILE* conn, const SEXP& dim, SEXP keep_dim, T* bufptr, 
+        const std::string& partition_path, 
+        const SEXP& dim, SEXP keep_dim, T* bufptr, 
         int buf_size, double* ret, T na, SEXP loc, int method, 
         bool remove_na, const double& scale){
+    
+    bool swap_endian = !isLittleEndian();
+    
     int elem_size = sizeof(T);
     int ndims = Rf_length(dim);
     
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    
     // dim are int64_t, keep_dim are integers
-    int64_t* dimptr = (int64_t*) REAL(dim);
+    int64_t* dimptr = INTEGER64(dim);
     int64_t partlen = 1;
     for(int i = 0; i < ndims; i++){
         partlen *= *(dimptr + i);
@@ -27,9 +37,19 @@ void collapse(
     
     int64_t buflen = buf_size / elem_size;
     
-    if(conn != NULL){
-        fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-    } else {
+    boost::interprocess::file_mapping fm;
+    boost::interprocess::mapped_region region;
+    bool is_open = false;
+    try {
+        fm = boost::interprocess::file_mapping(partition_path.c_str(), mode);
+        region = boost::interprocess::mapped_region(
+                fm, mode, FARR_HEADER_LENGTH);
+        region.advise(boost::interprocess::mapped_region::advice_sequential);
+        
+        if( region.get_size() >= partlen * sizeof(T)){
+            is_open = true;
+        }
+    } catch (...) {
         T* bufptr_ii = bufptr;
         for(int64_t kk = 0; kk < buflen; kk++){
             *bufptr_ii++ = na;
@@ -52,14 +72,22 @@ void collapse(
     int* ptrkeep_ii = ptrkeep;
     T v = 0;
     
+    T* mmap_ptr = static_cast<T*>(region.get_address());
+    
     for(int64_t iter = 0; iter < niter; iter++){
         buf_idx = iter * buflen;
         readlen = buflen;
         if( iter == niter - 1 ){
             readlen = partlen - buf_idx;
         }
-        if(conn != NULL){
-            lendian_fread(bufptr, elem_size, readlen, conn);
+        
+        if(is_open){
+            // lendian_fread(bufptr, elem_size, readlen, conn);
+            memcpy(bufptr, mmap_ptr, elem_size * readlen);
+            if( swap_endian ){
+                swap_endianess(bufptr, elem_size, readlen);
+            }
+            mmap_ptr += readlen;
         }
         
         for(int64_t jj = 0; jj < readlen; jj++){
@@ -151,7 +179,7 @@ SEXP FARR_collapse(
     
     int64_t part_size = 0, last_size = 0;
     std::string partition_path = "";
-    FILE* conn = NULL;
+    
     double* retptr = REAL(ret);
     for(R_xlen_t i = 0; i < retlen; i++){
         *retptr++ = 0;
@@ -194,25 +222,23 @@ SEXP FARR_collapse(
         *last_dimptr = part_size;
         partition_path = fbase + std::to_string(part) + ".farr";
         
-        conn = fopen(partition_path.c_str(), "rb"); 
-        
         try{
             // collapse_double(conn, dim_int64, keep, retptr);
             switch(array_type){
             case REALSXP:
-                collapse(conn, dim_int64, keep, 
+                collapse(partition_path, dim_int64, keep, 
                          REAL(buffer), buf_size,
                          retptr, NA_REAL, loc, method, 
                          remove_na, scale);
                 break;
             case INTSXP:
-                collapse(conn, dim_int64, keep, 
+                collapse(partition_path, dim_int64, keep, 
                          INTEGER(buffer), buf_size,
                          retptr, NA_INTEGER, loc, method, 
                          remove_na, scale);
                 break;
             case FLTSXP: {
-                collapse(conn, dim_int64, keep, 
+                collapse(partition_path, dim_int64, keep, 
                          FLOAT(buffer), buf_size,
                          retptr, NA_FLOAT, loc, method, 
                          remove_na, scale);
@@ -220,7 +246,7 @@ SEXP FARR_collapse(
             }
             case LGLSXP: {
                 Rbyte na_lgl = 2;
-                collapse(conn, dim_int64, keep, 
+                collapse(partition_path, dim_int64, keep, 
                          RAW(buffer), buf_size,
                          retptr, na_lgl, loc, method, 
                          remove_na, scale);
@@ -228,7 +254,7 @@ SEXP FARR_collapse(
             }
             case RAWSXP: {
                 Rbyte na_lgl = 0;
-                collapse(conn, dim_int64, keep, 
+                collapse(partition_path, dim_int64, keep, 
                          RAW(buffer), buf_size,
                          retptr, na_lgl, loc, method, 
                          true, scale);
@@ -237,10 +263,6 @@ SEXP FARR_collapse(
             }
         }catch(...){}
         
-        if(conn != NULL){
-            fclose(conn);
-            conn = NULL;
-        }
     }
     
     // retptr = REAL(ret);

@@ -1,12 +1,6 @@
 #include "common.h"
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <map>
-#include <fstream>
-#include <cassert>
-#include <iostream>
-#include <iterator>
-#include <algorithm>
 // [[Rcpp::depends(BH)]]
 
 #include "openmp.h"
@@ -203,6 +197,7 @@ void subset_assign_partition(
             // no check here, but tmp_loc should be >=0
             if(*idx1ptr != NA_INTEGER64){
                 // *(buf + (*idx1ptr - idx1_start)) = (*valptr2);
+                
                 lendian_assign(buf + (*idx1ptr - idx1_start),
                                valptr2, elem_size);
             }
@@ -290,10 +285,9 @@ SEXP FARR_subset_assign_template(
         try{
             boost::interprocess::file_mapping fm(file.c_str(), mode);
             int64_t region_len = elem_size * (idx1_end - idx1_start + block_size * (idx2_end - idx2_start));
+            int64_t region_offset = FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start);
             boost::interprocess::mapped_region region(
-                    fm, mode, 
-                    FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start), 
-                    region_len);
+                    fm, mode, region_offset, region_len);
             region.advise(boost::interprocess::mapped_region::advice_sequential);
             
             char* begin = static_cast<char*>(region.get_address());

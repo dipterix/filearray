@@ -27,6 +27,6 @@ size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 size_t lendian_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
-void lendian_assign(void* dst, const void* src, const size_t& size);
+void lendian_assign(void* dst, const void* src, const size_t& elem_size);
 
 #endif // FARR_UNSERIALIZE_H
