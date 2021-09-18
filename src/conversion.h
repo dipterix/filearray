@@ -59,5 +59,27 @@ void transforms_float(const float* x, double* y, const int& nelem, const bool& s
 void transforms_logical(const Rbyte* x, int* y, const int& nelem, const bool& swap_endian = false);
 void transforms_complex(const double* x, Rcomplex* y, const int& nelem, const bool& swap_endian = false);
 
+template <typename T, typename B>
+inline void transforms(const T* x, B* y, const int& nelem, const bool& swap_endian = false){
+    if(std::is_same<T, B>::value){
+        transforms_asis<T>(x, (T*) y, nelem, swap_endian);
+        return;
+    }
+    if(std::is_same<T, float>::value){
+        transforms_float((const float*) x, (double*) y, nelem, swap_endian);
+        return;
+    }
+    
+    if(std::is_same<T, Rbyte>::value){
+        transforms_logical((const Rbyte*) x, (int*) y, nelem, swap_endian);
+        return;
+    }
+    if(std::is_same<B, Rcomplex>::value){
+        transforms_complex((const double*) x, (Rcomplex*) y, nelem, swap_endian);
+        return;
+    }
+    Rcpp::stop("Unknown type in `transforms`.");
+    
+}
     
 #endif  // FARR_CONVERSION_H

@@ -90,7 +90,7 @@ test_that("R/C++ - Collapse", {
     set.seed(5)
     file <- tempfile()
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = "integer")
+    x <- filearray_create(file, dim, type = "integer", partition_size = 2)
     y <- array(1:(prod(dim)), dim)
     y[[20, 3, 3, 3]] <- NA
     storage.mode(y) <- "integer"
@@ -200,7 +200,7 @@ test_that("R/C++ - Float", {
     set.seed(5)
     file <- tempfile()
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = "float")
+    x <- filearray_create(file, dim, type = "float", partition_size = 2)
     y <- array(rnorm(length(x))^2, dim)
     y[[20, 3, 3, 3]] <- NA
     x[] <- y
@@ -311,7 +311,7 @@ test_that("R/C++ - Collapse (complex)", {
     set.seed(5)
     file <- tempfile()
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = "complex")
+    x <- filearray_create(file, dim, type = "complex", partition_size = 2)
     y <- array(rnorm(length(x)) + rnorm(length(x)) * 1i, dim)
     y[[20, 3, 3, 3]] <- NA
     x[] <- y

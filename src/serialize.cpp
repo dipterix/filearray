@@ -71,8 +71,7 @@ bool isLittleEndian(){
     // return(!is_little);
 }
 
-
-void swap_endianess(void *ptr, size_t size, size_t nmemb){
+void swap_endianess_old(void *ptr, size_t size, size_t nmemb){
     unsigned char *buffer_src = (unsigned char*)ptr;
     unsigned char *buffer_dst = new unsigned char[size];
     size_t ix = 0;
@@ -83,6 +82,27 @@ void swap_endianess(void *ptr, size_t size, size_t nmemb){
         memcpy(buffer_src, buffer_dst, size);
     }
     delete[] buffer_dst;
+}
+
+void swap_endianess(void *ptr, const size_t& size, const size_t& nmemb){
+    if( size <= 1 || nmemb <= 0 ){ return; }
+    unsigned char *buffer_src1 = (unsigned char*)ptr;
+    unsigned char *buffer_src2 = buffer_src1 + (size - 1);
+    
+    unsigned char tmp = 0;
+    unsigned char* tmpptr = &(tmp);
+    
+    size_t ix = 0;
+    const size_t half_size = size / 2;
+    for (size_t i = 0; i < nmemb; i++) {
+        for(ix = 0; ix < half_size; ix++){
+            *tmpptr = *buffer_src1;
+            *buffer_src1++ = *buffer_src2;
+            *buffer_src2-- = *tmpptr;
+        }
+        buffer_src1 += half_size;
+        buffer_src2 += half_size + size;
+    }
 }
 
 size_t lendian_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {

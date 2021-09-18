@@ -107,8 +107,8 @@ microbenchmark::microbenchmark(
 
 #> Unit: seconds
 #>   expr  min   lq mean median   uq  max neval
-#> double 1.29 1.45 1.50   1.60 1.61 1.61     3
-#>  float 1.34 1.65 1.84   1.97 2.10 2.23     3
+#> double 1.23 1.27 1.47   1.30 1.59 1.89     3
+#>  float 1.23 1.24 1.41   1.24 1.50 1.76     3
 ```
 
 3. Writing along slow margin
@@ -296,16 +296,16 @@ microbenchmark::microbenchmark(
   farr_double = { x_dbl$collapse(keep = keep, method = "sum") },
   farr_float = { x_flt$collapse(keep = keep, method = "sum") },
   native = { apply(y, keep, sum) },
-  dipsaus = { dipsaus::collapse(y, keep, average = FALSE) }, 
+  dipsaus = { dipsaus::collapse(y, keep, average = FALSE) },
   unit = "s", times = 5
 )
 
 #> Unit: seconds
 #>         expr   min    lq  mean median    uq   max neval
-#>  farr_double 0.681 0.692 1.052  1.030 1.133 1.724     5
-#>   farr_float 0.645 0.650 0.771  0.662 0.711 1.189     5
-#>       native 0.967 1.079 1.085  1.115 1.131 1.133     5
-#>      dipsaus 0.183 0.186 0.206  0.205 0.226 0.231     5
+#>  farr_double 0.782 0.790 1.009  0.799 0.832 1.840     5
+#>   farr_float 0.765 0.779 0.929  0.930 1.043 1.127     5
+#>       native 0.964 1.174 1.222  1.213 1.370 1.390     5
+#>      dipsaus 0.185 0.190 0.202  0.199 0.203 0.233     5
 ```
 
 The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7~8x` as fast as base R. File array is `1~2x` as fast as base R. Both `dipsaus` and `filearray` have little memory over-heads.

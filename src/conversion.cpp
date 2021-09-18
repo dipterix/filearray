@@ -536,14 +536,17 @@ void transforms_float(const float* x, double* y, const int& nelem, const bool& s
             for(ix = 0; ix <= size; ix++){
                 *(tmpptr2 + (size - ix)) = *(x2 + ix);
             }
+            if(ISNAN(tmp)){
+                *y2 = NA_REAL;
+            } else {
+                *y2 = tmp;
+            }
         } else {
-            tmp = *(x + i);
-        }
-        
-        if(ISNAN(tmp)){
-            *y2 = NA_REAL;
-        } else {
-            *y2 = tmp;
+            if(ISNAN(*(x + i))){
+                *y2 = NA_REAL;
+            } else {
+                *y2 = *(x + i);
+            }
         }
     }
 }

@@ -21,7 +21,7 @@ SEXP unserialize_connection(FILE* conn, size_t len);
  ***********************************************************/
 bool isLittleEndian();
 
-void swap_endianess(void *ptr, size_t size, size_t nmemb);
+void swap_endianess(void *ptr, const size_t& size, const size_t& nmemb);
 
 size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
