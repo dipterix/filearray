@@ -2,6 +2,7 @@
 
 * Added `OpenMP` flag in the `MakeVars`
 * Fixed critical bugs that could cause `segfaults`
+* Can store `complex` and `float` data types
 * Re-implemented read/write functions to use memory map
 * Allowed `dimnames` to be set
 * Added generics `subset` to subset using `dimnames`
