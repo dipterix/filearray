@@ -8,6 +8,19 @@
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+On R-4.X
+0 errors | 0 warnings | 0 notes
 
-* This is a new release.
+On R-3.6
+0 errors | 1 warning | 0 notes
+
+```
+Codoc mismatches from documentation object 'apply':
+apply
+  Code: function(X, MARGIN, FUN, ...)
+  Docs: function(X, MARGIN, FUN, ..., simplify = TRUE)
+  Argument names in docs not in code:
+    simplify
+```
+
+This is because `simplify` was added to `apply` function since R-4.0.
