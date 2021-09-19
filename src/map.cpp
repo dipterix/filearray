@@ -164,6 +164,106 @@ SEXP FARR_buffer_map(
     return(R_NilValue);
 }
 
+// [[Rcpp::export]]
+SEXP FARR_buffer_map2(
+        std::vector<std::string>& input_filebases,
+        const Function& map,
+        const int& buffer_nelems
+){
+    // prepare inputs
+    int narrays = input_filebases.size();
+    std::vector<List> metas(narrays);
+    std::vector<SEXPTYPE> arr_types(narrays);
+    std::vector<SEXPTYPE> file_buffer_types(narrays);
+    std::vector<SEXPTYPE> memory_buffer_types(narrays);
+    
+    std::vector<SEXP> cumparts(narrays);
+    std::vector<int64_t> part_lengths(narrays);
+    
+    SEXP in_dim = R_NilValue;
+    
+    for(int ii = 0; ii < narrays; ii++){
+        std::string fbase = correct_filebase(input_filebases[ii]);
+        input_filebases[ii] = fbase;
+        List meta = FARR_meta(fbase);
+        metas[ii] = meta;
+        arr_types[ii] = meta["sexp_type"];
+        file_buffer_types[ii] = file_buffer_sxptype(arr_types[ii]);
+        memory_buffer_types[ii] = array_memory_sxptype(arr_types[ii]);
+        cumparts[ii] = realToInt64_inplace(meta["cumsum_part_sizes"]);
+        if( in_dim == R_NilValue ){
+            in_dim = meta["dimension"];
+            realToInt64_inplace(in_dim);
+        }
+    }
+    
+    if( in_dim == R_NilValue ){
+        stop("Cannot obtain input dimensions");
+    }
+    
+    R_xlen_t in_ndims = Rf_length(in_dim);
+    int64_t* in_dimptr = INTEGER64(in_dim);
+    int64_t in_unit_partlen = 1;
+    for(R_xlen_t jj = 0; jj <in_ndims - 1; jj++, in_dimptr++){
+        in_unit_partlen *= *in_dimptr;
+    }
+    int64_t in_array_length = in_unit_partlen * *(INTEGER64(in_dim) + (in_ndims - 1));
+    
+    
+    // allocate buffers
+    SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
+    for(int ii = 0; ii < narrays; ii++){
+        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems)));
+    }
+    
+    int64_t current_pos = 0;
+    
+    int ncores = getThreads();
+    if( ncores > narrays ){
+        ncores = narrays;
+    }
+    
+    R_xlen_t niters = in_array_length / buffer_nelems;
+    if( niters * buffer_nelems < in_array_length ){
+        niters++;
+    }
+    SEXP ret = PROTECT(Rf_allocVector(VECSXP, niters));
+    R_xlen_t iter = 0;
+    
+    for( ; current_pos < in_array_length; current_pos += buffer_nelems, iter++ ){
+        
+#pragma omp parallel num_threads(ncores)
+{
+#pragma omp for schedule(static, 1) nowait
+        for(int ii = 0; ii < narrays; ii++){
+            FARR_subset_sequential(
+            input_filebases[ii],
+            in_unit_partlen,
+            cumparts[ii],
+            arr_types[ii],
+            VECTOR_ELT(argbuffers, ii),
+            current_pos, buffer_nelems
+            );
+        }
+}   
+
+        try{
+            SET_VECTOR_ELT(ret, iter, Shield<SEXP>(map(argbuffers)));
+        } catch(std::exception &ex){
+            UNPROTECT(2 + narrays);
+            forward_exception_to_r(ex);
+        } catch(...){
+            UNPROTECT(2 + narrays);
+            stop("Unknown error.");
+        }
+
+
+    }
+    
+    UNPROTECT(2 + narrays);
+    
+    return(ret);
+}
 
 /*** R
 # devtools::load_all()
@@ -190,6 +290,15 @@ FARR_buffer_map(
     3L,
     1L
 )
-
+res <- FARR_buffer_map2(
+    fbases,
+    function(x){
+        print(c(x[[1]], sum(x[[1]])))
+        sum(x[[1]])
+    },
+    3L,
+    1L
+)
+# y[] - simplify2array(res)
 
 */

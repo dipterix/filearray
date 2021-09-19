@@ -274,6 +274,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FARR_buffer_map2
+SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, const int& buffer_nelems);
+RcppExport SEXP _filearray_FARR_buffer_map2(SEXP input_filebasesSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
+    Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
+    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_buffer_map2(input_filebases, map, buffer_nelems));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_buffer_mapreduce
 SEXP FARR_buffer_mapreduce(const std::string& filebase, const Function map, const Nullable<Function> reduce, const int& buffer_nelems);
 RcppExport SEXP _filearray_FARR_buffer_mapreduce(SEXP filebaseSEXP, SEXP mapSEXP, SEXP reduceSEXP, SEXP buffer_nelemsSEXP) {
@@ -411,6 +424,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 7},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
     {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
+    {"_filearray_FARR_buffer_map2", (DL_FUNC) &_filearray_FARR_buffer_map2, 3},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},

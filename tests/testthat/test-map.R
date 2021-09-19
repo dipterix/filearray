@@ -51,6 +51,10 @@ test_that("map arrays", {
     
     expect_equal(output[], b)
     
+    
+    d <- fmap2(x, f, .input_size = 842800, .simplify = TRUE)
+    expect_equal(d, b)
+    
     x$delete()
     output$delete()
     

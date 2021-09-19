@@ -1,5 +1,7 @@
 #' @title Map multiple file arrays and save results
-#' @description Advanced mapping function for multiple file arrays. This 
+#' @description Advanced mapping function for multiple file arrays. \code{fmap}
+#' runs the mapping functions and stores the results in file arrays. 
+#' \code{fmap2} stores results in memory. This 
 #' feature is experimental. There are several constraints to the input. 
 #' Failure to meet these constraints may result in undefined results, or 
 #' even crashes. Please read Section 'Details' carefully before using 
@@ -10,6 +12,8 @@
 #' @param .y a file array object, used to save results
 #' @param .input_size number of elements to read from each array of \code{x}
 #' @param .output_size \code{fun} output vector length
+#' @param .simplify whether to apply \code{\link[base]{simplify2array}} to 
+#' the result
 #' @param ... other arguments passing to \code{fun}
 #' @return File array instance \code{.y}
 #' @details 
@@ -188,6 +192,56 @@ fmap <- function(x, fun, .y, .input_size = NA, .output_size = NA, ...){
         result_nelems = .output_size
     )
     .y
+}
+
+#' @rdname fmap
+#' @export
+fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
+    if(!length(x)){
+        stop("`x` must be a list of file arrays")
+    }
+    
+    if(inherits(x, "FileArray")){
+        x <- list(x)
+    }
+    
+    dims <- sapply(x, dim)
+    dim <- dims[,1, drop = TRUE]
+    
+    if(any(dims - dim != 0)){
+        stop("Input `x` array dimensions must match")
+    }
+    
+    fbases <- sapply(x, function(el){
+        if( !is_filearray(el) ){
+            stop("Input `x` must only contains file arrays")
+        }
+        el$initialize_partition()
+        el$.filebase
+    })
+    
+    if(is.na(.input_size)){
+        .input_size <- get_buffer_size() / 8L
+    }
+    if(.input_size <= 0){
+        stop("`.input_size` must be postive")
+    }
+    .input_size <- as.integer(.input_size)
+    
+    args <- list(quote(input), ...)
+    map <- function(input){
+        do.call(fun, args)
+    }
+    
+    res <- FARR_buffer_map2(
+        input_filebases = fbases,
+        map = map,
+        buffer_nelems = .input_size
+    )
+    if(.simplify){
+        res <- simplify2array(res)
+    }
+    res
 }
 
 is_filearray <- function(object){

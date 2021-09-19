@@ -2,10 +2,13 @@
 % Please edit documentation in R/map.R
 \name{fmap}
 \alias{fmap}
+\alias{fmap2}
 \alias{fmap_element_wise}
 \title{Map multiple file arrays and save results}
 \usage{
 fmap(x, fun, .y, .input_size = NA, .output_size = NA, ...)
+
+fmap2(x, fun, .input_size = NA, .simplify = TRUE, ...)
 
 fmap_element_wise(x, fun, .y, ..., .input_size = NA)
 }
@@ -22,12 +25,17 @@ share the same dimensions.}
 \item{.output_size}{\code{fun} output vector length}
 
 \item{...}{other arguments passing to \code{fun}}
+
+\item{.simplify}{whether to apply \code{\link[base]{simplify2array}} to 
+the result}
 }
 \value{
 File array instance \code{.y}
 }
 \description{
-Advanced mapping function for multiple file arrays. This 
+Advanced mapping function for multiple file arrays. \code{fmap}
+runs the mapping functions and stores the results in file arrays. 
+\code{fmap2} stores results in memory. This 
 feature is experimental. There are several constraints to the input. 
 Failure to meet these constraints may result in undefined results, or 
 even crashes. Please read Section 'Details' carefully before using 

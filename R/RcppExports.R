@@ -81,6 +81,10 @@ FARR_buffer_map <- function(input_filebases, output_filebase, map, buffer_nelems
     .Call(`_filearray_FARR_buffer_map`, input_filebases, output_filebase, map, buffer_nelems, result_nelems)
 }
 
+FARR_buffer_map2 <- function(input_filebases, map, buffer_nelems) {
+    .Call(`_filearray_FARR_buffer_map2`, input_filebases, map, buffer_nelems)
+}
+
 FARR_buffer_mapreduce <- function(filebase, map, reduce, buffer_nelems) {
     .Call(`_filearray_FARR_buffer_mapreduce`, filebase, map, reduce, buffer_nelems)
 }

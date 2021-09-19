@@ -138,7 +138,7 @@ In the current version, converting from `double` to `float` introduces overhead 
 
 Instead of writing one slice at a time along each margin, we write `100x100x100x5` (10 slices) each time.
 
-1.  partition margin
+1.  Write blocks of data along the partition margin
 
 ```{r}
 microbenchmark::microbenchmark(
@@ -162,7 +162,7 @@ microbenchmark::microbenchmark(
 #>   float 0.626 0.662 0.783  0.698 0.861 1.02     3
 ```
 
-2. Write along fast margin
+2. Write blocks of data along the fast margin
 
 ```{r}
 microbenchmark::microbenchmark(
@@ -186,7 +186,7 @@ microbenchmark::microbenchmark(
 #>   float 0.625 0.652 0.732  0.679 0.786 0.893     3
 ```
 
-3. Writing along slow margin
+3. Write blocks of data along slow margin
 
 ```{r}
 microbenchmark::microbenchmark(
@@ -208,9 +208,6 @@ microbenchmark::microbenchmark(
 #>  double 4.48 4.48 4.64   4.48 4.72 4.95     3
 #>   float 2.64 2.70 2.73   2.77 2.78 2.79     3
 ```
-
-Note: always avoid writing along the first margin (like `x[i,,,] <- ...`). It's slow.
-
 
 
 ## Read 
@@ -292,6 +289,8 @@ Collapse calculates the margin sum/mean. Collapse function in `filearray` uses s
 
 ```{r}
 keep <- c(2, 4)
+output <- filearray_create(tempfile(), dim(x_dbl)[keep])
+output$initialize_partition()
 microbenchmark::microbenchmark(
   farr_double = { x_dbl$collapse(keep = keep, method = "sum") },
   farr_float = { x_flt$collapse(keep = keep, method = "sum") },
@@ -309,4 +308,5 @@ microbenchmark::microbenchmark(
 ```
 
 The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7~8x` as fast as base R. File array is `1~2x` as fast as base R. Both `dipsaus` and `filearray` have little memory over-heads.
+
 
