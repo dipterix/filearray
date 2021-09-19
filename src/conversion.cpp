@@ -16,7 +16,7 @@ double na_cplx_dbl(){
 SEXP realToInt64(NumericVector x, const double min_, const double max_, const int strict){
     R_xlen_t len = x.length();
     SEXP re = PROTECT(Rf_allocVector(REALSXP, len));
-    Rf_setAttrib(re, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(re, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     
     int64_t *reptr = (int64_t *) REAL(re);
     
@@ -43,7 +43,7 @@ SEXP realToInt64(NumericVector x, const double min_, const double max_, const in
 
 SEXP realToInt64_inplace(SEXP x, const double min_, const double max_, const int strict){
     R_xlen_t len = Rf_xlength(x);
-    Rf_setAttrib(x, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(x, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     
     int64_t *reptr = (int64_t *) REAL(x);
     double* xptr = REAL(x);
@@ -70,14 +70,14 @@ SEXP convert_as(SEXP x, SEXPTYPE type) {
     SEXPTYPE xtype = TYPEOF(x);
     
     if( type == FLTSXP && xtype == INTSXP ){
-        if( Rf_getAttrib(x, wrap("_float_")) != R_NilValue ){
+        if( Rf_getAttrib(x, Rf_install("_float_")) != R_NilValue ){
             return(x);
         }
     }
     R_xlen_t xlen = Rf_xlength(x);
     if( type == FLTSXP ){
         SEXP y = PROTECT(Rf_allocVector(INTSXP, xlen));
-        Rf_setAttrib(y, Shield<SEXP>(wrap("_float_")), Shield<SEXP>(wrap(true)));
+        Rf_setAttrib(y, Rf_install("_float_"), Shield<SEXP>(wrap(true)));
         
         switch(xtype) {
         case RAWSXP: {

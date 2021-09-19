@@ -47,15 +47,17 @@ void collapse(
     } catch (...) {
     }
     
-    int ncores = 1;
+    // int ncores = 1;
     // int ncores = getThreads();
     // ncores = ncores > partlen ? partlen : ncores;
     
     // calculate loc in original array
-    std::vector<SEXP> locs(ncores);
-    for(int ii = 0; ii < ncores; ii++){
-        locs[ii] = PROTECT(Rf_allocVector(INT64SXP, ndims));
-    }
+    // std::vector<SEXP> locs(ncores);
+    // for(int ii = 0; ii < ncores; ii++){
+    //     locs[ii] = PROTECT(Rf_allocVector(INT64SXP, ndims));
+    // }
+    SEXP loc = PROTECT(Rf_allocVector(INT64SXP, ndims));
+    int64_t* locptr = INTEGER64(loc);
     
 // #pragma omp parallel num_threads(ncores)
 // {
@@ -83,8 +85,9 @@ void collapse(
             continue;
         }
         
-        int thread = (int) (idx % ncores);
-        int64_t* locptr = INTEGER64(locs[thread]);
+        // int thread = (int) (idx % ncores);
+        // int64_t* locptr = INTEGER64(locs[thread]);
+        locptr = INTEGER64(loc);
         
         // calculate position in ret
         rem = idx; 
@@ -134,7 +137,7 @@ void collapse(
     }
 // }
 
-    UNPROTECT(ncores);
+    UNPROTECT(1);
     
 }
 
