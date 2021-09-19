@@ -126,10 +126,27 @@
       <small>Source: <a href='https://github.com/dipterix/filearray/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="filearray-development-version" class="section level1">
-<h1 class="page-header" data-toc-text="development version">
-<a href="#filearray-development-version" class="anchor"></a>filearray (development version)<small> Unreleased </small>
+    <div id="filearray-011" class="section level1">
+<h1 class="page-header" data-toc-text="0.1.1">
+<a href="#filearray-011" class="anchor"></a>filearray 0.1.1<small> Unreleased </small>
 </h1>
+<ul>
+<li>Added <code>OpenMP</code> flag in the <code>MakeVars</code>
+</li>
+<li>Fixed critical bugs that could cause <code>segfaults</code>
+</li>
+<li>Re-implemented read/write functions to use memory map</li>
+<li>Allowed <code>dimnames</code> to be set</li>
+<li>Added generics <code>subset</code> to subset using <code>dimnames</code>
+</li>
+<li>Added vignette to compare performance</li>
+<li>Added speed comparisons in <code>README.md</code>
+</li>
+<li>Added <code>collapse</code> to calculate marginal summation with little memory overhead</li>
+<li>Added <code>fmap</code>, <code>fmap2</code> to apply functions to one or multiple file arrays with little memory overhead (also very fast)</li>
+<li>Fixed ‘unprotected’ issues warned by <code>rchk</code>
+</li>
+</ul>
 </div>
     <div id="filearray-010" class="section level1">
 <h1 class="page-header" data-toc-text="0.1.0">
