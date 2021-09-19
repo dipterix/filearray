@@ -18,7 +18,6 @@ Description: Stores large arrays in files to avoid occupying large
     types (double, float, complex, integer, logical, and raw).
 Imports: 
     methods, 
-    BH,
     Rcpp
 Suggests: 
     rmarkdown,
