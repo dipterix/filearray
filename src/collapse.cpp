@@ -1,109 +1,143 @@
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+// [[Rcpp::depends(BH)]]
+
 #include "core.h"
+#include "openmp.h"
 #include "conversion.h"
 #include "serialize.h"
 using namespace Rcpp;
 
 template <typename T>
 void collapse(
-        FILE* conn, const SEXP& dim, SEXP keep_dim, T* bufptr, 
-        int buf_size, double* ret, T na, SEXP loc, int method, 
+        const std::string& partition_path, 
+        const SEXP& dim, SEXP keep_dim, 
+        double* ret, T na, int method, 
         bool remove_na, const double& scale){
+    
+    bool swap_endian = !isLittleEndian();
+    
     int elem_size = sizeof(T);
     int ndims = Rf_length(dim);
     
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    
     // dim are int64_t, keep_dim are integers
-    int64_t* dimptr = (int64_t*) REAL(dim);
+    int64_t* dimptr = INTEGER64(dim);
     int64_t partlen = 1;
     for(int i = 0; i < ndims; i++){
         partlen *= *(dimptr + i);
     }
     
-    // calculate loc in original array
-    // SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
-    int64_t* locptr = (int64_t*) REAL(loc);
-    
     int keeplen = Rf_length(keep_dim);
     int* ptrkeep = INTEGER(keep_dim);
     
-    int64_t buflen = buf_size / elem_size;
-    
-    if(conn != NULL){
-        fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-    } else {
-        T* bufptr_ii = bufptr;
-        for(int64_t kk = 0; kk < buflen; kk++){
-            *bufptr_ii++ = na;
+    boost::interprocess::file_mapping fm;
+    boost::interprocess::mapped_region region;
+    bool is_open = false;
+    try {
+        fm = boost::interprocess::file_mapping(partition_path.c_str(), mode);
+        region = boost::interprocess::mapped_region(
+                fm, mode, FARR_HEADER_LENGTH);
+        region.advise(boost::interprocess::mapped_region::advice_sequential);
+        
+        if( region.get_size() >= partlen * sizeof(T)){
+            is_open = true;
         }
+    } catch (...) {
     }
     
-    int64_t niter = partlen % buflen;
-    if( niter == 0 ){
-        niter = partlen / buflen;
-    } else {
-        niter = (partlen - niter) / buflen + 1;
-    }
+    // int ncores = 1;
+    // int ncores = getThreads();
+    // ncores = ncores > partlen ? partlen : ncores;
     
-    int64_t buf_idx = 0;
-    int64_t readlen = 0;
-    int ii = 0;
-    int64_t rem = 0, fct = 0, tmp = 0;
-    int64_t* locptr_ii = locptr;
+    // calculate loc in original array
+    // std::vector<SEXP> locs(ncores);
+    // for(int ii = 0; ii < ncores; ii++){
+    //     locs[ii] = PROTECT(Rf_allocVector(INT64SXP, ndims));
+    // }
+    SEXP loc = PROTECT(Rf_allocVector(INT64SXP, ndims));
+    int64_t* locptr = INTEGER64(loc);
+    
+// #pragma omp parallel num_threads(ncores)
+// {
+    int64_t rem = 0, fct = 1, tmp = 0;
+    int64_t* locptr_ii;
     int64_t* dimptr_ii = dimptr;
     int* ptrkeep_ii = ptrkeep;
+    int ii = 0;
+    T* mmap_ptr = static_cast<T*>(region.get_address());
     T v = 0;
+    double v2 = 0.0;
     
-    for(int64_t iter = 0; iter < niter; iter++){
-        buf_idx = iter * buflen;
-        readlen = buflen;
-        if( iter == niter - 1 ){
-            readlen = partlen - buf_idx;
-        }
-        if(conn != NULL){
-            lendian_fread(bufptr, elem_size, readlen, conn);
+// #pragma omp for schedule(static, 1) nowait
+    for(int64_t idx = 0; idx < partlen; idx++){
+        if( is_open ){
+            v = *(mmap_ptr + idx);
+            if(swap_endian){
+                swap_endianess(&(v), elem_size, 1);
+            }
+        } else {
+            v = na;
         }
         
-        for(int64_t jj = 0; jj < readlen; jj++){
-            v = *(bufptr + jj);
-            if( remove_na && (ISNAN(v) || v == na) ){
-                continue;
-            }
-            rem = jj + buf_idx; 
-            locptr_ii = locptr; 
-            dimptr_ii = dimptr;
-            for(ii = 0; ii < ndims; ii++, dimptr_ii++, locptr_ii++){
-                *locptr_ii = rem % (*dimptr_ii);
-                rem = (rem - *locptr_ii) / *dimptr_ii;
-            }
-            // if( rem > 0 ){ continue; }
-            rem = 0; fct = 1; ptrkeep_ii = ptrkeep;
-            for(ii = 0; ii < keeplen; ii++, ptrkeep_ii++){
-                tmp = *ptrkeep_ii - 1;
-                rem += fct * (*(locptr + tmp));
-                fct *= *(dimptr + tmp);
-            }
-            
-            if( ISNAN(v) || v == na ){ // remove_na must be false
-                *(ret + rem) = NA_REAL;
-                continue;
-            }
-            // rem is index of ret
-            // need to be atom
+        if( remove_na && ( ISNAN(v) || v == na )){
+            continue;
+        }
+        
+        // int thread = (int) (idx % ncores);
+        // int64_t* locptr = INTEGER64(locs[thread]);
+        locptr = INTEGER64(loc);
+        
+        // calculate position in ret
+        rem = idx; 
+        locptr_ii = locptr; 
+        dimptr_ii = dimptr;
+        for(ii = 0; ii < ndims; ii++, dimptr_ii++, locptr_ii++){
+            *locptr_ii = rem % (*dimptr_ii);
+            rem = (rem - *locptr_ii) / *dimptr_ii;
+        }
+        // if( rem > 0 ){ continue; }
+        rem = 0; 
+        fct = 1, tmp = 0; 
+        ptrkeep_ii = ptrkeep;
+        for(ii = 0; ii < keeplen; ii++, ptrkeep_ii++){
+            tmp = *ptrkeep_ii - 1;
+            rem += fct * (*(locptr + tmp));
+            fct *= *(dimptr + tmp);
+        }
+        
+        if( ISNAN(v) || v == na ){ // remove_na must be false
+            v2 = NA_REAL;
+        } else if (!remove_na && *(ret + rem) == NA_REAL){
+            continue;
+        } else {
             switch(method){
             case 1: 
-                *(ret + rem) += ((double) v) * scale;
+                v2 = ((double) v) * scale;
                 break;
             case 2:
-                *(ret + rem) += std::log10((double) v) * (10.0 * scale);
+                v2 = std::log10((double) v) * (10.0 * scale);
                 break;
             case 3:
-                *(ret + rem) += std::pow((double) v, 2.0) * scale;
+                v2 = std::pow((double) v, 2.0) * scale;
                 break;
             case 4:
-                *(ret + rem) += std::sqrt((double) v) * scale;
+                v2 = std::sqrt((double) v) * scale;
                 break;
+            default:
+                continue;
             }
         }
+        
+        // rem is index of ret
+        // need to be atom
+// #pragma omp atomic
+        *(ret + rem) += v2;
     }
+// }
+
+    UNPROTECT(1);
     
 }
 
@@ -151,36 +185,11 @@ SEXP FARR_collapse(
     
     int64_t part_size = 0, last_size = 0;
     std::string partition_path = "";
-    FILE* conn = NULL;
+    
     double* retptr = REAL(ret);
     for(R_xlen_t i = 0; i < retlen; i++){
         *retptr++ = 0;
     }
-    
-    int buf_size = get_buffer_size();
-    SEXP buffer = R_NilValue;
-    switch(array_type){
-    case REALSXP:
-        buffer = PROTECT(Rf_allocVector(REALSXP, buf_size / 8));
-        break;
-    case INTSXP:
-        buffer = PROTECT(Rf_allocVector(INTSXP, buf_size / 4));
-        break;
-    case LGLSXP:
-    case RAWSXP:
-        buffer = PROTECT(Rf_allocVector(RAWSXP, buf_size));
-        break;
-    case FLTSXP:
-        buffer = PROTECT(Rf_allocVector(INTSXP, buf_size / 4));
-        break;
-    default:
-        UNPROTECT(3);
-    stop("Unsupported array type.");
-    }
-    
-    
-    SEXP loc = PROTECT(Rf_allocVector(REALSXP, ndims));
-    Rf_setAttrib(loc, R_ClassSymbol, wrap("integer64"));
     
     for(R_xlen_t part = 0; part < nparts; part++){
         part_size = *(cum_part64ptr + part) - last_size;
@@ -194,53 +203,42 @@ SEXP FARR_collapse(
         *last_dimptr = part_size;
         partition_path = fbase + std::to_string(part) + ".farr";
         
-        conn = fopen(partition_path.c_str(), "rb"); 
-        
         try{
             // collapse_double(conn, dim_int64, keep, retptr);
             switch(array_type){
             case REALSXP:
-                collapse(conn, dim_int64, keep, 
-                         REAL(buffer), buf_size,
-                         retptr, NA_REAL, loc, method, 
+                collapse(partition_path, dim_int64, keep, 
+                         retptr, NA_REAL, method, 
                          remove_na, scale);
                 break;
             case INTSXP:
-                collapse(conn, dim_int64, keep, 
-                         INTEGER(buffer), buf_size,
-                         retptr, NA_INTEGER, loc, method, 
+                collapse(partition_path, dim_int64, keep, 
+                         retptr, NA_INTEGER, method, 
                          remove_na, scale);
                 break;
             case FLTSXP: {
-                collapse(conn, dim_int64, keep, 
-                         FLOAT(buffer), buf_size,
-                         retptr, NA_FLOAT, loc, method, 
+                collapse(partition_path, dim_int64, keep, 
+                         retptr, NA_FLOAT, method, 
                          remove_na, scale);
                 break;
             }
             case LGLSXP: {
                 Rbyte na_lgl = 2;
-                collapse(conn, dim_int64, keep, 
-                         RAW(buffer), buf_size,
-                         retptr, na_lgl, loc, method, 
+                collapse(partition_path, dim_int64, keep, 
+                         retptr, na_lgl, method, 
                          remove_na, scale);
                 break;
             }
             case RAWSXP: {
                 Rbyte na_lgl = 0;
-                collapse(conn, dim_int64, keep, 
-                         RAW(buffer), buf_size,
-                         retptr, na_lgl, loc, method, 
+                collapse(partition_path, dim_int64, keep, 
+                         retptr, na_lgl, method, 
                          true, scale);
                 break;
             }
             }
         }catch(...){}
         
-        if(conn != NULL){
-            fclose(conn);
-            conn = NULL;
-        }
     }
     
     // retptr = REAL(ret);
@@ -249,7 +247,7 @@ SEXP FARR_collapse(
     // }
     
     
-    UNPROTECT(5);
+    UNPROTECT(3);
     return(ret);
 }
 

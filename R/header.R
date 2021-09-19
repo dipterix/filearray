@@ -42,7 +42,7 @@ read_header <- function(fid){
             endian <- 'big'
             stop("The file endianess is not little?")
         } else {
-            endian <- 'little'
+            endian <- "little"
         }
     }
     

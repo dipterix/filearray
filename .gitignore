@@ -20,3 +20,9 @@ tests2/
 docs
 CRAN-RELEASE
 inst/doc
+# C++ related
+*.a
+*.dll
+*.o
+*.so
+*.dll

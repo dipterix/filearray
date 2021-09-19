@@ -69,8 +69,8 @@ filearray_subset <- function(filebase, position_indices, drop = TRUE, use_dimnam
     .Call(`_filearray_filearray_subset`, filebase, position_indices, drop, use_dimnames, reshape)
 }
 
-FARR_subset_sequential <- function(filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from = 0L, len = 1L) {
-    .Call(`_filearray_FARR_subset_sequential`, filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from, len)
+FARR_subset_sequential <- function(filebase, unit_partlen, cum_partsizes, array_type, ret, from = 0L, len = 1L) {
+    .Call(`_filearray_FARR_subset_sequential`, filebase, unit_partlen, cum_partsizes, array_type, ret, from, len)
 }
 
 FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_dimnames = TRUE, thread_buffer = 2097152L, split_dim = 0L, strict = 1L) {
@@ -79,6 +79,10 @@ FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_
 
 FARR_buffer_map <- function(input_filebases, output_filebase, map, buffer_nelems, result_nelems = 0L) {
     .Call(`_filearray_FARR_buffer_map`, input_filebases, output_filebase, map, buffer_nelems, result_nelems)
+}
+
+FARR_buffer_map2 <- function(input_filebases, map, buffer_nelems) {
+    .Call(`_filearray_FARR_buffer_map2`, input_filebases, map, buffer_nelems)
 }
 
 FARR_buffer_mapreduce <- function(filebase, map, reduce, buffer_nelems) {
@@ -95,6 +99,10 @@ setThreads <- function(n, reset_after_fork = -1L) {
 
 hasOpenMP <- function() {
     .Call(`_filearray_hasOpenMP`)
+}
+
+FARR_subset_assign_sequential <- function(filebase, unit_partlen, cum_partsizes, array_type, value, from) {
+    .Call(`_filearray_FARR_subset_assign_sequential`, filebase, unit_partlen, cum_partsizes, array_type, value, from)
 }
 
 FARR_subset_assign2 <- function(filebase, value, listOrEnv, thread_buffer = 2097152L, split_dim = 0L) {

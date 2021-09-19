@@ -1,14 +1,12 @@
-#include "common.h"
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-// [[Rcpp::depends(BH)]]
-
+#include <iterator>
+#include <map> 
 #include "openmp.h"
 #include "serialize.h"
 #include "core.h"
 #include "utils.h"
 #include "conversion.h"
 #include "save.h"
+#include "mio.hpp"
 using namespace Rcpp;
 
 SEXP FARR_subset_assign_sequential_bare(
@@ -56,8 +54,11 @@ SEXP FARR_subset_assign_sequential_bare(
     cum_part = INTEGER64(cum_partsizes);
     
     int64_t nwrite = 0;
+    FILE* conn = NULL;
     
-    const boost::interprocess::mode_t mode = boost::interprocess::read_write;
+    // Rcout << slice_idx1 << "  -  " << slice_idx2 << "\n";
+    // Rcout << part_start << "  -  " << part_end << "\n";
+    // Rcout << skip_start << "  -  " << skip_end << "\n";
     
     for(int part = part_start; part <= part_end; part++, cum_part++, nwrite += write_len){
         // Rcout << part << "\n";
@@ -81,65 +82,56 @@ SEXP FARR_subset_assign_sequential_bare(
         }
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
+        conn = fopen(part_file.c_str(), "r+b");
         
-        try{
-            boost::interprocess::file_mapping fm(part_file.c_str(), mode);
-            boost::interprocess::mapped_region region(
-                    fm, mode, 
-                    FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
-                    file_buffer_elemsize * write_len);
-            region.advise(boost::interprocess::mapped_region::advice_sequential);
-            unsigned char* begin = static_cast<unsigned char*>(region.get_address());
-            switch(array_type) {
-            case REALSXP: {
-                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            case INTSXP: {
-                lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            case RAWSXP: {
-                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            case FLTSXP: {
-                lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            case LGLSXP: {
-                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            case CPLXSXP: {
-                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize, write_len);
-                // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
-                break;
-            }
-            default: {
-                stop("Unsupported SEXP type");
-            }
-            }
-            region.flush();
-        } catch(std::exception &ex){
-            stop("Error while writing sequential to partition " +
-                std::to_string(part + 1) + ". Reason: " + ex.what());
-        } catch(...){
-            stop("Error while writing sequential to partition " +
-                std::to_string(part + 1) + ". (Unknown error)");
+        if(conn == NULL){ continue; }
+        // Rcout << part << " " << read_start << " " << write_len << "\n";
+        
+        // Rcout << part << " " << read_start << " " << read_len << "\n";
+        fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
+        
+        switch(array_type) {
+        case REALSXP: {
+            lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
         }
+        case INTSXP: {
+            lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case RAWSXP: {
+            lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case FLTSXP: {
+            lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case LGLSXP: {
+            lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        case CPLXSXP: {
+            lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
+            break;
+        }
+        default: {
+            fclose(conn);
+            conn = NULL;
+            stop("Unsupported SEXP type");
+        }
+        }
+        // nread += read_len;
         
+        // fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
+        fflush(conn);
+        fclose(conn);
+        conn = NULL;
     }
     
     return(R_NilValue);
 }
 
-// [[Rcpp::export]]
 SEXP FARR_subset_assign_sequential(
         const std::string& filebase, 
         const int64_t& unit_partlen, 
@@ -165,47 +157,45 @@ void subset_assign_partition(
         int64_t* idx1ptr0, R_xlen_t idx1len, 
         int64_t idx1_start, int64_t idx2_start, 
         int64_t* idx2ptr0, R_xlen_t idx2len ) {
-    // TODO: swap_endian
+    
     int elem_size = sizeof(T);
     
-    // fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
+    int ncores = getThreads();
+    if(ncores > idx2len){
+        ncores = idx2len;
+    }
     
-    int64_t* idx1ptr = idx1ptr0;
-    int64_t* idx2ptr = idx2ptr0;
-    
-    T* valptr2 = value;
-    T* buf = NULL;
-    
-    R_xlen_t idx2ii = 0;
-    R_xlen_t idx1ii = 0;
-    int64_t start_loc = 0;
-    
-    for(idx2ii = 0; idx2ii < idx2len; idx2ii++, idx2ptr++){
+#pragma omp parallel num_threads(ncores)
+{
+#pragma omp for schedule(static, 1) nowait
+    for(R_xlen_t idx2ii = 0; idx2ii < idx2len; idx2ii++){
+        
+        int64_t* idx2ptr = idx2ptr0 + idx2ii;
         
         if(*idx2ptr == NA_INTEGER64){
             continue;
         }
         
-        // idx1ptr = (int64_t*) REAL(idx1);
-        idx1ptr = idx1ptr0;
-        start_loc = (*idx2ptr - idx2_start) * block_size;
+        int64_t* idx1ptr = idx1ptr0;
+        int64_t start_loc = (*idx2ptr - idx2_start) * block_size;
         
         // load current block
-        buf = (T*)(conn0 + start_loc * elem_size);
+        T* buf = (T*)(conn0 + start_loc * elem_size);
+        T* valptr2 = value + idx1len * idx2ii;
         
-        for(idx1ii = 0; idx1ii < idx1len; idx1ii++, idx1ptr++, valptr2++){
+        for(R_xlen_t idx1ii = 0; idx1ii < idx1len; idx1ii++, idx1ptr++, valptr2++){
             // calculate pointer location in the file
             // no check here, but tmp_loc should be >=0
             if(*idx1ptr != NA_INTEGER64){
                 // *(buf + (*idx1ptr - idx1_start)) = (*valptr2);
-                
                 lendian_assign(buf + (*idx1ptr - idx1_start),
                                valptr2, elem_size);
             }
         }
         
     }
-    
+}
+
 }
 
 template <typename T>
@@ -236,31 +226,37 @@ SEXP FARR_subset_assign_template(
     }
     
     
-    int ncores = getThreads();
-    if(ncores > idx2s.length()){
-        ncores = idx2s.length();
-    }
+    // int ncores = getThreads();
+    // if(ncores > idx2s.length()){
+    //     ncores = idx2s.length();
+    // }
     
     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
-    const boost::interprocess::mode_t mode = boost::interprocess::read_write;
     
-    std::map<int64_t, boost::interprocess::file_mapping> conn_map;
+    // sort partitions so partitions[sort_idx] will be ascending
+    std::vector<int64_t> sort_idx(partitions.size());
+    std::size_t idx_n(0);
+    std::generate(sort_idx.begin(), sort_idx.end(), [&]{ return idx_n++; });
+    std::sort(
+        sort_idx.begin(), sort_idx.end(),
+        [&](int i1, int i2) {
+            return partitions[i1] < partitions[i2];
+        } );
+
+    std::error_code error;
+    mio::mmap_sink rw_mmap;
+    R_xlen_t last_part = -1;
     
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
     for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
-        
-        if( has_error >= 0 ){ continue; }
-        
-        R_xlen_t part = partitions[iter];
+        int64_t current_iter = sort_idx[iter];
+        R_xlen_t part = partitions[current_iter];
         int64_t skips = 0;
-        if(iter > 0){
-            skips = idx2lens[iter - 1];
+        if(current_iter > 0){
+            skips = idx2lens[current_iter - 1];
         }
         
         // obtain starting end ending indices of idx2
-        SEXP idx2 = idx2s[iter];
+        SEXP idx2 = idx2s[current_iter];
         R_xlen_t idx2len = Rf_xlength(idx2);
         int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
         for(int64_t* ptr2 = INTEGER64(idx2); idx2len > 0; idx2len--, ptr2++ ){
@@ -281,39 +277,68 @@ SEXP FARR_subset_assign_template(
             continue;
         }
         
-        std::string file = filebase + std::to_string(part) + ".farr";
+        
+        if(last_part != part){
+            if( !rw_mmap.empty() ){
+                rw_mmap.sync(error);
+                if( !error ){
+                    rw_mmap.unmap();
+                } else {
+                    has_error = part;
+                    error_msg = error.message() + " while trying to save file.";
+                    stop(error_msg);
+                }
+            }
+            std::string file = filebase + std::to_string(part) + ".farr";
+            rw_mmap = mio::make_mmap_sink(
+                file, FARR_HEADER_LENGTH, 
+                mio::map_entire_file, error
+            );
+            if(error){
+                has_error = part;
+                error_msg = error.message() + " while trying to open file.";
+                stop(error_msg);
+            }
+        }
+        
+        // mio::mmap_sink rw_mmap = mio::make_mmap_sink(
+        //     file, 
+        //     FARR_HEADER_LENGTH + elem_size *
+        //         (block_size * idx2_start + idx1_start), 
+        //     elem_size * 
+        //         (idx1_end - idx1_start +
+        //         block_size * (idx2_end - idx2_start)), 
+        //     error);
         
         try{
-            boost::interprocess::file_mapping fm(file.c_str(), mode);
-            int64_t region_len = elem_size * (idx1_end - idx1_start + block_size * (idx2_end - idx2_start));
-            int64_t region_offset = FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start);
-            boost::interprocess::mapped_region region(
-                    fm, mode, region_offset, region_len);
-            region.advise(boost::interprocess::mapped_region::advice_sequential);
-            
-            char* begin = static_cast<char*>(region.get_address());
-        
             int64_t* idx2_ptr = INTEGER64(idx2);
             R_xlen_t idx2_len = Rf_xlength(idx2);
             T* value_ptr2 = value_ptr + (idx1len * skips);
             int64_t* idx1ptr = idx1ptr0;
             subset_assign_partition(
-                begin, value_ptr2,
+                rw_mmap.begin() + elem_size * (block_size * idx2_start + idx1_start),
+                value_ptr2,
                 block_size, idx1ptr, idx1len, 
                 idx1_start, idx2_start, 
                 idx2_ptr, idx2_len );
-            
-            region.flush();
+            // rw_mmap.sync(error);
+            // if( !error ){
+            //     rw_mmap.unmap();
+            // } else {
+            //     has_error = part;
+            //     error_msg = error.message() + " while trying to save file.";
+            // }
         } catch(std::exception &ex){
+            rw_mmap.unmap();
             has_error = part;
             error_msg =  ex.what();
-            error_msg += " while trying to open file.";
+            error_msg += " while trying to write to the file.";
+            stop(error_msg);
         } catch(...){
-            has_error = part;
             error_msg = "Unknown error.";
+            stop(error_msg);
         }
     }
-}
 
     // UNPROTECT(ncores);
     if( has_error >= 0 ){

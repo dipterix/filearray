@@ -16,7 +16,7 @@ double na_cplx_dbl(){
 SEXP realToInt64(NumericVector x, const double min_, const double max_, const int strict){
     R_xlen_t len = x.length();
     SEXP re = PROTECT(Rf_allocVector(REALSXP, len));
-    Rf_setAttrib(re, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(re, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     
     int64_t *reptr = (int64_t *) REAL(re);
     
@@ -43,7 +43,7 @@ SEXP realToInt64(NumericVector x, const double min_, const double max_, const in
 
 SEXP realToInt64_inplace(SEXP x, const double min_, const double max_, const int strict){
     R_xlen_t len = Rf_xlength(x);
-    Rf_setAttrib(x, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(x, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     
     int64_t *reptr = (int64_t *) REAL(x);
     double* xptr = REAL(x);
@@ -70,14 +70,14 @@ SEXP convert_as(SEXP x, SEXPTYPE type) {
     SEXPTYPE xtype = TYPEOF(x);
     
     if( type == FLTSXP && xtype == INTSXP ){
-        if( Rf_getAttrib(x, wrap("_float_")) != R_NilValue ){
+        if( Rf_getAttrib(x, Rf_install("_float_")) != R_NilValue ){
             return(x);
         }
     }
     R_xlen_t xlen = Rf_xlength(x);
     if( type == FLTSXP ){
         SEXP y = PROTECT(Rf_allocVector(INTSXP, xlen));
-        Rf_setAttrib(y, Shield<SEXP>(wrap("_float_")), Shield<SEXP>(wrap(true)));
+        Rf_setAttrib(y, Rf_install("_float_"), Shield<SEXP>(wrap(true)));
         
         switch(xtype) {
         case RAWSXP: {
@@ -334,17 +334,36 @@ void cplxToReal(Rcomplex* x, double* y, size_t nelem){
     }
 }
 
-void realToCplx(const double* x, Rcomplex* y, const size_t& nelem){
+void realToCplx(const double* x, Rcomplex* y, const size_t& nelem, const bool swap_endian){
     // double* xptr = x;
     Rcomplex* yptr = y;
     float* fptr = NULL;
     na_cplx_dbl();
+    
+    double tmp;
+    double* tmpptr = &(tmp);
+    unsigned char* tmpptr2 = (unsigned char*) tmpptr;
+    size_t size = sizeof(double) - 1;
+    size_t ix = 0;
+    unsigned char* x2;
+    
     for(size_t ii = 0; ii < nelem; ii++, yptr++){
-        if(*(x + ii) == NA_COMPLEX_DBL){
+        
+        if( swap_endian ){
+            x2 = (unsigned char*) (x + ii);
+            for(ix = 0; ix <= size; ix++){
+                *(tmpptr2 + (size - ix)) = *(x2 + ix);
+            }
+        } else {
+            tmp = *(x + ii);
+        }
+        
+        
+        if(tmp == NA_COMPLEX_DBL){
             yptr->r = NA_REAL;
             yptr->i = NA_REAL;
         } else {
-            fptr = (float*) (x + ii);
+            fptr = (float*) (tmpptr);
             yptr->r = *fptr++;
             yptr->i = *fptr;
         }
@@ -442,10 +461,32 @@ SEXP get_float_na(){
  * Transform functions
  ***********************************************************/
 
-void transform_float(const float* x, double* y){
-    *y = *x;
+void transform_float(const float* x, double* y, const bool& swap_endian){
+    if( swap_endian ){
+        size_t size = sizeof(float);
+        float tmp;
+        
+        unsigned char *buffer_src = (unsigned char*) x;
+        unsigned char *buffer_dst = (unsigned char*) (&tmp);
+        
+        for (size_t ix = 0; ix < size; ix++) {
+            *(buffer_dst + (size - ix - 1)) = *(buffer_src + ix);
+        }
+        if(tmp == NA_FLOAT){
+            *y = NA_REAL;
+        } else {
+            *y = tmp;
+        }
+        
+    } else {
+        if(*x == NA_FLOAT){
+            *y = NA_REAL;
+        } else {
+            *y = *x;
+        }
+    }
 }
-void transform_logical(const Rbyte* x, int* y){
+void transform_logical(const Rbyte* x, int* y, const bool& swap_endian){
     if(*x == 0){
         *y = FALSE;
     } else if (*x == 1){
@@ -454,26 +495,62 @@ void transform_logical(const Rbyte* x, int* y){
         *y = NA_LOGICAL;
     }
 }
-void transform_complex(const double* x, Rcomplex* y){
-    y->r = *((float*) x);
-    y->i = *(((float*) x) + 1);
+void transform_complex(const double* x, Rcomplex* y, const bool& swap_endian){
+    if( swap_endian ){
+        size_t size = sizeof(double);
+        double tmp;
+        
+        unsigned char *buffer_src = (unsigned char*) x;
+        unsigned char *buffer_dst = (unsigned char*) (&tmp);
+        
+        for (size_t ix = 0; ix < size; ix++) {
+            *(buffer_dst + (size - ix - 1)) = *(buffer_src + ix);
+        }
+        y->r = *((float*) buffer_dst);
+        y->i = *(((float*) buffer_dst) + 1);
+        
+    } else {
+        y->r = *((float*) x);
+        y->i = *(((float*) x) + 1);
+    }
+    
     if( ISNAN(y->r) || ISNAN(y->i) ){
         y->r = NA_REAL;
         y->i = NA_REAL;
     }
 }
 
-void transforms_float(const float* x, double* y, const int& nelem){
+void transforms_float(const float* x, double* y, const int& nelem, const bool& swap_endian){
     double* y2 = y;
+    float tmp;
+    float* tmpptr = &(tmp);
+    unsigned char* tmpptr2 = (unsigned char*) tmpptr;
+    size_t size = sizeof(float) - 1;
+    size_t ix = 0;
+    unsigned char* x2;
+    
     for(int i = 0; i < nelem; i++, y2++){
-        if(ISNAN(*(x + i))){
-            *y2 = NA_REAL;
+        
+        if( swap_endian ){
+            x2 = (unsigned char*) (x + i);
+            for(ix = 0; ix <= size; ix++){
+                *(tmpptr2 + (size - ix)) = *(x2 + ix);
+            }
+            if(ISNAN(tmp)){
+                *y2 = NA_REAL;
+            } else {
+                *y2 = tmp;
+            }
         } else {
-            *y2 = *(x + i);
+            if(ISNAN(*(x + i))){
+                *y2 = NA_REAL;
+            } else {
+                *y2 = *(x + i);
+            }
         }
     }
 }
-void transforms_logical(const Rbyte* x, int* y, const int& nelem){
+void transforms_logical(const Rbyte* x, int* y, const int& nelem, const bool& swap_endian){
     int* y2 = y;
     for(int i = 0; i < nelem; i++, y2++){
         *y2 = *(x + i);
@@ -482,6 +559,6 @@ void transforms_logical(const Rbyte* x, int* y, const int& nelem){
         }
     }
 }
-void transforms_complex(const double* x, Rcomplex* y, const int& nelem){
-    realToCplx(x, y, nelem);
+void transforms_complex(const double* x, Rcomplex* y, const int& nelem, const bool& swap_endian){
+    realToCplx(x, y, nelem, swap_endian);
 }

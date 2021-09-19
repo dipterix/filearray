@@ -1,3 +1,4 @@
+set.seed(1)
 dim <- c(100,200,200,100)
 lazyx <- lazyarray::create_lazyarray(
     tempfile(), storage_format = 'double', dim = dim)
@@ -9,41 +10,42 @@ filex$initialize_partition()
 set.seed(1)
 tmp <- rnorm(4e7)
 res1 <- microbenchmark::microbenchmark(
-    lazyarray = {
-        for(i in 1:10){
-            lazyx[,,,(i-1)*10 +1:10] <- tmp
-        }
-    },
+    # lazyarray = {
+    #     for(i in 1:10){
+    #         lazyx[,,,(i-1)*10 +1:10] <- tmp
+    #     }
+    # },
     filearray = {
         for(i in 1:10){
             filex[,,,(i-1)*10 +1:10] <- tmp
         }
-    }, times = 5
+    }, times = 3, setup = quote(gc())
 ); res1
+
 
 
 speed1 <- sapply(split(res1, res1$expr), function(res){
     speed <- matrix(800*4 / res$time, nrow = 10) * 1e9
     c(mean(speed), sd(speed) / 2)
-})
+}); speed1
 
 
 res2 <- microbenchmark::microbenchmark(
-    lazyarray = {
-        for(i in 1:10){
-            lazyx[,,,1:10 + (i-1) * 10]
-        }
-    },
+    # lazyarray = {
+    #     for(i in 1:10){
+    #         lazyx[,,,1:10 + (i-1) * 10]
+    #     }
+    # },
     filex = {
         for(i in 1:10){
-            filex[,,,1:10 + (i-1) * 10]
+            filex[,,,(i-1)*10 + 1:10]
         }
     }, times = 10, setup = quote(gc())
 )
 speed2 <- sapply(split(res2, res2$expr), function(res){
     speed <- matrix(3200 / res$time, nrow = 10) * 1e9
     c(mean(speed), sd(speed) / 3)
-})
+}); speed2
 
 
 
@@ -52,42 +54,35 @@ locs <- lapply(dim, function(d){
     sample(1:d, replace = FALSE, size = sample(50:d, 1))
 })
 
-
-microbenchmark::microbenchmark(
-    lazyarray = {
-        lazyx[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
-    }, times = 10, setup = quote(gc()))
-# Unit: milliseconds
-# expr      min       lq     mean   median       uq
-# lazyarray 971.9185 1008.228 1083.982 1094.343 1139.947
-# max neval
-# 1212.9    10
-microbenchmark::microbenchmark(
+res3 <- microbenchmark::microbenchmark(
+    # lazyarray = {
+    #     lazyx[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
+    # }, 
     filearray = {
         filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
-    }, times = 10, setup = quote(gc()))
-# Unit: milliseconds
-# expr      min       lq     mean   median       uq
-# filearray 68.79333 71.39941 282.4135 215.8452 429.8881
-# max neval
-# 666.0666    10
+    }, 
+    times = 1, setup = quote(gc()))
+
+speed3 <- sapply(split(res3, res3$expr), function(res){
+    speed <- matrix(prod(sapply(locs, length)) / 1e8 * 800 / res$time, nrow = 10) * 1e9
+    c(mean(speed), sd(speed) / 3)
+}); speed3
+
 
 z <- filex[]
-microbenchmark::microbenchmark(
+res5 <- microbenchmark::microbenchmark(
     nativeR = {
         z[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
-    }, times = 10, setup = quote(gc()))
-# Unit: milliseconds
-# expr     min     lq     mean   median      uq      max
-# nativeR 169.609 173.31 222.3218 203.4826 246.041 392.5921
-# neval
-# 10
-speed3 <- matrix(nrow = 1, prod(sapply(locs, length)) / 1e8 * 800 / c(
-    1094.343, 215.8452, 203.4826
-))
+    }, 
+    times = 10, setup = quote(gc()))
+speed3 <- cbind(speed3, sapply(split(res5, res5$expr), function(res){
+    speed <- matrix(prod(sapply(locs, length)) / 1e8 * 800 / res$time, nrow = 10) * 1e9
+    c(mean(speed), sd(speed) / 3)
+}))
 
-tmp <- rnorm(prod(sapply(locs, length)))
+
 rm(z); gc()
+tmp <- rnorm(prod(sapply(locs, length)))
 res4 <- microbenchmark::microbenchmark(
     lazyarray = {
         lazyx[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
@@ -96,13 +91,10 @@ res4 <- microbenchmark::microbenchmark(
         filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
     }, times = 10, setup = quote(gc())
 )
-sapply(split(res4, res4$expr), function(res){
+speed4 <- sapply(split(res4, res4$expr), function(res){
     speed <- matrix(prod(sapply(locs, length)) / 1e8 * 800 / res$time, nrow = 10) * 1e9
     c(mean(speed), sd(speed) / 3)
 })
-# lazyarray filearray
-# [1,] 38.8646985 394.38949
-# [2,]  0.7159783  32.14047
 
 z <- filex[]
 res5 <- microbenchmark::microbenchmark(
@@ -111,10 +103,11 @@ res5 <- microbenchmark::microbenchmark(
     }, times = 10, setup = quote(gc())
 )
 rm(z); gc()
+speed4 <- cbind(speed4, sapply(split(res5, res5$expr), function(res){
+    speed <- matrix(prod(sapply(locs, length)) / 1e8 * 800 / res$time, nrow = 10) * 1e9
+    c(mean(speed), sd(speed) / 3)
+}))
 mean(prod(sapply(locs, length)) / 1e8 * 800 / res5$time) * 1e9
-# 931.8366
-    
-speed4 <- matrix(nrow = 1, c(38.8646985, 394.38949, 931.8366)) / 1024
 
 f <- function(){
     
@@ -172,7 +165,7 @@ f <- function(){
     speed <- cbind(
         speed3[1,],
         speed4[1,]
-    )
+    ) / 1024
     rownames(speed) <- c("lazyarray", "filearray", "in-memory")
     colnames(speed) <- c("Subset", "SubsetAssign")
     plt <- barplot.default(

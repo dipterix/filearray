@@ -225,8 +225,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_subset_sequential
-SEXP FARR_subset_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP file_buffer, SEXP ret, const int64_t from, const int64_t len);
-RcppExport SEXP _filearray_FARR_subset_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP file_bufferSEXP, SEXP retSEXP, SEXP fromSEXP, SEXP lenSEXP) {
+SEXP FARR_subset_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP ret, const int64_t from, const int64_t len);
+RcppExport SEXP _filearray_FARR_subset_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP retSEXP, SEXP fromSEXP, SEXP lenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -234,11 +234,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int64_t& >::type unit_partlen(unit_partlenSEXP);
     Rcpp::traits::input_parameter< SEXP >::type cum_partsizes(cum_partsizesSEXP);
     Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type file_buffer(file_bufferSEXP);
     Rcpp::traits::input_parameter< SEXP >::type ret(retSEXP);
     Rcpp::traits::input_parameter< const int64_t >::type from(fromSEXP);
     Rcpp::traits::input_parameter< const int64_t >::type len(lenSEXP);
-    rcpp_result_gen = Rcpp::wrap(FARR_subset_sequential(filebase, unit_partlen, cum_partsizes, array_type, file_buffer, ret, from, len));
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_sequential(filebase, unit_partlen, cum_partsizes, array_type, ret, from, len));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -272,6 +271,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
     Rcpp::traits::input_parameter< int >::type result_nelems(result_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_map(input_filebases, output_filebase, map, buffer_nelems, result_nelems));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_buffer_map2
+SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, const int& buffer_nelems);
+RcppExport SEXP _filearray_FARR_buffer_map2(SEXP input_filebasesSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
+    Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
+    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_buffer_map2(input_filebases, map, buffer_nelems));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -319,6 +331,22 @@ BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     rcpp_result_gen = Rcpp::wrap(hasOpenMP());
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_subset_assign_sequential
+SEXP FARR_subset_assign_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP value, const int64_t from);
+RcppExport SEXP _filearray_FARR_subset_assign_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP valueSEXP, SEXP fromSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
+    Rcpp::traits::input_parameter< const int64_t& >::type unit_partlen(unit_partlenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type cum_partsizes(cum_partsizesSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< const int64_t >::type from(fromSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_sequential(filebase, unit_partlen, cum_partsizes, array_type, value, from));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -393,13 +421,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_filearray_meta", (DL_FUNC) &_filearray_filearray_meta, 1},
     {"_filearray_filearray_assign", (DL_FUNC) &_filearray_filearray_assign, 3},
     {"_filearray_filearray_subset", (DL_FUNC) &_filearray_filearray_subset, 5},
-    {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 8},
+    {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 7},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
     {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
+    {"_filearray_FARR_buffer_map2", (DL_FUNC) &_filearray_FARR_buffer_map2, 3},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
     {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
+    {"_filearray_FARR_subset_assign_sequential", (DL_FUNC) &_filearray_FARR_subset_assign_sequential, 6},
     {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
     {"_filearray_kinda_sorted", (DL_FUNC) &_filearray_kinda_sorted, 3},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},

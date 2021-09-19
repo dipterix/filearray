@@ -1,7 +1,7 @@
 #ifndef FARR_LOAD_H
 #define FARR_LOAD_H
 
-#include <Rcpp.h>
+#include "common.h"
 
 SEXP FARR_subset2(
         const std::string& filebase,
@@ -19,7 +19,6 @@ SEXP FARR_subset_sequential(
         const int64_t& unit_partlen, 
         SEXP cum_partsizes, 
         SEXPTYPE array_type,
-        SEXP file_buffer, 
         SEXP ret, 
         const int64_t from, 
         const int64_t len

@@ -1,3 +1,7 @@
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+// [[Rcpp::depends(BH)]]
+
 #include "openmp.h"
 #include "serialize.h"
 #include "core.h"
@@ -27,171 +31,6 @@ int get_buffer_nelem(SEXPTYPE type){
 }
 
 /**********************************************************
- * Read partition
- ***********************************************************/
-
-template <typename T,  typename B>
-inline void subset_partition(
-        FILE* conn, B* buffer, int buffer_size, 
-        T* retptr, const R_xlen_t block_size, 
-        SEXP idx1, int64_t idx1_start, int64_t idx1_end,
-        SEXP idx2, int64_t idx2_start, int64_t idx2_end,
-        int idx1_sorted, int idx2_sorted,
-        void (*transform) (const B*, T*)
-) {
-    double content_size = 0;
-    int elem_size = sizeof(B);
-    // R_xlen_t buffer_size = buffer_bytes / elem_size;
-    if( buffer_size > block_size ){
-        buffer_size = block_size;
-    }
-    B* bufferptr = (B*) buffer;
-    B* bufferptr2 = bufferptr;
-    
-    fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-    lendian_fread(&(content_size), 8, 1, conn);
-    
-    int64_t start_idx = idx1_start;
-    int64_t end_idx = 0;
-    int64_t conn_pos = 0;
-    
-    int64_t* idx1ptr = INTEGER64(idx1);
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    int64_t* idx2ptr = INTEGER64(idx2);
-    R_xlen_t idx2len = Rf_xlength(idx2);
-    
-    R_xlen_t ii = 0, jj = 0, ll = 0, ii_idx1 = 0;
-    T* retptr2 = retptr;
-    T* retptr3 = retptr;
-    
-    // print(idx2);
-    // Rcout << idx2_sorted << "---\n";
-    int matched = 0;
-    
-    for(int64_t block = idx2_start; block <= idx2_end; block++){
-        
-        /**
-         * The following commented code will bug out when
-         * running in multithread. My goal is to find
-         * the first element in idx2 that equals to `block`
-         * The issue is `block` might not exist in `idx2`,
-         * hence I added a check `*idx2ptr != block` at the end
-         * 
-         * In single thread, it seems that the compiler will
-         * check and make sure `idx2ptr` won't go beyond the
-         * end if the array. However, OpenMP compiler does not
-         * have this check. So at the end of the loop,
-         * `idx2ptr` will go beyong the array and `*idx2ptr`
-         * is not an element in `idx2`. I think this is 
-         * compiler-related and also depend on type of optimization
-         * 
-         * In my case, when block is 1, in some rare cases,
-         * this if-clause will fail, and instead of jumping
-         * to next block, the rest of code gets executed.
-         * 
-         for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
-             ii_idx1 < idx2len; 
-             ii_idx1++, idx2ptr++){
-             if( *idx2ptr == block ){
-                 break;
-             }
-         }
-         if( *idx2ptr != block ){ continue; }
-         */
-        
-        
-        // find block in idx2
-        matched = 0;
-        for(ii_idx1 = 0, idx2ptr = INTEGER64(idx2);
-            ii_idx1 < idx2len; 
-            ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                matched = 1;
-                break;
-            }
-        }
-        if( matched == 0 ){ continue; }
-        
-        // Rcout << block << "\n";
-        
-        // read current block!
-        retptr2 = retptr + ii_idx1 * idx1len;
-        start_idx = (idx1_start + block_size * block);
-        end_idx = start_idx - idx1_start + idx1_end + 1;
-        
-        if( start_idx >= content_size ){
-            if( idx2_sorted ){
-                break;
-            }
-            continue;
-        }
-        if( end_idx > content_size ){
-            end_idx = content_size;
-        }
-        
-        // Rcout << block << " " << ii_idx1 <<  " " << start_idx <<  " " << end_idx << "\n";
-        
-        // fseek is somehow slow, read to buffer without using it seems faster
-        while( conn_pos < start_idx ){
-            ii = start_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
-            conn_pos += ii;
-        }
-        // fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-        // fseek(conn, (start_idx - conn_pos) * elem_size, SEEK_CUR);
-        // conn_pos = start_idx;
-        
-        
-        idx1ptr = (int64_t*) REAL(idx1);
-        jj = 0;
-        while( conn_pos < end_idx ){
-            ii = end_idx - conn_pos;
-            ii = ii > buffer_size ? buffer_size : ii;
-            lendian_fread(bufferptr, elem_size, ii, conn);
-            
-            if( !idx1_sorted ){
-                idx1ptr = (int64_t*) REAL(idx1);
-                jj = 0;
-            }
-            for(; jj < idx1len; jj++, idx1ptr++) {
-                if(*idx1ptr == NA_INTEGER64){ continue; }
-                // ll should be [conn_pos, conn_pos + ii)
-                
-                ll = *idx1ptr - idx1_start + start_idx - conn_pos;
-                if( ll < 0 ){ continue; }
-                if( ll >= ii ){
-                    if( idx1_sorted ) {
-                        break;
-                    }
-                    continue;
-                }
-                bufferptr2 = bufferptr + ll;
-                transform(bufferptr2, retptr2 + jj);
-                // *(retptr2 + jj) = (T) *(bufferptr + ll);
-            }
-            
-            conn_pos += ii;
-        }
-        
-        retptr2 = retptr + ii_idx1 * idx1len;
-        ii_idx1++;
-        idx2ptr = ((int64_t*) REAL(idx2)) + ii_idx1;
-        // Rcout << "1\n";
-        for(; ii_idx1 < idx2len; ii_idx1++, idx2ptr++){
-            if( *idx2ptr == block ){
-                retptr3 = retptr + ii_idx1 * idx1len;
-                memcpy(retptr3, retptr2, sizeof(T) * idx1len);
-            } else if( idx2_sorted && *idx2ptr > block ){
-                break;
-            }
-        }
-        // Rcout << "2\n";
-    }
-}
-
-/**********************************************************
  * Subset - internal (multithread here)
  ***********************************************************/
 
@@ -201,9 +40,9 @@ bool FARR_subset_template(
         const std::string& filebase, 
         const List& sch,
         T* ret_ptr, const T na, const R_xlen_t& retlen,
-        std::vector<B*> buffer_ptrs, const int& buffer_nelems,
-        void (*transform)(const B*, T*)
+        void (*transform)(const B*, T*, const bool&)
 ){
+    
     SEXP idx1 = sch["idx1"];
     SEXP idx1range = sch["idx1range"];
     List idx2s = sch["idx2s"];
@@ -213,11 +52,6 @@ bool FARR_subset_template(
     
     R_xlen_t niter = partitions.length();
     R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    // // TODO: change
-    // SEXP ret = PROTECT(Rf_allocVector(INTSXP, idx1len * idx2lens[niter - 1]));
-    // // TODO: change
-    // const int na = NA_INTEGER;
     
     int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
@@ -232,23 +66,22 @@ bool FARR_subset_template(
         return(false);
     }
     
-    const int idx1_sorted = kinda_sorted(idx1, idx1_start, buffer_nelems);
-    
     int err = -1;
     std::string error_msg = "";
     // char* buffer[nbuffers];
     
-    int ncores = buffer_ptrs.size();
+    int ncores = getThreads();
     if(ncores > niter){
         ncores = niter;
     }
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    const int elem_size = sizeof(B);
+    const bool swap_endian = !isLittleEndian();
     
 #pragma omp parallel num_threads(ncores) 
 {
 #pragma omp for schedule(static, 1) nowait
     for(R_xlen_t ii = 0; ii < niter; ii++){
-        // get current buffer
-        int thread = ii % ncores;
         
         int part = partitions[ii];
         int64_t skips = 0;
@@ -289,40 +122,66 @@ bool FARR_subset_template(
         const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
         std::string file = filebase + std::to_string(part) + ".farr";
         
-        FILE* conn = fopen( file.c_str(), "rb" );
-        if (conn) {
+        try{
+            boost::interprocess::file_mapping fm(file.c_str(), mode);
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + elem_size * (
+                            idx2_start * block_size + idx1_start
+                    ), 
+                    elem_size * (
+                            idx1_end - idx1_start + 1 +
+                                block_size * (idx2_end - idx2_start)
+                    ));
+            region.advise(boost::interprocess::mapped_region::advice_sequential);
+            const B* mmap_ptr = static_cast<const B*>(region.get_address());
+            const int64_t content_size = region.get_size() / elem_size;
             
-            std::string s = "";
             
-            // TODO: change
-            // int* buffer = INTEGER(buf);
-            B* buffer = buffer_ptrs[thread];
+            // prepare for all the pointers, local variables
+            int64_t* idx2ptr = INTEGER64(idx2);
+            R_xlen_t idx2len = Rf_xlength(idx2);
+            R_xlen_t ii_idx2 = 0;
+            int64_t start_idx = idx1_start;
+
+            int64_t* idx1ptr = INTEGER64(idx1);
             
-            try{
-                subset_partition(conn, buffer, buffer_nelems, 
-                                 retptr, block_size,
-                                 idx1, idx1_start, idx1_end,
-                                 idx2, idx2_start, idx2_end,
-                                 idx1_sorted, idx2_sorted,
-                                 transform);
-                // subset_partition(conn, buffer, nbuffers, retptr, block_size, 
-                //                  idx1, idx1_start, idx1_end,
-                //                  idx2, idx2_start, idx2_end,
-                //                  0, idx2_sorted);
-            } catch(std::exception &ex){
-                fclose(conn);
-                conn = NULL;
-                err = part;
-                error_msg = ex.what();
-            } catch(...) {
-                fclose(conn);
-                conn = NULL;
-                err = part;
+            R_xlen_t jj = 0;
+            T* retptr2 = retptr;
+            
+            for(; ii_idx2 < idx2len; ii_idx2++, idx2ptr++) {
+                
+                if ( *idx2ptr == NA_INTEGER64 ){
+                    continue;
+                }
+                
+                // Rcout << block << "\n";
+                
+                // read current block!
+                retptr2 = retptr + ii_idx2 * idx1len;
+                start_idx = block_size * (*idx2ptr - idx2_start);
+                
+                if( start_idx >= content_size ){
+                    if( idx2_sorted ){
+                        break;
+                    }
+                    continue;
+                }
+                
+                idx1ptr = INTEGER64(idx1);
+                
+                for(jj = 0; jj < idx1len; jj++, idx1ptr++) {
+                    if(*idx1ptr == NA_INTEGER64){ continue; }
+                    
+                    transform(mmap_ptr + (start_idx + *idx1ptr - idx1_start), retptr2 + jj, swap_endian);
+                }
+                
             }
-            if( conn != NULL ){
-                fclose(conn);
-            }
+        } catch(...) {
+            // Debug use
+            // err = part;
         }
+        
     }
 }
 
@@ -337,7 +196,6 @@ bool FARR_subset_template(
 SEXP FARR_subset(const std::string& filebase, 
                  const List& sch,
                  const SEXPTYPE type,
-                 std::vector<SEXP>& buffer_pool,
                  SEXP ret){
     std::string fbase = correct_filebase(filebase);
     
@@ -359,88 +217,49 @@ SEXP FARR_subset(const std::string& filebase,
     
     // SEXPTYPE buffer_type = file_buffer_sxptype(type);
     // int buffer_nelems = get_buffer_nelem(type);
-    int ncores = buffer_pool.size();
+    int ncores = getThreads();
     if( ncores < 1 ){
         stop("Thread number and buffer pool size must be positive.");
     }
-    int buffer_nelems = Rf_length(buffer_pool[0]);
-    // std::vector<SEXP> buffer_pool(ncores);
-    // for(int ii = 0; ii < ncores; ii++){
-    //     buffer_pool[ii] = PROTECT(Rf_allocVector(buffer_type, buffer_nelems));
-    // }
     
     switch(type){
     case INTSXP: {
-        std::vector<int*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = INTEGER(buffer_pool[ii]);
-        }
-        FARR_subset_template(
+        FARR_subset_template<int, int>(
             fbase, sch, INTEGER(ret), NA_INTEGER, retlen,
-            buffer_ptrs, buffer_nelems, 
             &transform_asis);
         break;
     }
     case REALSXP: {
-        std::vector<double*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = REAL(buffer_pool[ii]);
-        }
-        FARR_subset_template(
+        FARR_subset_template<double, double>(
             fbase, sch, REAL(ret), NA_REAL, retlen,
-            buffer_ptrs, buffer_nelems, 
             &transform_asis);
         break;
     }
     case FLTSXP: {
-        std::vector<float*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = FLOAT(buffer_pool[ii]);
-        }
-        // Rcout << "1\n";
-        // REAL(ret);
-        // Rcout << "2\n";
-        FARR_subset_template(
+        FARR_subset_template<double, float>(
             fbase, sch, REAL(ret), NA_REAL, retlen,
-            buffer_ptrs, buffer_nelems, 
             &transform_float);
         break;
     }
     case RAWSXP: {
-        std::vector<Rbyte*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = RAW(buffer_pool[ii]);
-        }
-        Rbyte na_byte = 2;
-        FARR_subset_template(
-            fbase, sch, RAW(ret), na_byte, retlen,
-            buffer_ptrs, buffer_nelems, 
+        FARR_subset_template<Rbyte, Rbyte>(
+            fbase, sch, RAW(ret), NA_RBYTE, retlen,
             &transform_asis);
         break;
     }
     case LGLSXP: {
-        std::vector<Rbyte*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = RAW(buffer_pool[ii]);
-        }
-        FARR_subset_template(
+        FARR_subset_template<int, Rbyte>(
             fbase, sch, LOGICAL(ret), NA_LOGICAL, retlen,
-            buffer_ptrs, buffer_nelems, 
             &transform_logical);
         break;
     }
     case CPLXSXP: {
-        std::vector<double*> buffer_ptrs(ncores);
-        for(int ii = 0; ii < ncores; ii++){
-            buffer_ptrs[ii] = REAL(buffer_pool[ii]);
-        }
         na_cplx_dbl();
         Rcomplex na_cplx;
         na_cplx.i = NA_REAL;
         na_cplx.r = NA_REAL;
-        FARR_subset_template(
+        FARR_subset_template<Rcomplex, double>(
             fbase, sch, COMPLEX(ret), na_cplx, retlen,
-            buffer_ptrs, buffer_nelems, 
             &transform_complex);
         break;
     }
@@ -457,7 +276,6 @@ SEXP FARR_subset_sequential(
         const int64_t& unit_partlen, 
         SEXP cum_partsizes, 
         SEXPTYPE array_type,
-        SEXP file_buffer, 
         SEXP ret, 
         const int64_t from = 0, 
         const int64_t len = 1
@@ -465,12 +283,14 @@ SEXP FARR_subset_sequential(
     if( TYPEOF(ret) != array_memory_sxptype(array_type) ){
         stop("Inconsistent `array_type` and return type");
     }
-    if( TYPEOF(file_buffer) != file_buffer_sxptype(array_type) ){
-        stop("Inconsistent `array_type` and `file_buffer` type");
-    }
     if( len > Rf_xlength(ret) ){
         stop("`ret` size is too small");
     }
+    if( len <= 0 ){
+        return(ret);
+    }
+    bool swap_endian = !isLittleEndian();
+    
     int file_buffer_elemsize = file_element_size(array_type);
     std::string fbase = correct_filebase(filebase);
     R_len_t nparts = Rf_length(cum_partsizes);
@@ -508,9 +328,9 @@ SEXP FARR_subset_sequential(
     cum_part = INTEGER64(cum_partsizes);
     
     int64_t nread = 0;
-    FILE* conn = NULL;
-    R_len_t buf_nelem = Rf_length(file_buffer);
-    R_len_t buf_reads = 0, buf_reads_total = 0;
+    
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    
     for(int part = part_start; part <= part_end; part++, cum_part++, nread += read_len){
         if( part >= nparts ){
             continue;
@@ -532,120 +352,59 @@ SEXP FARR_subset_sequential(
         }
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
-        conn = fopen(part_file.c_str(), "rb");
         
-        if(conn == NULL){ continue; }
+        try {
+            boost::interprocess::file_mapping fm(part_file.c_str(), mode);
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
+                    file_buffer_elemsize * read_len);
+            region.advise(boost::interprocess::mapped_region::advice_sequential);
+            
+            switch(array_type) {
+            case REALSXP: {
+                double* fbptr = static_cast<double*>(region.get_address());
+                double* mbptr = REAL(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case INTSXP: {
+                int* fbptr = static_cast<int*>(region.get_address());
+                int* mbptr = INTEGER(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case RAWSXP: {
+                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
+                Rbyte* mbptr = RAW(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case FLTSXP: {
+                float* fbptr = static_cast<float*>(region.get_address());
+                double* mbptr = REAL(ret) + nread;
+                transforms_float(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case LGLSXP: {
+                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
+                int* mbptr = LOGICAL(ret) + nread;
+                transforms_logical(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case CPLXSXP: {
+                double* fbptr = static_cast<double*>(region.get_address());
+                Rcomplex* mbptr = COMPLEX(ret) + nread;
+                transforms_complex(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            default: {
+                stop("Unsupported SEXP type");
+            }
+            }
+            
+        } catch (...) {}
         
-        // Rcout << part << " " << read_start << " " << read_len << "\n";
-        fseek(conn, FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, SEEK_SET);
-        
-        switch(array_type) {
-        case REALSXP: {
-            double* fbptr = REAL(file_buffer);
-            double* mbptr = REAL(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_asis(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        case INTSXP: {
-            int* fbptr = INTEGER(file_buffer);
-            int* mbptr = INTEGER(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_asis(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        case RAWSXP: {
-            Rbyte* fbptr = RAW(file_buffer);
-            Rbyte* mbptr = RAW(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_asis(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        case FLTSXP: {
-            float* fbptr = FLOAT(file_buffer);
-            double* mbptr = REAL(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_float(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        case LGLSXP: {
-            Rbyte* fbptr = RAW(file_buffer);
-            int* mbptr = LOGICAL(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_logical(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        case CPLXSXP: {
-            double* fbptr = REAL(file_buffer);
-            Rcomplex* mbptr = COMPLEX(ret) + nread;
-            buf_reads_total = 0;
-            while(buf_reads_total < read_len){
-                buf_reads = read_len - buf_reads_total;
-                buf_reads = buf_reads > buf_nelem ? buf_nelem : buf_reads;
-                lendian_fread(fbptr, file_buffer_elemsize, buf_reads, conn);
-                transforms_complex(fbptr, mbptr, buf_reads);
-                fbptr += buf_reads;
-                mbptr += buf_reads;
-                buf_reads_total += buf_reads;
-            }
-            
-            break;
-        }
-        default: {
-            fclose(conn);
-            conn = NULL;
-            stop("Unsupported SEXP type");
-        }
-        }
-        // nread += read_len;
-        
-        fclose(conn);
-        conn = NULL;
     }
     
     return(ret);
@@ -695,13 +454,6 @@ SEXP FARR_subset2(
     // schedule indices
     List sch = schedule(sliceIdx, dim, cum_part_size, split_dim, strict);
     
-    int ncores = getThreads();
-    SEXPTYPE buffer_type = file_buffer_sxptype(sexp_type);
-    int buffer_nelems = get_buffer_nelem(sexp_type);
-    std::vector<SEXP> buffer_pool(ncores);
-    for(int ii = 0; ii < ncores; ii++){
-        buffer_pool[ii] = PROTECT(Rf_allocVector(buffer_type, buffer_nelems));
-    }
     // allocate for returns
     int64_t retlen = *INTEGER64(sch["result_length"]);
     // const SEXP idx1 = sch["idx1"];
@@ -712,14 +464,14 @@ SEXP FARR_subset2(
     SEXPTYPE ret_type = array_memory_sxptype(sexp_type);
     SEXP res = PROTECT(Rf_allocVector(ret_type, retlen));
     
-    FARR_subset(fbase, sch, sexp_type, buffer_pool, res);
+    FARR_subset(fbase, sch, sexp_type, res);
     if( dnames != R_NilValue ){
         Rf_setAttrib(res, R_DimNamesSymbol, dnames);
     }
     reshape_or_drop(res, reshape, drop);
     // R_gc();
     
-    UNPROTECT(2 + ncores);
+    UNPROTECT(2);
     return(res);
 }
 

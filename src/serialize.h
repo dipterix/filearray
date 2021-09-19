@@ -1,7 +1,7 @@
 #ifndef FARR_UNSERIALIZE_H
 #define FARR_UNSERIALIZE_H
 
-#include <Rcpp.h>
+#include "common.h"
 
 // buffer type
 typedef struct {
@@ -21,11 +21,12 @@ SEXP unserialize_connection(FILE* conn, size_t len);
  ***********************************************************/
 bool isLittleEndian();
 
-void swap_endianess(void *ptr, size_t size, size_t nmemb);
+void swap_endianess(void *ptr, const size_t& size, const size_t& nmemb);
 
 size_t lendian_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 size_t lendian_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
+void lendian_assign(void* dst, const void* src, const size_t& elem_size, const size_t& nelems = 1);
 
 #endif // FARR_UNSERIALIZE_H

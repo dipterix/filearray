@@ -71,7 +71,7 @@ List FARR_meta(const std::string& filebase) {
         stop("Cannot allocate 1KB of memory to read meta file");
     }
     
-    int nread = lendian_fread(buf, 1, FARR_HEADER_LENGTH, conn);
+    int nread = fread(buf, 1, FARR_HEADER_LENGTH, conn);
     if( nread < FARR_HEADER_LENGTH ){
         fclose(conn);
         conn = NULL;
@@ -80,9 +80,12 @@ List FARR_meta(const std::string& filebase) {
         stop("Invalid header length");
     }
     
+    bool swap_endian = !isLittleEndian();
+    
     char* buf2 = (char*) buf;
     double content_len = 0.0;
     memcpy(&(content_len), buf2 + (FARR_HEADER_LENGTH - 8), 8);
+    if( swap_endian ){ swap_endianess(&(content_len), 8, 1); }
     size_t content_len2 = (size_t) content_len;
     
     SEXP dimnames = R_NilValue;
@@ -94,24 +97,31 @@ List FARR_meta(const std::string& filebase) {
     
     SEXP file_version = PROTECT(Rf_allocVector(INTSXP, 3)); 
     memcpy(INTEGER(file_version), buf2 + 8, 3 * 4); // 20
+    if( swap_endian ){ swap_endianess(INTEGER(file_version), 4, 3); }
     
     int sexp_type = 0;
     memcpy(&sexp_type, buf2 + 20, 4); // 24
+    if( swap_endian ){ swap_endianess(&sexp_type, 4, 1); }
     
     int elem_size = 0;
     memcpy(&elem_size, buf2 + 24, 4); // 28
+    if( swap_endian ){ swap_endianess(&elem_size, 4, 1); }
     
     double partition_size = 0.0;
     memcpy(&partition_size, buf2 + 28, 8); // 36
+    if( swap_endian ){ swap_endianess(&partition_size, 8, 1); }
     
     double total_len = 0.0;
     memcpy(&total_len, buf2 + 36, 8); // 44
+    if( swap_endian ){ swap_endianess(&total_len, 8, 1); }
     
     int ndims = 0;
     memcpy(&ndims, buf2 + 44, 4); // 48
+    if( swap_endian ){ swap_endianess(&ndims, 4, 1); }
     
     SEXP dimension = PROTECT(Rf_allocVector(REALSXP, ndims));
     memcpy(REAL(dimension), buf2 + 48, ndims * 8);
+    if( swap_endian ){ swap_endianess(REAL(dimension), 8, ndims); }
     
     free(buf);
     buf = NULL;
@@ -167,7 +177,8 @@ SEXP loc2idx(const List sliceIdx, const NumericVector& dim){
     }
     
     SEXP re = PROTECT( Rf_allocVector(REALSXP, exp_len) );
-    Rf_setAttrib(re, R_ClassSymbol, wrap("integer64"));
+    
+    Rf_setAttrib(re, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     if( exp_len == 0 ){
         UNPROTECT(1);
         return( re );
@@ -221,7 +232,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
         break;
     }
     case VECSXP: {
-        if( Rf_getAttrib(listOrEnv, wrap("_asis_")) == R_NilValue ){
+        if( Rf_getAttrib(listOrEnv, Rf_install("_asis_")) == R_NilValue ){
         sliceIdx = listOrEnv;
         idx_size = Rf_xlength(sliceIdx);
     } else {
@@ -280,7 +291,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
             n_protected++;
         }
     }
-    Rf_setAttrib(sliceIdx, Shield<SEXP>(wrap("_asis_")), Shield<SEXP>(wrap(true)));
+    Rf_setAttrib(sliceIdx, Rf_install("_asis_"), Shield<SEXP>(wrap(true)));
     
     UNPROTECT(n_protected); // sliceIdx
     
@@ -339,7 +350,7 @@ List schedule(const SEXP listOrEnv,
     
     
     SEXP sliceIdx = listOrEnv;
-    if( Rf_getAttrib(sliceIdx, wrap("_asis_")) == R_NilValue ){
+    if( Rf_getAttrib(sliceIdx, Rf_install("_asis_")) == R_NilValue ){
         sliceIdx = PROTECT(locationList(listOrEnv, dim, strict));
         n_protected++;
     }
@@ -397,7 +408,7 @@ List schedule(const SEXP listOrEnv,
         if( l2 > l1 ){
             SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
             n_protected++;
-            Rf_setAttrib(tmp, R_ClassSymbol, wrap("integer64"));
+            Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
             lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
             tmpptr = (int64_t*) REAL(tmp);
             R_xlen_t part_start = part > 0 ? cum_part_sizes[part - 1] : 0;
@@ -431,7 +442,7 @@ List schedule(const SEXP listOrEnv,
     if( l2 > l1 ){
         SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
         n_protected++;
-        Rf_setAttrib(tmp, R_ClassSymbol, wrap("integer64"));
+        Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
         lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
         tmpptr = (int64_t*) REAL(tmp);
         R_xlen_t part_start = part > 0 ? cum_part_sizes[part - 1] : 0;
@@ -482,7 +493,7 @@ List schedule(const SEXP listOrEnv,
     }
     
     SEXP result_length = PROTECT(Rf_allocVector(INT64SXP, 1)); n_protected++;
-    Rf_setAttrib(result_length, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(result_length, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     *(INTEGER64(result_length)) = idx1len * idx2lens[part_size];
     
     List re = List::create(
@@ -503,7 +514,7 @@ List schedule(const SEXP listOrEnv,
 
 SEXP seq_len_int64(const R_xlen_t len){
     SEXP tmp = PROTECT(Rf_allocVector(REALSXP, len));
-    Rf_setAttrib(tmp, R_ClassSymbol, wrap("integer64"));
+    Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     int64_t* tmpptr = (int64_t*) REAL(tmp);
     for(R_xlen_t ii = 1; ii <= len; ii++, tmpptr++){
         *tmpptr = ii;
