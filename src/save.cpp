@@ -92,32 +92,32 @@ SEXP FARR_subset_assign_sequential_bare(
             unsigned char* begin = static_cast<unsigned char*>(region.get_address());
             switch(array_type) {
             case REALSXP: {
-                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
             case INTSXP: {
-                lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
             case RAWSXP: {
-                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
             case FLTSXP: {
-                lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, FLOAT(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(FLOAT(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
             case LGLSXP: {
-                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, RAW(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(RAW(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
             case CPLXSXP: {
-                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize);
+                lendian_assign(begin, REAL(value_) + nwrite, file_buffer_elemsize, write_len);
                 // lendian_fwrite(REAL(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }
@@ -139,6 +139,7 @@ SEXP FARR_subset_assign_sequential_bare(
     return(R_NilValue);
 }
 
+// [[Rcpp::export]]
 SEXP FARR_subset_assign_sequential(
         const std::string& filebase, 
         const int64_t& unit_partlen, 

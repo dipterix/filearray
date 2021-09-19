@@ -1,3 +1,7 @@
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+// [[Rcpp::depends(BH)]]
+
 #include "core.h"
 #include "serialize.h"
 #include "conversion.h"
@@ -99,47 +103,10 @@ SEXP FARR_buffer_map(
     /**
      * Repeat meself
      */
-    int file_buffer_elemsize = file_element_size(out_array_type);
-    R_len_t nparts = Rf_length(out_cumpart);
-    int64_t* out_cumpart_ptr = INTEGER64(out_cumpart);
-    int current_partition = -1;
-    FILE* conn = NULL;
-    
-    int64_t part_left = 0;
-    int64_t nwrite_current = 0;
     int nprot = 0;
     
+    
     for( ; current_pos < in_array_length; current_pos += buffer_nelems ){
-        
-        if( current_partition >= nparts ){
-            break;
-        }
-        
-        if( current_partition < 0 || 
-            current_pos_save >= *(out_cumpart_ptr + current_partition) * out_unit_partlen) {
-            // close connection
-            if(conn != NULL){
-                fseek(conn, 0, SEEK_SET);
-                // fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            }
-            current_partition++;
-            if( current_partition >= nparts ){
-                break;
-            }
-            std::string current_file = out_fbase + std::to_string(current_partition) + ".farr";
-            conn = fopen(current_file.c_str(), "r+b");
-            if(conn == NULL){
-                continue;
-            }
-            fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-        }
-        
-        if(conn == NULL){
-            continue;
-        }
-        
         
 #pragma omp parallel num_threads(ncores)
 {
@@ -156,8 +123,6 @@ SEXP FARR_buffer_map(
         }
 }   
         
-        
-        
         nprot = 0;
         try{
             tmp = PROTECT(map(argbuffers));
@@ -169,106 +134,29 @@ SEXP FARR_buffer_map(
             } else {
                 expected_res_nelem = result_nelems;
                 if(tmplen != result_nelems){
+                    UNPROTECT(1);
                     stop("Function `map` return length is inconsistent with `result_nelems`");
                 }
             }
             convert_as2(tmp, tmp_val, out_array_type);
             
-            
-            
-            part_left = 0;
-            nwrite_current = 0;
-            
-            while( tmplen > 0 ){
-                part_left = *(out_cumpart_ptr + current_partition) * out_unit_partlen - current_pos_save;
-                if( part_left <= 0 ){
-                    // open a new partition
-                    // close connection
-                    // fflush(conn);
-                    fseek(conn, 0, SEEK_SET);
-                    fclose(conn);
-                    conn = NULL;
-                    current_partition++;
-                    if( current_partition >= nparts ){
-                        break;
-                    }
-                    std::string current_file = out_fbase + std::to_string(current_partition) + ".farr";
-                    conn = fopen(current_file.c_str(), "r+b");
-                    if(conn == NULL){
-                        break;
-                    }
-                    fseek(conn, FARR_HEADER_LENGTH, SEEK_SET);
-                    part_left = *(out_cumpart_ptr + current_partition) * out_unit_partlen - current_pos_save;
-                }
-                if( part_left > tmplen ){
-                    part_left = tmplen;
-                }
-                switch(out_array_type) {
-                case REALSXP: {
-                    lendian_fwrite(REAL(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                case INTSXP: {
-                    lendian_fwrite(INTEGER(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                case RAWSXP: {
-                    lendian_fwrite(RAW(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                case FLTSXP: {
-                    lendian_fwrite(FLOAT(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                case LGLSXP: {
-                    lendian_fwrite(RAW(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                case CPLXSXP: {
-                    lendian_fwrite(REAL(tmp_val) + nwrite_current, file_buffer_elemsize, part_left, conn);
-                    break;
-                }
-                }
-                nwrite_current += part_left;
-                tmplen -= part_left;
-                current_pos_save += part_left;
-            }
-            
-            // FARR_subset_assign_sequential_bare(
-            //     out_fbase, out_unit_partlen, 
-            //     out_cumpart, out_array_type,
-            //     tmp_val, current_pos_save
-            // );
+            FARR_subset_assign_sequential_bare(
+                out_fbase, out_unit_partlen,
+                out_cumpart, out_array_type,
+                tmp_val, current_pos_save
+            );
+            current_pos_save += expected_res_nelem;
             
             UNPROTECT(1);
         } catch(std::exception &ex){
-            if(conn != NULL){
-                fseek(conn, 0, SEEK_SET);
-                // fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            }
-            UNPROTECT(2 + narrays * 2);
+            UNPROTECT(2 + narrays);
             forward_exception_to_r(ex);
         } catch(...){
-            if(conn != NULL){
-                fseek(conn, 0, SEEK_SET);
-                // fflush(conn);
-                fclose(conn);
-                conn = NULL;
-            }
-            UNPROTECT(2 + narrays * 2);
+            UNPROTECT(2 + narrays);
             stop("Unknown error.");
         }
         
         
-    }
-    
-    if(conn != NULL){
-        fseek(conn, 0, SEEK_SET);
-        // fflush(conn);
-        fclose(conn);
-        conn = NULL;
     }
     
     UNPROTECT(2 + narrays);

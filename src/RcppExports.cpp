@@ -321,6 +321,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FARR_subset_assign_sequential
+SEXP FARR_subset_assign_sequential(const std::string& filebase, const int64_t& unit_partlen, SEXP cum_partsizes, SEXPTYPE array_type, SEXP value, const int64_t from);
+RcppExport SEXP _filearray_FARR_subset_assign_sequential(SEXP filebaseSEXP, SEXP unit_partlenSEXP, SEXP cum_partsizesSEXP, SEXP array_typeSEXP, SEXP valueSEXP, SEXP fromSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filebase(filebaseSEXP);
+    Rcpp::traits::input_parameter< const int64_t& >::type unit_partlen(unit_partlenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type cum_partsizes(cum_partsizesSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type array_type(array_typeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< const int64_t >::type from(fromSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_subset_assign_sequential(filebase, unit_partlen, cum_partsizes, array_type, value, from));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_subset_assign2
 SEXP FARR_subset_assign2(const std::string& filebase, SEXP value, const SEXP listOrEnv, const size_t thread_buffer, int split_dim);
 RcppExport SEXP _filearray_FARR_subset_assign2(SEXP filebaseSEXP, SEXP valueSEXP, SEXP listOrEnvSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP) {
@@ -399,6 +415,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
     {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
+    {"_filearray_FARR_subset_assign_sequential", (DL_FUNC) &_filearray_FARR_subset_assign_sequential, 6},
     {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
     {"_filearray_kinda_sorted", (DL_FUNC) &_filearray_kinda_sorted, 3},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
