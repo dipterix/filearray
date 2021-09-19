@@ -8,10 +8,10 @@
 
 ## R CMD check results
 
-On R-4.X
+On R-4.1 and `devel`
 0 errors | 0 warnings | 0 notes
 
-On R-3.6
+On R-4.0
 0 errors | 1 warning | 0 notes
 
 ```
@@ -23,4 +23,4 @@ apply
     simplify
 ```
 
-This is because `simplify` was added to `apply` function since R-4.0.
+This is because `simplify` was added to `apply` function since R-4.1.
