@@ -40,7 +40,9 @@
 
 
 <meta property="og:title" content="Map multiple file arrays and save results — fmap" />
-<meta property="og:description" content="Advanced mapping function for multiple file arrays. This 
+<meta property="og:description" content="Advanced mapping function for multiple file arrays. fmap
+runs the mapping functions and stores the results in file arrays. 
+fmap2 stores results in memory. This 
 feature is experimental. There are several constraints to the input. 
 Failure to meet these constraints may result in undefined results, or 
 even crashes. Please read Section 'Details' carefully before using 
@@ -133,7 +135,9 @@ this function." />
     </div>
 
     <div class="ref-description">
-    <p>Advanced mapping function for multiple file arrays. This 
+    <p>Advanced mapping function for multiple file arrays. <code>fmap</code>
+runs the mapping functions and stores the results in file arrays. 
+<code>fmap2</code> stores results in memory. This 
 feature is experimental. There are several constraints to the input. 
 Failure to meet these constraints may result in undefined results, or 
 even crashes. Please read Section 'Details' carefully before using 
@@ -141,6 +145,8 @@ this function.</p>
     </div>
 
     <pre class="usage"><span class='fu'>fmap</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>fun</span>, <span class='va'>.y</span>, .input_size <span class='op'>=</span> <span class='cn'>NA</span>, .output_size <span class='op'>=</span> <span class='cn'>NA</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>fmap2</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>fun</span>, .input_size <span class='op'>=</span> <span class='cn'>NA</span>, .simplify <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='fu'>fmap_element_wise</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>fun</span>, <span class='va'>.y</span>, <span class='va'>...</span>, .input_size <span class='op'>=</span> <span class='cn'>NA</span><span class='op'>)</span></pre>
 
@@ -171,6 +177,11 @@ share the same dimensions.</p></td>
     <tr>
       <th>...</th>
       <td><p>other arguments passing to <code>fun</code></p></td>
+    </tr>
+    <tr>
+      <th>.simplify</th>
+      <td><p>whether to apply <code><a href='https://rdrr.io/r/base/lapply.html'>simplify2array</a></code> to 
+the result</p></td>
     </tr>
     </table>
 
@@ -217,7 +228,7 @@ must be the consistent.</p>
 #&gt; # of partitions: 3 
 #&gt; Partition size: 1 
 #&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpXYDAfL/file2b2a181b9247 </div><div class='input'>
+#&gt; Location: /tmp/RtmpbXlhcv/file2c8c6fa62f59 </div><div class='input'>
 <span class='co'># check</span>
 <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>output</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>-</span> <span class='op'>(</span><span class='va'>x1</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>+</span> <span class='va'>x2</span><span class='op'>[</span><span class='op'>]</span><span class='op'>)</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; [1] 0 0</div><div class='input'>
@@ -234,7 +245,7 @@ must be the consistent.</p>
 #&gt; # of partitions: 3 
 #&gt; Partition size: 1 
 #&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpXYDAfL/file2b2a5a037f98 </div><div class='input'>
+#&gt; Location: /tmp/RtmpbXlhcv/file2c8c4db49fcc </div><div class='input'>
 <span class='co'># check</span>
 <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>output</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>-</span> <span class='fu'><a href='apply.html'>apply</a></span><span class='op'>(</span><span class='va'>x1</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>/</span> <span class='va'>x2</span><span class='op'>[</span><span class='op'>]</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>,<span class='fl'>3</span><span class='op'>)</span>, <span class='va'>max</span><span class='op'>)</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; [1] 0 0</div><div class='input'>
