@@ -28,8 +28,7 @@ options(repos = c(
     dipterix = 'https://dipterix.r-universe.dev',
     CRAN = 'https://cloud.r-project.org'))
 
-# Install some packages
-install.packages('dipsaus')
+install.packages('filearray')
 ```
 
 Alternatively, you can compile from `Github` repository. This requires proper compilers (`rtools` on `windows`, or `xcode-select --install` on `osx`, or `build-essentials` on `linux`).
