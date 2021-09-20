@@ -1,3 +1,7 @@
+# filearray (development version)
+
+* Removed `flush` in saving data to let system decide when to flush to hard drive
+
 # filearray 0.1.1
 
 * Added `OpenMP` flag in the `MakeVars`

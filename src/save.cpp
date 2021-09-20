@@ -125,7 +125,7 @@ SEXP FARR_subset_assign_sequential_bare(
                 stop("Unsupported SEXP type");
             }
             }
-            region.flush();
+            // region.flush();
         } catch(std::exception &ex){
             stop("Error while writing sequential to partition " +
                 std::to_string(part + 1) + ". Reason: " + ex.what());
@@ -303,7 +303,7 @@ SEXP FARR_subset_assign_template(
                 idx1_start, idx2_start, 
                 idx2_ptr, idx2_len );
             
-            region.flush();
+            // region.flush();
         } catch(std::exception &ex){
             has_error = part;
             error_msg =  ex.what();
