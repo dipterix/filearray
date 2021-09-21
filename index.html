@@ -84,11 +84,13 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
+
+<p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/inst/hexbadge.png" height="160px" align="right"></p>
 <div id="file-backed-array-for-out-of-memory-computation" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#file-backed-array-for-out-of-memory-computation" class="anchor"></a>File-Backed Array for Out-of-memory Computation</h1></div>
 <!-- badges: start -->
-
+<p><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a> <a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a> <a href="https://dipterix.r-universe.dev/ui#builds"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a> <!-- badges: end --></p>
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
 <p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png"></p>
 <p><small> <em>Speed comparisons with <code>lazyarray</code> (<code>zstd</code>-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an <code>MacBook Air (M1, 2020, 8GB RAM)</code>. <code>filearray</code> is uniformly faster than <code>lazyarray</code>. Random access has almost the same speed as the native in-memory operation.</em> </small></p>
@@ -231,6 +233,7 @@ curl -O https://mac.r-project.org/openmp/$OMP
 </div>
 </div>
 </div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -258,15 +261,7 @@ curl -O https://mac.r-project.org/openmp/$OMP
 </ul>
 </div>
 
-  <div class="dev-status">
-<h2>Dev status</h2>
-<ul class="list-unstyled">
-<li><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a></li>
-<li><a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a></li>
-<li><a href="https://dipterix.r-universe.dev/ui#builds"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a></li>
-</ul>
-</div>
-</div>
+  </div>
 </div>
 
 
