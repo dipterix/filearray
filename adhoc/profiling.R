@@ -44,12 +44,15 @@ system.time({
 # write to slow margin - Never recommended to write on single 
 # (see next section - block write)
 system.time({
-    x[,i,,] <- tmp
+    for(i in 1:128){
+        x[i,,,] <- tmp
+    }
 })
 #   user  system elapsed 
 #  0.057   1.048   2.097
 
-# 10 MB/s - super slow, writing 128 times is forever. but writing in blocks will be faster
+# Using memory map boosts the speed
+# 1.2 GB/s
 
 # -------------------- WRITE (block) - 4-threaded ------------------------
 # write to fast margin - 4 threaded
@@ -91,7 +94,7 @@ system.time({
 
 # 500 MB/s
 
-
+rm(tmp); gc()
 # -------------------- READ - single-threaded ------------------------
 ### single-threaded
 filearray::filearray_threads(1)
@@ -179,9 +182,9 @@ system.time({
     x[,,idx,]
 })
 #   user  system elapsed 
-#  0.176   0.411   0.495
+#  0.378   0.324   0.248 
 
-# 2 GB/s
+# 4 GB/s
 
 # slow margin
 system.time({
@@ -191,3 +194,11 @@ system.time({
 #  0.174   0.448   0.681
 
 # 1.5 GB/s
+
+
+system.time({
+    x[1:65,,,]
+})
+system.time({
+    x[c(1, 67:128),,,]
+})

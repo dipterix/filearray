@@ -1,5 +1,5 @@
 set.seed(1)
-dim <- c(1000,1000,125,10)
+dim <- c(100,200,200,100)
 # lazyx <- lazyarray::create_lazyarray(
 #     tempfile(), storage_format = 'double', dim = dim)
 # lazyx[] <- NA
@@ -8,7 +8,7 @@ filex <- filearray::filearray_create(
 filex$initialize_partition()
 
 set.seed(1)
-tmp <- rnorm(1.25e8)
+tmp <- rnorm(4e7)
 res1 <- microbenchmark::microbenchmark(
     # lazyarray = {
     #     for(i in 1:10){
@@ -17,7 +17,7 @@ res1 <- microbenchmark::microbenchmark(
     # },
     filearray = {
         for(i in 1:10){
-            filex[,,,i] <- tmp
+            filex[,,,i*10-9:0] <- tmp
         }
     }, times = 1, setup = quote(gc())
 ); res1
@@ -38,7 +38,7 @@ res2 <- microbenchmark::microbenchmark(
     # },
     filex = {
         for(i in 1:10){
-            filex[,,,i]
+            filex[,,,1:10 + (i-1) * 10]
         }
     }, times = 1, setup = quote(gc())
 )
@@ -61,7 +61,7 @@ res3 <- microbenchmark::microbenchmark(
     filearray = {
         filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
     }, 
-    times = 10, setup = quote(gc()))
+    times = 1, setup = quote(gc()))
 
 speed3 <- sapply(split(res3, res3$expr), function(res){
     speed <- prod(sapply(locs, length)) * 8000 / res$time
