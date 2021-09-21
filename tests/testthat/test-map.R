@@ -6,7 +6,7 @@ test_that("map arrays", {
     unlink(path, recursive = TRUE)
     
     # A large array example
-    x <- filearray_create(path, dimension = c(28, 100, 301, 4))
+    x <- filearray_create(path, dimension = c(28, 100, 301, 4), initialize = FALSE)
     dnames <- list(
         Trial = sample(c("A", "B"), 28, replace = TRUE),
         Marker = 1:100,
@@ -20,7 +20,7 @@ test_that("map arrays", {
     y <- array(rnorm(length(x)), dim(x))
     x[] <- y
     
-    output <- filearray_create(tempfile(), dimension = dim(x))
+    output <- filearray_create(tempfile(), dimension = dim(x), initialize = FALSE)
     
     f <- function(input){
         # get locational data

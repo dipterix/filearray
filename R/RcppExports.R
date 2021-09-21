@@ -73,7 +73,7 @@ FARR_subset_sequential <- function(filebase, unit_partlen, cum_partsizes, array_
     .Call(`_filearray_FARR_subset_sequential`, filebase, unit_partlen, cum_partsizes, array_type, ret, from, len)
 }
 
-FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_dimnames = TRUE, thread_buffer = 2097152L, split_dim = 0L, strict = 1L) {
+FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_dimnames = TRUE, thread_buffer = 0L, split_dim = 0L, strict = 1L) {
     .Call(`_filearray_FARR_subset2`, filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict)
 }
 

@@ -65,7 +65,7 @@ NULL
     }
     
     # guess split dim
-    max_buffer <- max_buffer_size() / elem_size
+    max_buffer <- get_buffer_size() / elem_size
     
     if(length(listOrEnv) == length(dim)){
         idxrange <- sapply(listOrEnv, function(x){
@@ -99,7 +99,7 @@ NULL
         reshape = reshape,
         drop = drop,
         use_dimnames = isTRUE(dimnames),
-        thread_buffer = max_buffer_size(), 
+        thread_buffer = get_buffer_size(), 
         split_dim = split_dim,
         strict = isTRUE(strict)
     )

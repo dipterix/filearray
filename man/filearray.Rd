@@ -10,7 +10,9 @@ filearray_create(
   filebase,
   dimension,
   type = c("double", "float", "integer", "logical", "raw", "complex"),
-  partition_size = NA
+  partition_size = NA,
+  initialize = FALSE,
+  ...
 )
 
 filearray_load(filebase, mode = c("readwrite", "readonly"))

@@ -27,7 +27,7 @@ void floatToReal(float* x, double* y, size_t nelem);
 template <typename T>
 inline void transform_asis(const T* x, T* y, const bool& swap_endian = false) {
     if( swap_endian ){
-        size_t size = sizeof(T);
+        const size_t size = sizeof(T);
         T tmp;
         
         unsigned char *buffer_src = (unsigned char*) x;
@@ -38,7 +38,8 @@ inline void transform_asis(const T* x, T* y, const bool& swap_endian = false) {
         }
         *y = tmp;
     } else {
-        *y = *x;
+        memcpy(y, x, sizeof(T));
+        // *y = *x;
     }
     
 }

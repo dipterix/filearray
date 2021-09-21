@@ -3,7 +3,7 @@ test_that("R: FileArray-class", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 3:5
-    x <- filearray_create(file, dim, partition_size = 3)
+    x <- filearray_create(file, dim, partition_size = 3, initialize = FALSE)
     
     expect_equal(x$dimension(), dim)
     expect_true(x$can_write())
@@ -17,7 +17,7 @@ test_that("R: FileArray-class", {
     expect_equal(x[[60]], 2)
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, partition_size = 1)
+    x <- filearray_create(file, dim, partition_size = 1, initialize = FALSE)
     expect_equal(x$.mode, "readwrite")
     x$fill_partition(1, 2)
     
@@ -55,7 +55,7 @@ test_that("R: S3 methods", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 3:5
-    x <- filearray_create(file, dim, partition_size = 3)
+    x <- filearray_create(file, dim, partition_size = 3, initialize = FALSE)
     expect_equal(file.exists(x$partition_path(1:3)), c(FALSE, FALSE, FALSE))
     x[,,4] <- 1:12
     expect_equal(as.integer(x[,,4]), 1:12)

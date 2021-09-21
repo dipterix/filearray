@@ -242,7 +242,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_subset2
-SEXP FARR_subset2(const std::string& filebase, const SEXP listOrEnv, const SEXP reshape, const bool drop, const bool use_dimnames, const size_t thread_buffer, int split_dim, const int strict);
+SEXP FARR_subset2(const std::string& filebase, const SEXP listOrEnv, const SEXP reshape, const bool drop, const bool use_dimnames, size_t thread_buffer, int split_dim, const int strict);
 RcppExport SEXP _filearray_FARR_subset2(SEXP filebaseSEXP, SEXP listOrEnvSEXP, SEXP reshapeSEXP, SEXP dropSEXP, SEXP use_dimnamesSEXP, SEXP thread_bufferSEXP, SEXP split_dimSEXP, SEXP strictSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -252,7 +252,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< const bool >::type drop(dropSEXP);
     Rcpp::traits::input_parameter< const bool >::type use_dimnames(use_dimnamesSEXP);
-    Rcpp::traits::input_parameter< const size_t >::type thread_buffer(thread_bufferSEXP);
+    Rcpp::traits::input_parameter< size_t >::type thread_buffer(thread_bufferSEXP);
     Rcpp::traits::input_parameter< int >::type split_dim(split_dimSEXP);
     Rcpp::traits::input_parameter< const int >::type strict(strictSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_subset2(filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict));

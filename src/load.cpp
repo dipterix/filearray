@@ -169,11 +169,13 @@ bool FARR_subset_template(
                 }
                 
                 idx1ptr = INTEGER64(idx1);
+                start_idx -= idx1_start;
                 
-                for(jj = 0; jj < idx1len; jj++, idx1ptr++) {
-                    if(*idx1ptr == NA_INTEGER64){ continue; }
+                for(jj = 0; jj < idx1len; jj++, idx1ptr++, retptr2++) {
+                    if(*idx1ptr != NA_INTEGER64){
+                        transform(mmap_ptr + (start_idx + *idx1ptr), retptr2, swap_endian);
+                    }
                     
-                    transform(mmap_ptr + (start_idx + *idx1ptr - idx1_start), retptr2 + jj, swap_endian);
                 }
                 
             }
@@ -419,7 +421,7 @@ SEXP FARR_subset2(
         const SEXP reshape = R_NilValue,
         const bool drop = false,
         const bool use_dimnames = true,
-        const size_t thread_buffer = 2097152,
+        size_t thread_buffer = 0,
         int split_dim = 0,
         const int strict = 1
 ) {
@@ -431,6 +433,11 @@ SEXP FARR_subset2(
     SEXP cum_part_size = meta["cumsum_part_sizes"];
     
     R_len_t ndims = Rf_length(dim);
+    
+    int current_bufsize = get_buffer_size();
+    if( thread_buffer <= 0 ){
+        thread_buffer = current_bufsize;
+    }
     
     // calculate split_dim
     if( split_dim == NA_INTEGER || split_dim == 0 ){
@@ -470,6 +477,8 @@ SEXP FARR_subset2(
     }
     reshape_or_drop(res, reshape, drop);
     // R_gc();
+    
+    set_buffer_size(current_bufsize);
     
     UNPROTECT(2);
     return(res);

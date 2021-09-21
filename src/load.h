@@ -9,7 +9,7 @@ SEXP FARR_subset2(
         const SEXP reshape,
         const bool drop,
         const bool use_dimnames,
-        const size_t thread_buffer,
+        size_t thread_buffer,
         int split_dim,
         const int strict
 );

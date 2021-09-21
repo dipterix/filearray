@@ -1,14 +1,14 @@
 set.seed(1)
-dim <- c(100,200,200,100)
-lazyx <- lazyarray::create_lazyarray(
-    tempfile(), storage_format = 'double', dim = dim)
-lazyx[] <- NA
+dim <- c(100,100,125,1000)
+# lazyx <- lazyarray::create_lazyarray(
+#     tempfile(), storage_format = 'double', dim = dim)
+# lazyx[] <- NA
 filex <- filearray::filearray_create(
     tempfile(), dim, 'double')
 filex$initialize_partition()
 
 set.seed(1)
-tmp <- rnorm(4e7)
+tmp <- rnorm(1.25e8)
 res1 <- microbenchmark::microbenchmark(
     # lazyarray = {
     #     for(i in 1:10){
@@ -17,15 +17,15 @@ res1 <- microbenchmark::microbenchmark(
     # },
     filearray = {
         for(i in 1:10){
-            filex[,,,(i-1)*10 +1:10] <- tmp
+            filex[,,,i*100-0:99] <- tmp
         }
-    }, times = 3, setup = quote(gc())
+    }, times = 1, setup = quote(gc())
 ); res1
 
 
 
 speed1 <- sapply(split(res1, res1$expr), function(res){
-    speed <- matrix(800*4 / res$time, nrow = 10) * 1e9
+    speed <- length(filex) *8000 / res$time
     c(mean(speed), sd(speed) / 2)
 }); speed1
 
@@ -37,13 +37,13 @@ res2 <- microbenchmark::microbenchmark(
     #     }
     # },
     filex = {
-        for(i in 1:10){
-            filex[,,,(i-1)*10 + 1:10]
+        for(i in 1:1000){
+            filex[,,,i]
         }
-    }, times = 10, setup = quote(gc())
+    }, times = 1, setup = quote(gc())
 )
 speed2 <- sapply(split(res2, res2$expr), function(res){
-    speed <- matrix(3200 / res$time, nrow = 10) * 1e9
+    speed <- length(filex) *8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }); speed2
 
@@ -64,7 +64,7 @@ res3 <- microbenchmark::microbenchmark(
     times = 1, setup = quote(gc()))
 
 speed3 <- sapply(split(res3, res3$expr), function(res){
-    speed <- matrix(prod(sapply(locs, length)) / 1e8 * 800 / res$time, nrow = 10) * 1e9
+    speed <- prod(sapply(locs, length)) * 8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }); speed3
 

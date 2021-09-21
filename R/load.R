@@ -89,7 +89,9 @@ NULL
 filearray_create <- function(
     filebase, dimension, 
     type = c('double', 'float', 'integer', 'logical', 'raw', 'complex'), 
-    partition_size = NA)
+    partition_size = NA,
+    initialize = FALSE,
+    ...)
 {
     type <- match.arg(type)
     
@@ -114,6 +116,9 @@ filearray_create <- function(
         type = type,
         partition_size = partition_size
     )
+    if(initialize){
+        arr$initialize_partition()
+    }
     arr
 }
 

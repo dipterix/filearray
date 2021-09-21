@@ -66,7 +66,7 @@ test_that("C++: IO - subset/assign", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 33:35
-    x <- filearray_create(file, dim, partition_size = 2)
+    x <- filearray_create(file, dim, partition_size = 2, initialize = FALSE)
     
     expect_equal(x[[2]], x$.na)
     
@@ -121,7 +121,7 @@ test_that("C++: IO - subset/assign", {
     expect_error(x[c(rep(c(TRUE,TRUE,TRUE, TRUE),8), TRUE, NA),,])
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, partition_size = 2)
+    x <- filearray_create(file, dim, partition_size = 2, initialize = FALSE)
     y <- array(x$.na, dim)
     x[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
     y[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
@@ -147,7 +147,7 @@ test_that("C++: IO - subset/assign - complex", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 33:35
-    x <- filearray_create(file, dim, partition_size = 2, type = "complex")
+    x <- filearray_create(file, dim, partition_size = 2, type = "complex", initialize = FALSE)
     
     expect_equal(x[[2]], x$.na)
     
@@ -217,7 +217,7 @@ test_that("C++: IO - subset/assign - complex", {
     expect_error(x[c(rep(c(TRUE,TRUE,TRUE, TRUE),8), TRUE, NA),,])
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, partition_size = 2, type = 'complex')
+    x <- filearray_create(file, dim, partition_size = 2, type = 'complex', initialize = FALSE)
     y <- array(x$.na, dim)
     x[33:1, , c(35,2,1,3,4,5:34)] <- tmp
     y[33:1, , c(35,2,1,3,4,5:34)] <- tmp
@@ -243,7 +243,7 @@ test_that("C++: IO - subset/assign - float", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 33:35
-    x <- filearray_create(file, dim, partition_size = 2, type = "float")
+    x <- filearray_create(file, dim, partition_size = 2, type = "float", initialize = FALSE)
     
     expect_equal(x[[2]], x$.na)
     
@@ -318,7 +318,7 @@ test_that("C++: IO - subset/assign - float", {
     expect_error(x[c(rep(c(TRUE,TRUE,TRUE, TRUE),8), TRUE, NA),,])
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, partition_size = 2)
+    x <- filearray_create(file, dim, partition_size = 2, initialize = FALSE)
     y <- array(x$.na, dim)
     x[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
     y[33:1, , c(35,2,1,3,4,5:34)] <- 1:prod(dim)
@@ -337,7 +337,7 @@ test_that("C++: IO - type conversion", {
     file <- tempfile()
     unlink(file, recursive = TRUE)
     dim <- 3:5
-    x <- filearray_create(file, dim, type = 'integer', partition_size = 2)
+    x <- filearray_create(file, dim, type = 'integer', partition_size = 2, initialize = FALSE)
     
     expect_equal(x[[2]], x$.na)
     
@@ -350,7 +350,7 @@ test_that("C++: IO - type conversion", {
     
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = 'logical', partition_size = 2)
+    x <- filearray_create(file, dim, type = 'logical', partition_size = 2, initialize = FALSE)
     y <- array(x$.na, dim)
     tmp <- sample(c(1.1, 0, NA), replace = TRUE, size = 60)
     x[] <- tmp
@@ -358,7 +358,7 @@ test_that("C++: IO - type conversion", {
     expect_equal(x[], y)
     
     unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = 'raw')
+    x <- filearray_create(file, dim, type = 'raw', initialize = FALSE)
     y <- array(x$.na, dim)
     tmp <- sample(0:255, replace = TRUE, size = 60)
     tmp[sample(1:60, size = 10)] <- NA
