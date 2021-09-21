@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/dipterix/filearray/main/inst/hexbadge.png" height="116px" align="right" />
+<img src="https://raw.githubusercontent.com/dipterix/filearray/main/inst/hexbadge.png" height="160px" align="right" />
 
 # File-Backed Array for Out-of-memory Computation
 
