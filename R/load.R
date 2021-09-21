@@ -38,6 +38,10 @@ guess_partition <- function(dim, elem_size){
 #' \code{'readwrite'} and \code{'readonly'}.
 #' @param partition_size positive partition size for the last margin, or
 #' \code{NA} to automatically guess; see 'Details'.
+#' @param initialize whether to initialize partition files; default is false
+#' for performance considerations. However, if the array is dense, it is 
+#' recommended to set to true
+#' @param ... ignored, reserved for future compatibility
 #' @return A \code{\link{FileArray-class}} instance.
 #' 
 #' @details The file arrays partition out-of-memory array objects and store them 

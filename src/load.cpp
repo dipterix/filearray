@@ -34,6 +34,147 @@ int get_buffer_nelem(SEXPTYPE type){
  * Subset - internal (multithread here)
  ***********************************************************/
 
+// [[Rcpp::export]]
+SEXP FARR_subset_sequential(
+        const std::string& filebase, 
+        const int64_t& unit_partlen, 
+        SEXP cum_partsizes, 
+        SEXPTYPE array_type,
+        SEXP ret, 
+        const int64_t from = 0, 
+        const int64_t len = 1
+) {
+    if( TYPEOF(ret) != array_memory_sxptype(array_type) ){
+        stop("Inconsistent `array_type` and return type");
+    }
+    if( len > Rf_xlength(ret) ){
+        stop("`ret` size is too small");
+    }
+    if( len <= 0 ){
+        return(ret);
+    }
+    bool swap_endian = !isLittleEndian();
+    
+    int file_buffer_elemsize = file_element_size(array_type);
+    std::string fbase = correct_filebase(filebase);
+    R_len_t nparts = Rf_length(cum_partsizes);
+    
+    // calculate the first partition
+    int64_t slice_idx1 = 0;
+    int64_t slice_idx2 = 0;
+    int64_t tmp = 0;
+    for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
+    for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    // Rcout << slice_idx1 << "  -  " << slice_idx2 << "\n";
+    
+    int part_start = 0;
+    int part_end = 0;
+    int64_t skip_start = 0;
+    int64_t skip_end = 0;
+    
+    int64_t* cum_part = INTEGER64(cum_partsizes);
+    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
+    if( part_start == 0 ){
+        skip_start = from;
+    } else {
+        skip_start = from - (*(cum_part - 1)) * unit_partlen;
+    }
+    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
+    skip_end = (*cum_part) * unit_partlen - (from + len);
+    
+    // Rcout << part_start << "  -  " << part_end << "\n";
+    // Rcout << skip_start << "  -  " << skip_end << "\n";
+    
+    int64_t read_start = 0;
+    int64_t read_len = 0;
+    int64_t part_nelem = 0;
+    int64_t last_part_nelem = 0;
+    cum_part = INTEGER64(cum_partsizes);
+    
+    int64_t nread = 0;
+    
+    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    
+    for(int part = part_start; part <= part_end; part++, cum_part++, nread += read_len){
+        if( part >= nparts ){
+            continue;
+        }
+        // get partition n_elems
+        part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
+        last_part_nelem = (*cum_part) * unit_partlen;
+        
+        // skip read_start elements
+        read_start = 0;
+        if( part == part_start ) {
+            read_start = skip_start;
+        }
+        // Rcout << part_nelem << "--\n";
+        // then read read_len elements
+        read_len = part_nelem - read_start;
+        if( part == part_end ){
+            read_len -= skip_end;
+        }
+        
+        std::string part_file = fbase + std::to_string(part) + ".farr";
+        
+        try {
+            boost::interprocess::file_mapping fm(part_file.c_str(), mode);
+            boost::interprocess::mapped_region region(
+                    fm, mode, 
+                    FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
+                    file_buffer_elemsize * read_len);
+            region.advise(boost::interprocess::mapped_region::advice_sequential);
+            
+            switch(array_type) {
+            case REALSXP: {
+                double* fbptr = static_cast<double*>(region.get_address());
+                double* mbptr = REAL(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case INTSXP: {
+                int* fbptr = static_cast<int*>(region.get_address());
+                int* mbptr = INTEGER(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case RAWSXP: {
+                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
+                Rbyte* mbptr = RAW(ret) + nread;
+                transforms_asis(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case FLTSXP: {
+                float* fbptr = static_cast<float*>(region.get_address());
+                double* mbptr = REAL(ret) + nread;
+                transforms_float(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case LGLSXP: {
+                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
+                int* mbptr = LOGICAL(ret) + nread;
+                transforms_logical(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            case CPLXSXP: {
+                double* fbptr = static_cast<double*>(region.get_address());
+                Rcomplex* mbptr = COMPLEX(ret) + nread;
+                transforms_complex(fbptr, mbptr, read_len, swap_endian);
+                break;
+            }
+            default: {
+                stop("Unsupported SEXP type");
+            }
+            }
+            
+        } catch (...) {}
+        
+    }
+    
+    return(ret);
+    
+}
+
 
 template <typename T, typename B>
 bool FARR_subset_template(
@@ -271,148 +412,6 @@ SEXP FARR_subset(const std::string& filebase,
     
     return(ret);
 }
-
-// [[Rcpp::export]]
-SEXP FARR_subset_sequential(
-        const std::string& filebase, 
-        const int64_t& unit_partlen, 
-        SEXP cum_partsizes, 
-        SEXPTYPE array_type,
-        SEXP ret, 
-        const int64_t from = 0, 
-        const int64_t len = 1
-) {
-    if( TYPEOF(ret) != array_memory_sxptype(array_type) ){
-        stop("Inconsistent `array_type` and return type");
-    }
-    if( len > Rf_xlength(ret) ){
-        stop("`ret` size is too small");
-    }
-    if( len <= 0 ){
-        return(ret);
-    }
-    bool swap_endian = !isLittleEndian();
-    
-    int file_buffer_elemsize = file_element_size(array_type);
-    std::string fbase = correct_filebase(filebase);
-    R_len_t nparts = Rf_length(cum_partsizes);
-    
-    // calculate the first partition
-    int64_t slice_idx1 = 0;
-    int64_t slice_idx2 = 0;
-    int64_t tmp = 0;
-    for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
-    for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
-    // Rcout << slice_idx1 << "  -  " << slice_idx2 << "\n";
-    
-    int part_start = 0;
-    int part_end = 0;
-    int64_t skip_start = 0;
-    int64_t skip_end = 0;
-    
-    int64_t* cum_part = INTEGER64(cum_partsizes);
-    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
-    if( part_start == 0 ){
-        skip_start = from;
-    } else {
-        skip_start = from - (*(cum_part - 1)) * unit_partlen;
-    }
-    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
-    skip_end = (*cum_part) * unit_partlen - (from + len);
-    
-    // Rcout << part_start << "  -  " << part_end << "\n";
-    // Rcout << skip_start << "  -  " << skip_end << "\n";
-    
-    int64_t read_start = 0;
-    int64_t read_len = 0;
-    int64_t part_nelem = 0;
-    int64_t last_part_nelem = 0;
-    cum_part = INTEGER64(cum_partsizes);
-    
-    int64_t nread = 0;
-    
-    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
-    
-    for(int part = part_start; part <= part_end; part++, cum_part++, nread += read_len){
-        if( part >= nparts ){
-            continue;
-        }
-        // get partition n_elems
-        part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
-        last_part_nelem = (*cum_part) * unit_partlen;
-        
-        // skip read_start elements
-        read_start = 0;
-        if( part == part_start ) {
-            read_start = skip_start;
-        }
-        // Rcout << part_nelem << "--\n";
-        // then read read_len elements
-        read_len = part_nelem - read_start;
-        if( part == part_end ){
-            read_len -= skip_end;
-        }
-        
-        std::string part_file = fbase + std::to_string(part) + ".farr";
-        
-        try {
-            boost::interprocess::file_mapping fm(part_file.c_str(), mode);
-            boost::interprocess::mapped_region region(
-                    fm, mode, 
-                    FARR_HEADER_LENGTH + file_buffer_elemsize * read_start, 
-                    file_buffer_elemsize * read_len);
-            region.advise(boost::interprocess::mapped_region::advice_sequential);
-            
-            switch(array_type) {
-            case REALSXP: {
-                double* fbptr = static_cast<double*>(region.get_address());
-                double* mbptr = REAL(ret) + nread;
-                transforms_asis(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            case INTSXP: {
-                int* fbptr = static_cast<int*>(region.get_address());
-                int* mbptr = INTEGER(ret) + nread;
-                transforms_asis(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            case RAWSXP: {
-                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
-                Rbyte* mbptr = RAW(ret) + nread;
-                transforms_asis(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            case FLTSXP: {
-                float* fbptr = static_cast<float*>(region.get_address());
-                double* mbptr = REAL(ret) + nread;
-                transforms_float(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            case LGLSXP: {
-                Rbyte* fbptr = static_cast<Rbyte*>(region.get_address());
-                int* mbptr = LOGICAL(ret) + nread;
-                transforms_logical(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            case CPLXSXP: {
-                double* fbptr = static_cast<double*>(region.get_address());
-                Rcomplex* mbptr = COMPLEX(ret) + nread;
-                transforms_complex(fbptr, mbptr, read_len, swap_endian);
-                break;
-            }
-            default: {
-                stop("Unsupported SEXP type");
-            }
-            }
-            
-        } catch (...) {}
-        
-    }
-    
-    return(ret);
-    
-}
-
 
 // [[Rcpp::export]]
 SEXP FARR_subset2(
