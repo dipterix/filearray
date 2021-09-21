@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/dipterix/filearray/main/inst/hexbadge.png" height="116px" align="right" />
+
 # File-Backed Array for Out-of-memory Computation
 
 
