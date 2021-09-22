@@ -13,7 +13,7 @@ Stores large arrays in files to avoid occupying large memories. Implemented with
 
 ![](https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png)
 
-<small> *Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an `MacBook Air (M1, 2020, 8GB RAM)`. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native in-memory operation.* </small>
+<small> Speed comparisons with `lazyarray` (`zstd`-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an `MacBook Air (M1, 2020, 8GB RAM)`, with 8-threads. `filearray` is uniformly faster than `lazyarray`. Random access has almost the same speed as the native array operation in R. *(The actual speed may vary depending on the storage type and memory size)* </small>
 
 ## Installation
 

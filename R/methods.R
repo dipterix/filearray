@@ -16,7 +16,7 @@ NULL
 
 #' @describeIn S3-filearray get element by position
 #' @export
-`[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE) {
+`[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE, split_dim = 0) {
     if(!x$valid()){
         stop("Invalid file array")
     }
@@ -76,21 +76,24 @@ NULL
     } else {
         idxrange <- dim
     }
-    # worst-case time-complexity
-    time_complexity <-
-        sapply(seq_len(length(dim) - 1), function(split_dim) {
-            dim[[length(dim)]] <- 1
-            idx1dim <- dim[seq_len(split_dim)]
-            idx1dim[[split_dim]] <- idxrange[[split_dim]]
-            idx1len <- prod(idx1dim)
-            idx2len <- prod(dim[-seq_len(split_dim)])
-            buffer_sz <-
-                ifelse(idx1len > max_buffer, max_buffer, idx1len)
-            nloops <- ceiling(idx1len / buffer_sz)
-            (idx1len * nloops + idx2len) * idx2len
-        })
-    split_dim <- which.min(time_complexity)
-    split_dim <- split_dim[[length(split_dim)]]
+    split_dim <- as.integer(split_dim)
+    if(is.na(split_dim) || split_dim <= 0 || split_dim >= length(dim)){
+        # worst-case time-complexity
+        time_complexity <-
+            sapply(seq_len(length(dim) - 1), function(split_dim) {
+                dim[[length(dim)]] <- 1
+                idx1dim <- dim[seq_len(split_dim)]
+                idx1dim[[split_dim]] <- idxrange[[split_dim]]
+                idx1len <- prod(idx1dim)
+                idx2len <- prod(dim[-seq_len(split_dim)])
+                buffer_sz <-
+                    ifelse(idx1len > max_buffer, max_buffer, idx1len)
+                nloops <- ceiling(idx1len / buffer_sz)
+                (idx1len * nloops + idx2len) * idx2len
+            })
+        split_dim <- which.min(time_complexity)
+        split_dim <- split_dim[[length(split_dim)]]
+    }
     
 
     FARR_subset2(

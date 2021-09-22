@@ -273,7 +273,7 @@ bool FARR_subset_mmap(
                             idx1_end - idx1_start + 1 +
                                 block_size * (idx2_end - idx2_start)
                     ));
-            region.advise(boost::interprocess::mapped_region::advice_sequential);
+            // region.advise(boost::interprocess::mapped_region::advice_sequential);
             const B* mmap_ptr = static_cast<const B*>(region.get_address());
             const int64_t content_size = region.get_size() / elem_size;
             
@@ -300,13 +300,6 @@ bool FARR_subset_mmap(
                 // read current block!
                 retptr2 = retptr + ii_idx2 * idx1len;
                 start_idx = block_size * (*idx2ptr - idx2_start);
-                
-                if( start_idx >= content_size ){
-                    if( idx2_sorted ){
-                        break;
-                    }
-                    continue;
-                }
                 
                 idx1ptr = INTEGER64(idx1);
                 start_idx -= idx1_start;
@@ -431,12 +424,6 @@ bool FARR_subset_fread(
         try{
             B* buf_ptr = buf_ptrs[ii % ncores];
             
-            fseek(conn, FARR_HEADER_LENGTH - 8, SEEK_SET);
-            double content_size0;
-            
-            lendian_fread(&content_size0, 8, 1, conn);
-            int64_t content_size = (int64_t) content_size0;
-            
             // prepare for all the pointers, local variables
             int64_t* idx2ptr = INTEGER64(idx2);
             R_xlen_t idx2len = Rf_xlength(idx2);
@@ -458,14 +445,6 @@ bool FARR_subset_fread(
                 
                 // read current block!
                 retptr2 = retptr + ii_idx2 * idx1len;
-                
-                if( *idx2ptr * block_size + idx1_end >= content_size ){
-                    if( idx2_sorted ){
-                        break;
-                    }
-                    continue;
-                }
-                
                 idx1ptr = INTEGER64(idx1);
                 
                 fseek(conn, FARR_HEADER_LENGTH + elem_size * (
