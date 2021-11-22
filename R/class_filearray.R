@@ -13,6 +13,7 @@
 #' \item{\code{element_size()}}{Internal storage: bytes per element}
 #' \item{\code{fill_partition(part, value)}}{Fill a partition with given scalar}
 #' \item{\code{get_partition(part, reshape = NULL)}}{Get partition data, and reshape (if not null) to desired dimension}
+#' \item{\code{expand(n)}}{Expand array along the last margin; returns true if expanded; if the \code{dimnames} have been assigned prior to expansion, the last dimension names will be filled with \code{NA}}
 #' \item{\code{initialize_partition()}}{Make sure a partition file exists; if not, create one and fill with \code{NA}s or 0 (\code{type='raw'})}
 #' \item{\code{load(filebase, mode = c("readwrite", "readonly"))}}{Load file array from existing directory}
 #' \item{\code{partition_path(part)}}{Get partition file path}
@@ -318,6 +319,47 @@ setRefClass(
                 reshape[[length(reshape)]] <- .self$partition_size()
             }
             return(load_partition(.self$partition_path(part), dim = reshape))
+        },
+        expand = function(n){
+            if(isTRUE(.self$.mode == 'readonly')){
+                stop("File array is read-only")
+            }
+            
+            # get the last margin size
+            dim <- .self$dimension()
+            ndims <- length(dim)
+            last_dim <- dim[[ndims]]
+            if(last_dim >= n){
+                return(FALSE)
+            }
+            dnames <- .self$.header$dimnames
+            if(is.list(dnames) && length(dnames) >= ndims){
+                ldn <- tryCatch({
+                    ldn <- dnames[[ndims]]
+                    c(ldn, rep(NA, n - length(ldn)))
+                }, error = function(e){
+                    NULL
+                })
+                dnames[[ndims]] <- ldn
+            }
+            meta <- file.path(.self$.filebase, "meta")
+            fid <- file(meta, "r+b")
+            on.exit({
+                try({close(fid)}, silent = TRUE)
+            }, add = TRUE)
+            
+            
+            dim[[ndims]] <- n
+            type <- sexp_to_type(.self$.header$sexp_type)
+            write_header(fid = fid, partition = .self$.header$partition, 
+                         dimension = dim, type = type, 
+                         size = get_elem_size(type))
+            close(fid)
+            
+            .self$load(.self$.filebase, mode = .self$.mode)
+            .self$dimnames(dnames)
+            return(TRUE)
+            
         },
         fill_partition = function(part, value){
             if(isTRUE(.self$.mode == 'readonly')){

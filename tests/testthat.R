@@ -2,9 +2,9 @@ library(testthat)
 
 # Only use 2 cores on CRAN
 if(isTRUE(testthat:::on_cran())){
-    message("--as-cran: Using ", filearray::filearray_threads(2L), " threads")
+    cat("--as-cran: Using ", filearray::filearray_threads(2L), " threads\n")
 } else {
-    message("Not on CRAN, using ", filearray::filearray_threads(8L), " threads")
+    cat("Not on CRAN, using ", filearray::filearray_threads(8L), " threads\n")
 }
 
 

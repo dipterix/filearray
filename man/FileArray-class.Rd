@@ -19,6 +19,7 @@ to create instances.
 \item{\code{element_size()}}{Internal storage: bytes per element}
 \item{\code{fill_partition(part, value)}}{Fill a partition with given scalar}
 \item{\code{get_partition(part, reshape = NULL)}}{Get partition data, and reshape (if not null) to desired dimension}
+\item{\code{expand(n)}}{Expand array along the last margin; returns true if expanded; if the \code{dimnames} have been assigned prior to expansion, the last dimension names will be filled with \code{NA}}
 \item{\code{initialize_partition()}}{Make sure a partition file exists; if not, create one and fill with \code{NA}s or 0 (\code{type='raw'})}
 \item{\code{load(filebase, mode = c("readwrite", "readonly"))}}{Load file array from existing directory}
 \item{\code{partition_path(part)}}{Get partition file path}
