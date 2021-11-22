@@ -151,6 +151,7 @@ to create instances.</p>
 <dt><code>element_size()</code></dt><dd><p>Internal storage: bytes per element</p></dd>
 <dt><code>fill_partition(part, value)</code></dt><dd><p>Fill a partition with given scalar</p></dd>
 <dt><code>get_partition(part, reshape = NULL)</code></dt><dd><p>Get partition data, and reshape (if not null) to desired dimension</p></dd>
+<dt><code>expand(n)</code></dt><dd><p>Expand array along the last margin; returns true if expanded; if the <code>dimnames</code> have been assigned prior to expansion, the last dimension names will be filled with <code>NA</code></p></dd>
 <dt><code>initialize_partition()</code></dt><dd><p>Make sure a partition file exists; if not, create one and fill with <code>NA</code>s or 0 (<code>type='raw'</code>)</p></dd>
 <dt><code>load(filebase, mode = c("readwrite", "readonly"))</code></dt><dd><p>Load file array from existing directory</p></dd>
 <dt><code>partition_path(part)</code></dt><dd><p>Get partition file path</p></dd>
