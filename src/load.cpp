@@ -259,7 +259,7 @@ bool FARR_subset_mmap(
             continue;
         }
         
-        const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
+        // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
         std::string file = filebase + std::to_string(part) + ".farr";
         
         try{
@@ -275,7 +275,7 @@ bool FARR_subset_mmap(
                     ));
             // region.advise(boost::interprocess::mapped_region::advice_sequential);
             const B* mmap_ptr = static_cast<const B*>(region.get_address());
-            const int64_t content_size = region.get_size() / elem_size;
+            // const int64_t content_size = region.get_size() / elem_size;
             
             
             // prepare for all the pointers, local variables
@@ -368,9 +368,9 @@ bool FARR_subset_fread(
     if(ncores > niter){
         ncores = niter;
     }
-    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    // const boost::interprocess::mode_t mode = boost::interprocess::read_only;
     const int elem_size = sizeof(B);
-    const bool swap_endian = !isLittleEndian();
+    // const bool swap_endian = !isLittleEndian();
     
 #pragma omp parallel num_threads(ncores) 
 {
@@ -413,7 +413,7 @@ bool FARR_subset_fread(
             continue;
         }
         
-        const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
+        // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
         std::string file = filebase + std::to_string(part) + ".farr";
         
         FILE* conn = fopen(file.c_str(), "rb");
@@ -428,7 +428,7 @@ bool FARR_subset_fread(
             int64_t* idx2ptr = INTEGER64(idx2);
             R_xlen_t idx2len = Rf_xlength(idx2);
             R_xlen_t ii_idx2 = 0;
-            int64_t start_idx = idx1_start;
+            // int64_t start_idx = idx1_start;
 
             int64_t* idx1ptr = INTEGER64(idx1);
             

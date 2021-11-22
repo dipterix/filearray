@@ -11,6 +11,9 @@
 #' @param dimnames whether to preserve \code{\link[base]{dimnames}}
 #' @param value value to substitute or set
 #' @param na.rm whether to remove \code{NA} values during the calculation
+#' @param split_dim internally used; split dimension and calculate indices to
+#' manually speed up the subset; value ranged from 0 to size of dimension minus
+#' one.
 #' @param i,... index set, or passed to other methods
 NULL
 

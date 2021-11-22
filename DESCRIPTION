@@ -23,7 +23,7 @@ Suggests:
     rmarkdown,
     knitr,
     testthat (>= 3.0.0)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 LinkingTo: 
     BH,
     Rcpp

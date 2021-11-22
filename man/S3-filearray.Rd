@@ -62,6 +62,10 @@
 
 \item{dimnames}{whether to preserve \code{\link[base]{dimnames}}}
 
+\item{split_dim}{internally used; split dimension and calculate indices to
+manually speed up the subset; value ranged from 0 to size of dimension minus
+one.}
+
 \item{value}{value to substitute or set}
 
 \item{i, ...}{index set, or passed to other methods}

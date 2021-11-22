@@ -65,6 +65,7 @@ speed3 <- rowMeans(replicate(5, {
 
 
 tmp <- rnorm(prod(sapply(locs, length)))
+# filex <- filearray::filearray_load(filex$.filebase)
 speed4 <- rowMeans(replicate(5, {
     res <- sapply(threads, function(thread){
         filearray::filearray_threads(thread)
@@ -104,7 +105,7 @@ f <- function(txt_cex = 0.7){
         speed[,idx], beside = TRUE,
         ylab = "Speed (GB/s)", 
         col = dipsaus::col2hexStr(cols, alpha = 0.5),
-        ylim = c(0, 1), las = 1, yaxt = "n", 
+        ylim = c(0, 1.2), las = 1, yaxt = "n", 
         border = NA,
         main = "Speed Comparisons (Different Threads, memory purged)", 
         cex.names = 1.4, cex.lab = 1.4, cex.main = 1.4
@@ -173,6 +174,6 @@ f <- function(txt_cex = 0.7){
     
 }
 
-png("./adhoc/other docs/comparison-threads.png", width = 4267, height = 1600, res = 300)
+png(sprintf("./adhoc/other docs/comparison-threads-%s.png", ifelse(cold_start, "coldstart", "warmstart")), width = 4267, height = 1600, res = 300)
 f()
 dev.off()

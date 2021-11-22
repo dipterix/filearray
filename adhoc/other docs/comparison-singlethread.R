@@ -1,4 +1,11 @@
 sudo_pwd <- rstudioapi::askForPassword("sudo password")
+cold_start <- TRUE
+purge_memory <- function(){
+    if(cold_start){
+        system("sudo -kS purge", input = sudo_pwd)
+        Sys.sleep(1)
+    }
+}
 
 set.seed(1)
 dim <- c(100,200,200,100)
@@ -10,17 +17,17 @@ filex <- filearray::filearray_create(
 filex$initialize_partition()
 xs <- list(lazyx, filex)
 
-set.seed(1)
-tmp <- rnorm(4e7)
-
 lazyarray:::set_lazy_threads(1)
 filearray::filearray_threads(1)
 
+set.seed(1)
+tmp <- rnorm(4e7)
 
-speed1 <- rowMeans(replicate(1, {
+
+speed1 <- rowMeans(replicate(5, {
     res <- sapply(xs, function(x){
         gc()
-        system("sudo -kS purge", input = sudo_pwd)
+        purge_memory()
         system.time({
             for(i in 1:10){
                 x[,,,(i-1)*10 +1:10] <- tmp
@@ -30,10 +37,10 @@ speed1 <- rowMeans(replicate(1, {
     speed <- prod(dim) *8e-6 / res[3,]; speed
 })); speed1
 
-speed2 <- rowMeans(replicate(1, {
+speed2 <- rowMeans(replicate(5, {
     res <- sapply(xs, function(x){
         gc()
-        system("sudo -kS purge", input = sudo_pwd)
+        purge_memory()
         system.time({
             for(i in 1:10){
                 x[,,,(i-1)*10 +1:10]
@@ -48,10 +55,10 @@ locs <- lapply(dim, function(d){
     sample(1:d, replace = FALSE, size = 100)
 })
 
-speed3 <- rowMeans(replicate(1, {
+speed3 <- rowMeans(replicate(5, {
     res <- sapply(xs, function(x){
         gc()
-        system("sudo -kS purge", input = sudo_pwd)
+        purge_memory()
         system.time({
             x[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
         }, gcFirst = TRUE)
@@ -60,10 +67,10 @@ speed3 <- rowMeans(replicate(1, {
 })); speed3
 
 tmp <- rnorm(prod(sapply(locs, length)))
-speed4 <- rowMeans(replicate(1, {
+speed4 <- rowMeans(replicate(5, {
     res <- sapply(xs, function(x){
         gc()
-        system("sudo -kS purge", input = sudo_pwd)
+        purge_memory()
         system.time({
             x[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
         }, gcFirst = TRUE)
@@ -97,7 +104,7 @@ f <- function(){
         col = dipsaus::col2hexStr(cols, alpha = 0.5),
         ylim = c(0, 1000), las = 1, yaxt = "n", 
         border = NA,
-        main = "Single threaded\nmemory purged", 
+        main = sprintf("Single threaded\n%s", ifelse(cold_start, "memory purged", "")), 
         cex.names = 1.4, cex.lab = 1.4, cex.main = 1.4
     )
     axis(2, c(0, 350, 700), las = 1)
@@ -131,7 +138,7 @@ f <- function(){
         col = dipsaus::col2hexStr(cols, alpha = 0.5),
         ylim = c(0, 2500), las = 1, yaxt = "n", 
         border = NA,
-        main = "Single threaded\nmemory purged", 
+        main = sprintf("Single threaded\n%s", ifelse(cold_start, "memory purged", "")), 
         cex.names = 1.4, cex.lab = 1.4, cex.main = 1.4
     )
     axis(2, c(0, 1000, 2000), las = 1, labels = c(0,1,2))
@@ -162,6 +169,6 @@ f <- function(){
     
 }
 
-png("./adhoc/other docs/comparison-singlethread.png", width = 4267, height = 1600, res = 300)
+png(sprintf("./adhoc/other docs/comparison-singlethread-%s.png", ifelse(cold_start, "coldstart", "warmstart")), width = 4267, height = 1600, res = 300)
 f()
 dev.off()
