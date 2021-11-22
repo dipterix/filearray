@@ -133,7 +133,15 @@
     </div>
 
     <pre class="usage"># S3 method for FileArray
-[(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE)
+[(
+  x,
+  ...,
+  drop = TRUE,
+  reshape = NULL,
+  strict = TRUE,
+  dimnames = TRUE,
+  split_dim = 0
+)
 
 # S3 method for FileArray
 [(x, ...) &lt;- value
@@ -193,6 +201,12 @@ subset(x, ..., drop = FALSE)</pre>
     <tr>
       <th>dimnames</th>
       <td><p>whether to preserve <code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames</a></code></p></td>
+    </tr>
+    <tr>
+      <th>split_dim</th>
+      <td><p>internally used; split dimension and calculate indices to
+manually speed up the subset; value ranged from 0 to size of dimension minus
+one.</p></td>
     </tr>
     <tr>
       <th>value</th>

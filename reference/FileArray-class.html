@@ -147,12 +147,12 @@ to create instances.</p>
 <dt><code>create(filebase, dimension, type = "double", partition_size = 1)</code></dt><dd><p>Create a file array instance</p></dd>
 <dt><code>delete(force = FALSE)</code></dt><dd><p>Remove array from local file system and reset</p></dd>
 <dt><code>dimension()</code></dt><dd><p>Get dimension vector</p></dd>
-<dt><code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames(v)</a></code></dt><dd><p>Set/get dimension names</p></dd>
+<dt><code>dimnames(v)</code></dt><dd><p>Set/get dimension names</p></dd>
 <dt><code>element_size()</code></dt><dd><p>Internal storage: bytes per element</p></dd>
 <dt><code>fill_partition(part, value)</code></dt><dd><p>Fill a partition with given scalar</p></dd>
 <dt><code>get_partition(part, reshape = NULL)</code></dt><dd><p>Get partition data, and reshape (if not null) to desired dimension</p></dd>
 <dt><code>initialize_partition()</code></dt><dd><p>Make sure a partition file exists; if not, create one and fill with <code>NA</code>s or 0 (<code>type='raw'</code>)</p></dd>
-<dt><code><a href='https://rdrr.io/r/base/load.html'>load(filebase, mode = c("readwrite", "readonly"))</a></code></dt><dd><p>Load file array from existing directory</p></dd>
+<dt><code>load(filebase, mode = c("readwrite", "readonly"))</code></dt><dd><p>Load file array from existing directory</p></dd>
 <dt><code>partition_path(part)</code></dt><dd><p>Get partition file path</p></dd>
 <dt><code>partition_size()</code></dt><dd><p>Get partition size; see <code><a href='filearray.html'>filearray</a></code></p></dd>
 <dt><code>set_partition(part, value, ..., strict = TRUE)</code></dt><dd><p>Set partition value</p></dd>

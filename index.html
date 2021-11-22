@@ -93,7 +93,7 @@
 <p><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a> <a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a> <a href="https://dipterix.r-universe.dev/ui#builds"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a> <!-- badges: end --></p>
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
 <p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png"></p>
-<p><small> <em>Speed comparisons with <code>lazyarray</code> (<code>zstd</code>-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an <code>MacBook Air (M1, 2020, 8GB RAM)</code>. <code>filearray</code> is uniformly faster than <code>lazyarray</code>. Random access has almost the same speed as the native in-memory operation.</em> </small></p>
+<p><small> Speed comparisons with <code>lazyarray</code> (<code>zstd</code>-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an <code>MacBook Air (M1, 2020, 8GB RAM)</code>, with 8-threads. <code>filearray</code> is uniformly faster than <code>lazyarray</code>. Random access has almost the same speed as the native array operation in R. <em>(The actual speed may vary depending on the storage type and memory size)</em> </small></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -153,10 +153,10 @@
 <h4 class="hasAnchor">
 <a href="#map-reduce" class="anchor"></a>Map-reduce</h4>
 <p>Process segments of array and reduce to save memories.</p>
-<pre><code><a href="reference/mapreduce.html"># Identical to sum(x, na.rm = TRUE)
+<pre><code># Identical to sum(x, na.rm = TRUE)
 mapreduce(x, 
           map = \(data){ sum(data, na.rm = TRUE) }, 
-          reduce = \(mapped){ do.call(sum, mapped) })</a></code></pre>
+          reduce = \(mapped){ do.call(sum, mapped) })</code></pre>
 <p>See more: <code><a href="reference/mapreduce.html">help("mapreduce")</a></code></p>
 </div>
 <div id="collapse" class="section level4">
@@ -180,7 +180,7 @@ a[1] - b[1]</code></pre>
 <code>square</code>: <code>v * v</code>
 </li>
 <li>
-<code>sqrt</code>: <code><a href="https://rdrr.io/r/base/MathFun.html">sqrt(v)</a></code>
+<code>sqrt</code>: <code>sqrt(v)</code>
 </li>
 </ul>
 <p>For complex numbers, <code>transform</code> is a little bit different:</p>

@@ -136,7 +136,9 @@
   <span class='va'>filebase</span>,
   <span class='va'>dimension</span>,
   type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"double"</span>, <span class='st'>"float"</span>, <span class='st'>"integer"</span>, <span class='st'>"logical"</span>, <span class='st'>"raw"</span>, <span class='st'>"complex"</span><span class='op'>)</span>,
-  partition_size <span class='op'>=</span> <span class='cn'>NA</span>
+  partition_size <span class='op'>=</span> <span class='cn'>NA</span>,
+  initialize <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
 <span class='op'>)</span>
 
 <span class='fu'>filearray_load</span><span class='op'>(</span><span class='va'>filebase</span>, mode <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"readwrite"</span>, <span class='st'>"readonly"</span><span class='op'>)</span><span class='op'>)</span></pre>
@@ -162,6 +164,16 @@ options include <code>'integer'</code>, <code>'logical'</code>, and <code>'raw'<
       <th>partition_size</th>
       <td><p>positive partition size for the last margin, or
 <code>NA</code> to automatically guess; see 'Details'.</p></td>
+    </tr>
+    <tr>
+      <th>initialize</th>
+      <td><p>whether to initialize partition files; default is false
+for performance considerations. However, if the array is dense, it is 
+recommended to set to true</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>ignored, reserved for future compatibility</p></td>
     </tr>
     <tr>
       <th>mode</th>
@@ -197,42 +209,45 @@ numbers of partitions as much as possible.</p>
     <p>Zhengjia Wang</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
-
-<span class='co'># Prepare </span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://dipterix.org/filearray/'>filearray</a></span><span class='op'>)</span>
-<span class='va'>filebase</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='kw'>if</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span><span class='op'>(</span><span class='va'>filebase</span><span class='op'>)</span><span class='op'>)</span><span class='op'>{</span> <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>filebase</span>, <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'>}</span>
-
-<span class='co'># create array</span>
-<span class='va'>x</span> <span class='op'>&lt;-</span> <span class='fu'>filearray_create</span><span class='op'>(</span><span class='va'>filebase</span>, dimension <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>200</span>, <span class='fl'>30</span>, <span class='fl'>8</span><span class='op'>)</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; Reference class object of class "FileArray"
-#&gt; Mode: readwrite 
-#&gt; Dimension: 200x30x8 
-#&gt; # of partitions: 8 
-#&gt; Partition size: 1 
-#&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpmMOEcX/file2a3167c70cad </div><div class='input'>
-<span class='co'># Assign values</span>
-<span class='va'>x</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>48000</span><span class='op'>)</span>
-
-<span class='co'># Subset</span>
-<span class='va'>x</span><span class='op'>[</span><span class='fl'>1</span>,<span class='fl'>2</span>,<span class='op'>]</span>
-</div><div class='output co'>#&gt; [1] -0.42938009  0.44742147  1.05363668 -0.97346749 -0.09327726 -1.14067120
-#&gt; [7]  1.45111737  0.47259544</div><div class='input'>
-<span class='co'># load existing array</span>
-<span class='fu'>filearray_load</span><span class='op'>(</span><span class='va'>filebase</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; Reference class object of class "FileArray"
-#&gt; Mode: readwrite 
-#&gt; Dimension: 200x30x8 
-#&gt; # of partitions: 8 
-#&gt; Partition size: 1 
-#&gt; Storage type: double (internal size: 8)
-#&gt; Location: /tmp/RtmpmMOEcX/file2a3167c70cad </div><div class='input'>
-
-
-</div></pre>
+    <pre class="examples"><span class='r-in'></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Prepare </span></span>
+<span class='r-in'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://dipterix.org/filearray/'>filearray</a></span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>filebase</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span><span class='op'>(</span><span class='va'>filebase</span><span class='op'>)</span><span class='op'>)</span><span class='op'>{</span> <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>filebase</span>, <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'>}</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># create array</span></span>
+<span class='r-in'><span class='va'>x</span> <span class='op'>&lt;-</span> <span class='fu'>filearray_create</span><span class='op'>(</span><span class='va'>filebase</span>, dimension <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>200</span>, <span class='fl'>30</span>, <span class='fl'>8</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Reference class object of class "FileArray"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Mode: readwrite </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Dimension: 200x30x8 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> # of partitions: 8 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Partition size: 1 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Storage type: double (internal size: 8)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpXwmHJ7/file2f5eb49bcc2 </span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Assign values</span></span>
+<span class='r-in'><span class='va'>x</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>48000</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Subset</span></span>
+<span class='r-in'><span class='va'>x</span><span class='op'>[</span><span class='fl'>1</span>,<span class='fl'>2</span>,<span class='op'>]</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] -0.42938009  0.44742147  1.05363668 -0.97346749 -0.09327726 -1.14067120</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [7]  1.45111737  0.47259544</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># load existing array</span></span>
+<span class='r-in'><span class='fu'>filearray_load</span><span class='op'>(</span><span class='va'>filebase</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Reference class object of class "FileArray"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Mode: readwrite </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Dimension: 200x30x8 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> # of partitions: 8 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Partition size: 1 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Storage type: double (internal size: 8)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpXwmHJ7/file2f5eb49bcc2 </span>
+<span class='r-in'></span>
+<span class='r-in'></span>
+<span class='r-in'></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
