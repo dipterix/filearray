@@ -162,65 +162,11 @@ SEXP check_missing_dots(const SEXP env){
     return(Rcpp::wrap(is_missing));
 }
 
-
 SEXP dropDimension(SEXP x){
-    // return(Rf_DropDims(x));
-    SEXP dim = Rf_getAttrib(x, R_DimSymbol);
-    if(dim == R_NilValue){
-        return x;
-    }
-    SEXP new_dim;
-    R_xlen_t ndims = Rf_xlength(dim);
-    R_xlen_t xlen = Rf_xlength(x);
-    if(ndims == 0){
-        new_dim = R_NilValue;
-        Rf_setAttrib(x, R_DimSymbol, new_dim);
-        return x;
-    }
-    if(xlen == 0){
-        return x;
-    }
     
-    R_xlen_t ii;
-    
-    new_dim = PROTECT(Rf_allocVector(TYPEOF(dim), ndims));
-    
-    switch(TYPEOF(dim)){
-    case INTSXP: {
-        int *ptr_orig = INTEGER(dim);
-        int *ptr_new = INTEGER(new_dim);
-        for(ii = 0; ptr_orig != INTEGER(dim) + ndims; ptr_orig++ ){
-            if(*ptr_orig > 1){
-                *ptr_new++ = *ptr_orig;
-                ii++;
-            }
-        }
-        break;
-    }
-    case REALSXP: {
-        double *ptr_orig = REAL(dim);
-        double *ptr_new = REAL(new_dim);
-        for(ii = 0; ptr_orig != REAL(dim) + ndims; ptr_orig++ ){
-            if(*ptr_orig > 1){
-                *ptr_new++ = *ptr_orig;
-                ii++;
-            }
-        }
-        break;
-    }
-    default:
-        stop("unknown dimension storage type");
-    }
-    if(ii == ndims){} else if(ii >= 2){
-        SETLENGTH(new_dim, ii);
-        
-        Rf_setAttrib(x, R_DimSymbol, new_dim);
-    } else {
-        Rf_setAttrib(x, R_DimSymbol, R_NilValue);
-    }
-    
-    UNPROTECT(1);
-    return x;
+    // Rf_DropDims mutates x, but since x is always internally created
+    // and won't be referenced
+    return(Rf_DropDims(x));
 }
 
 int64_t prod2(SEXP x, bool na_rm){
