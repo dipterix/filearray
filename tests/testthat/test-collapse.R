@@ -1,10 +1,5 @@
 
-# Only use 2 cores on CRAN
-if(isTRUE(testthat:::on_cran())){
-    cat("\n--as-cran: Using ", filearray::filearray_threads(2L), " threads\n")
-} else {
-    cat("\nNot on CRAN, using ", filearray::filearray_threads(8L), " threads\n")
-}
+print(Sys.getenv())
 
 collapse_real <- function(y, keep, transform = c("asis", "10log10", "square", "sqrt", "normalize")){
     re <- switch (

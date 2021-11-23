@@ -11,6 +11,7 @@
 #' @return An integer of current number of threads
 #' @export
 filearray_threads <- function(n, reset_after_fork = -1L){
+    
     if(!missing(n)){
         n <- as.integer(n)
         reset_after_fork <- sign(reset_after_fork)

@@ -1,10 +1,4 @@
 
-# Only use 2 cores on CRAN
-if(isTRUE(testthat:::on_cran())){
-    filearray::filearray_threads(2L)
-}
-
-
 require(testthat)
 as_int64 <- function(x){
     realToInt64(x, NA_real_, NA_real_, 0L)

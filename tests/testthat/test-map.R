@@ -1,9 +1,3 @@
-
-# Only use 2 cores on CRAN
-if(isTRUE(testthat:::on_cran())){
-    filearray::filearray_threads(2L)
-}
-
 library(testthat)
 test_that("map arrays", {
     
