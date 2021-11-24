@@ -1,5 +1,7 @@
 # filearray (development version)
 
+# filearray 0.1.2
+
 * Removed `flush` in saving data to let system decide when to flush to hard drive
 * Allowed array to expand along the partition margin
 * Fixed dimension name getting dropped under certain situations
