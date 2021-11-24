@@ -1,6 +1,10 @@
 
 print(Sys.getenv())
 
+# Testing collapse is time consuming, skip if ran
+skip_collapse <- Sys.getenv("FILEARRAY_SKIP_COLLAPSE", unset = "") == "TRUE"
+testthat::skip_if(skip_collapse)
+
 collapse_real <- function(y, keep, transform = c("asis", "10log10", "square", "sqrt", "normalize")){
     re <- switch (
         transform,
@@ -408,3 +412,6 @@ test_that("R/C++ - Collapse (complex)", {
     }
 
 })
+
+
+Sys.setenv("FILEARRAY_SKIP_COLLAPSE" = "TRUE")

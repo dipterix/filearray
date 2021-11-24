@@ -130,7 +130,7 @@ setRefClass(
                 dim <- .self$.header$partition_dim
                 stopifnot(is.list(v) || length(v) <= length(dim))
                 for(ii in seq_along(v)){
-                    if(length(v[[ii]]) != dim[[ii]]){
+                    if(length(v[[ii]]) && length(v[[ii]]) != dim[[ii]]){
                         stop("Dimension ", ii, " length mismatch")
                     }
                 }
