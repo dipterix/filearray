@@ -84,6 +84,7 @@ expect_equivalent_cplx <- function(x, y, eps = 1e-6){
 }
 
 test_that("R/C++ - Collapse", {
+    testthat::skip_on_cran()
     bsz <- get_buffer_size()
     on.exit({
         set_buffer_size(bsz)
@@ -194,6 +195,7 @@ test_that("R/C++ - Collapse", {
 })
 
 test_that("R/C++ - Float", {
+    testthat::skip_on_cran()
     bsz <- get_buffer_size()
     on.exit({
         set_buffer_size(bsz)
@@ -305,6 +307,7 @@ test_that("R/C++ - Float", {
 })
 
 test_that("R/C++ - Collapse (complex)", {
+    testthat::skip_on_cran()
     bsz <- get_buffer_size()
     on.exit({
         set_buffer_size(bsz)
