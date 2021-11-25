@@ -228,7 +228,7 @@ must be the consistent.</p>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> # of partitions: 3 </span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> Partition size: 1 </span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpPQjFlm/file2aae1fa6655b </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpwddbbX/file2c284421c57d </span>
 <span class='r-in'></span>
 <span class='r-in'><span class='co'># check</span></span>
 <span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>output</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>-</span> <span class='op'>(</span><span class='va'>x1</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>+</span> <span class='va'>x2</span><span class='op'>[</span><span class='op'>]</span><span class='op'>)</span><span class='op'>)</span></span>
@@ -247,10 +247,10 @@ must be the consistent.</p>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> # of partitions: 3 </span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> Partition size: 1 </span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpPQjFlm/file2aae6440b840 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Location: /tmp/RtmpwddbbX/file2c283cc56d9e </span>
 <span class='r-in'></span>
 <span class='r-in'><span class='co'># check</span></span>
-<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>output</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>-</span> <span class='fu'><a href='https://rdrr.io/r/base/apply.html'>apply</a></span><span class='op'>(</span><span class='va'>x1</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>/</span> <span class='va'>x2</span><span class='op'>[</span><span class='op'>]</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>,<span class='fl'>3</span><span class='op'>)</span>, <span class='va'>max</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>output</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>-</span> <span class='fu'><a href='apply.html'>apply</a></span><span class='op'>(</span><span class='va'>x1</span><span class='op'>[</span><span class='op'>]</span> <span class='op'>/</span> <span class='va'>x2</span><span class='op'>[</span><span class='op'>]</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>,<span class='fl'>3</span><span class='op'>)</span>, <span class='va'>max</span><span class='op'>)</span><span class='op'>)</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 0 0</span>
 <span class='r-in'></span>
 <span class='r-in'><span class='va'>output</span><span class='op'>$</span><span class='fu'>delete</span><span class='op'>(</span><span class='op'>)</span></span>
@@ -284,7 +284,7 @@ must be the consistent.</p>
 <span class='r-in'>            </span>
 <span class='r-in'>            <span class='co'># collapse over first 50 time points for </span></span>
 <span class='r-in'>            <span class='co'># each trial, and marker</span></span>
-<span class='r-in'>            <span class='va'>baseline</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/apply.html'>apply</a></span><span class='op'>(</span><span class='va'>location_data</span><span class='op'>[</span>,,<span class='fl'>1</span><span class='op'>:</span><span class='fl'>50</span><span class='op'>]</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>2</span><span class='op'>)</span>, <span class='va'>mean</span><span class='op'>)</span></span>
+<span class='r-in'>            <span class='va'>baseline</span> <span class='op'>&lt;-</span> <span class='fu'><a href='apply.html'>apply</a></span><span class='op'>(</span><span class='va'>location_data</span><span class='op'>[</span>,,<span class='fl'>1</span><span class='op'>:</span><span class='fl'>50</span><span class='op'>]</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>2</span><span class='op'>)</span>, <span class='va'>mean</span><span class='op'>)</span></span>
 <span class='r-in'>            </span>
 <span class='r-in'>            <span class='co'># calibrate</span></span>
 <span class='r-in'>            <span class='va'>calibrated</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/sweep.html'>sweep</a></span><span class='op'>(</span><span class='va'>location_data</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>2</span><span class='op'>)</span>, <span class='va'>baseline</span>, </span>
