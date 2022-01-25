@@ -55,7 +55,7 @@ x2 <- filearray_create(
     partition_size = partition_size)
 x2[] <- 5:6
 
-y1 <- filearray_bind(x1, x2)
+y1 <- filearray_bind(x1, x2, symlink = FALSE)
 y2 <- filearray_bind(x1, x2, symlink = TRUE)
 
 # y1 copies partition files, and y2 simply creates links 

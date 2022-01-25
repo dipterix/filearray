@@ -271,12 +271,12 @@ setRefClass(
                     # check if this array is a binded array
                     bind_info <- .self$.header$filearray_bind
                     if(is.list(bind_info) && isTRUE(bind_info$is_binded)){
-                        partition_info[,1] <- cumsum(partition_info[,1])
+                        partition_info[,1] <- seq_along(partition_info[,1])
                         if(!all(expected_part == partition_info[,1])){
                             stop("Partition filenames mismatch with partition headers.")
                         }
                         if(bind_info$symlink && .self$.mode != "readonly"){
-                            # quiet_warning("Partition filenames mismatch with partition headers. This happens when the array partitions are symlinked from other arrays. For safety reasons, switched to read-only mode.")
+                            quiet_warning("Partition filenames mismatch with partition headers. This happens when the array partitions are symlinked from other arrays. For safety reasons, switched to read-only mode.")
                             .self$.mode <- "readonly"
                         }
                     } else {

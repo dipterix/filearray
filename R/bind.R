@@ -41,7 +41,7 @@
 #'     partition_size = partition_size)
 #' x2[] <- 5:6
 #' 
-#' y1 <- filearray_bind(x1, x2)
+#' y1 <- filearray_bind(x1, x2, symlink = FALSE)
 #' y2 <- filearray_bind(x1, x2, symlink = TRUE)
 #' 
 #' # y1 copies partition files, and y2 simply creates links 
@@ -93,7 +93,14 @@ filearray_bind <- function(
         nrow(x$.partition_info)
     })
     
-    dim[[length(dim)]] <- sum(last_margin)
+    last_margins <- sapply(arrays, dim)
+    last_margins <- last_margins[nrow(last_margins),]
+    
+    if(!all(last_margins %% part_size == 0)){
+        quiet_warning("One or more arrays have last margin size that cannot be devided by `partition_size`. This will cause binded arrays to be mis-aligned. ")
+    }
+    
+    dim[[length(dim)]] <- sum(last_margin) * part_size
     
     re <- filearray_create(filebase = filebase, dimension = dim, type = type, partition_size = part_size)
     
