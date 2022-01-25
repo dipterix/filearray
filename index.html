@@ -22,6 +22,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -34,18 +36,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.2.9000</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
@@ -67,7 +63,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/dipterix/filearray/">
+  <a href="https://github.com/dipterix/filearray/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -86,89 +82,89 @@
   <div class="contents col-md-9">
 
 <p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/inst/hexbadge.png" height="160px" align="right"></p>
-<div id="file-backed-array-for-out-of-memory-computation" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#file-backed-array-for-out-of-memory-computation" class="anchor"></a>File-Backed Array for Out-of-memory Computation</h1></div>
+<div class="section level1">
+<div class="page-header"><h1 id="file-backed-array-for-out-of-memory-computation">File-Backed Array for Out-of-memory Computation<a class="anchor" aria-label="anchor" href="#file-backed-array-for-out-of-memory-computation"></a>
+</h1></div>
 <!-- badges: start -->
-<p><a href="https://github.com/dipterix/filearray/actions"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a> <a href="https://CRAN.R-project.org/package=filearray"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a> <a href="https://dipterix.r-universe.dev/ui#builds"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a> <!-- badges: end --></p>
+
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
 <p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png"></p>
 <p><small> Speed comparisons with <code>lazyarray</code> (<code>zstd</code>-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an <code>MacBook Air (M1, 2020, 8GB RAM)</code>, with 8-threads. <code>filearray</code> is uniformly faster than <code>lazyarray</code>. Random access has almost the same speed as the native array operation in R. <em>(The actual speed may vary depending on the storage type and memory size)</em> </small></p>
-<div id="installation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#installation" class="anchor"></a>Installation</h2>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"filearray"</span><span class="op">)</span></code></pre></div>
-<div id="install-develop-version" class="section level3">
-<h3 class="hasAnchor">
-<a href="#install-develop-version" class="anchor"></a>Install Develop Version</h3>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"filearray"</span><span class="op">)</span></code></pre></div>
+<div class="section level3">
+<h3 id="install-develop-version">Install Develop Version<a class="anchor" aria-label="anchor" href="#install-develop-version"></a>
+</h3>
 <p>The internal functions are written in <code>C++</code>. To avoid compiling the packages, you can install from my personal repository. It’s automatically updated every hour. Currently available on <code>Windows</code> and <code>osx (Intel chip)</code> only.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>
     dipterix <span class="op">=</span> <span class="st">'https://dipterix.r-universe.dev'</span>,
     CRAN <span class="op">=</span> <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span><span class="op">)</span></code></pre></div>
 <p>Alternatively, you can compile from <code>Github</code> repository. This requires proper compilers (<code>rtools</code> on <code>windows</code>, or <code>xcode-select --install</code> on <code>osx</code>, or <code>build-essentials</code> on <code>linux</code>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># install.packages("remotes")</span>
 <span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dipterix/filearray"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
-<div id="basic-usage" class="section level2">
-<h2 class="hasAnchor">
-<a href="#basic-usage" class="anchor"></a>Basic Usage</h2>
-<div id="createload-file-array" class="section level4">
-<h4 class="hasAnchor">
-<a href="#createload-file-array" class="anchor"></a>Create/load file array</h4>
+<div class="section level2">
+<h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+</h2>
+<div class="section level4">
+<h4 id="createload-file-array">Create/load file array<a class="anchor" aria-label="anchor" href="#createload-file-array"></a>
+</h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span>
-<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span><span class="op">(</span><span class="op">)</span>
-<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span>
+<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co"># load existing</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_load</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></code></pre></div>
 <p>See more: <code><a href="reference/filearray.html">help("filearray")</a></code></p>
 </div>
-<div id="assign--subset-array" class="section level4">
-<h4 class="hasAnchor">
-<a href="#assign--subset-array" class="anchor"></a>Assign &amp; subset array</h4>
+<div class="section level4">
+<h4 id="assign--subset-array">Assign &amp; subset array<a class="anchor" aria-label="anchor" href="#assign--subset-array"></a>
+</h4>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span>
 <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></code></pre></div>
 </div>
-<div id="generics" class="section level4">
-<h4 class="hasAnchor">
-<a href="#generics" class="anchor"></a>Generics</h4>
+<div class="section level4">
+<h4 id="generics">Generics<a class="anchor" aria-label="anchor" href="#generics"></a>
+</h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/typeof.html">typeof</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span>, <span class="va">min</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 
 <span class="va">val</span> <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">5</span>,<span class="fl">1</span><span class="op">]</span>
 <span class="fu"><a href="reference/fwhich.html">fwhich</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">val</span>, arr.ind <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p>See more: <code><a href="reference/S3-filearray.html">help("S3-filearray")</a></code>, <code><a href="reference/fwhich.html">help("fwhich")</a></code></p>
 </div>
-<div id="map-reduce" class="section level4">
-<h4 class="hasAnchor">
-<a href="#map-reduce" class="anchor"></a>Map-reduce</h4>
+<div class="section level4">
+<h4 id="map-reduce">Map-reduce<a class="anchor" aria-label="anchor" href="#map-reduce"></a>
+</h4>
 <p>Process segments of array and reduce to save memories.</p>
-<pre><code># Identical to sum(x, na.rm = TRUE)
-mapreduce(x, 
-          map = \(data){ sum(data, na.rm = TRUE) }, 
-          reduce = \(mapped){ do.call(sum, mapped) })</code></pre>
+<pre><code><span class="co"># Identical to sum(x, na.rm = TRUE)</span>
+<span class="fu"><a href="reference/mapreduce.html">mapreduce</a></span><span class="op">(</span><span class="va">x</span>, 
+          map <span class="op">=</span> \<span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">data</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span>, 
+          reduce <span class="op">=</span> \<span class="op">(</span><span class="va">mapped</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></code></pre>
 <p>See more: <code><a href="reference/mapreduce.html">help("mapreduce")</a></code></p>
 </div>
-<div id="collapse" class="section level4">
-<h4 class="hasAnchor">
-<a href="#collapse" class="anchor"></a>Collapse</h4>
+<div class="section level4">
+<h4 id="collapse">Collapse<a class="anchor" aria-label="anchor" href="#collapse"></a>
+</h4>
 <p>Transform data, and collapse (calculate sum or mean) along margins.</p>
-<pre><code>a &lt;- x$collapse(keep = 4, method = "mean", transform = "asis")
+<pre><code><span class="va">a</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="fl">4</span>, method <span class="op">=</span> <span class="st">"mean"</span>, transform <span class="op">=</span> <span class="st">"asis"</span><span class="op">)</span>
 
-# equivalent to
-b &lt;- apply(x[], 4, mean)
+<span class="co"># equivalent to</span>
+<span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="op">]</span>, <span class="fl">4</span>, <span class="va">mean</span><span class="op">)</span>
 
-a[1] - b[1]</code></pre>
+<span class="va">a</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></code></pre>
 <p>Available <code>transform</code> for double/integer numbers are:</p>
 <ul>
 <li>
@@ -199,35 +195,35 @@ a[1] - b[1]</code></pre>
 </ul>
 </div>
 </div>
-<div id="notes" class="section level2">
-<h2 class="hasAnchor">
-<a href="#notes" class="anchor"></a>Notes</h2>
-<div id="i-openmp-support-and-number-of-threads" class="section level4">
-<h4 class="hasAnchor">
-<a href="#i-openmp-support-and-number-of-threads" class="anchor"></a>I. ‘OpenMP’ support and Number of Threads</h4>
-<p>If <code>OpenMP</code> is not detected, then only single thread will be used. This is more likely to happen on recent Apple’s system because the native support for ‘OpenMP’ was dropped. To enable ‘OpenMP’, please read <a href="https://mac.r-project.org/openmp/">this link</a>. Find your system build and replace <code>OMP</code> accordingly, then run the following commands line-by-line.</p>
+<div class="section level2">
+<h2 id="notes">Notes<a class="anchor" aria-label="anchor" href="#notes"></a>
+</h2>
+<div class="section level4">
+<h4 id="i-openmp-support-and-number-of-threads">I. ‘OpenMP’ support and Number of Threads<a class="anchor" aria-label="anchor" href="#i-openmp-support-and-number-of-threads"></a>
+</h4>
+<p>If <code>OpenMP</code> is not detected, then only single thread will be used. This is more likely to happen on recent Apple’s system because the native support for ‘OpenMP’ was dropped. To enable ‘OpenMP’, please read <a href="https://mac.r-project.org/openmp/" class="external-link">this link</a>. Find your system build and replace <code>OMP</code> accordingly, then run the following commands line-by-line.</p>
 <pre><code>OMP="openmp-11.0.1-darwin20-Release.tar.gz"
 xcode-select --install
 curl -O https://mac.r-project.org/openmp/$OMP
     sudo tar fvx $OMP -C /</code></pre>
 <p>This is a one-time configuration. After the configuration, please run</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></code></pre></div>
 <p>If <code>OpenMP</code> is detected, then the number of threads the maximum number of <code>CPU</code> cores on your machine, or <code>8</code>, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total processing cores.</p>
 <p>Simultaneous file read/write operation is recommended on modern <code>NVMe</code> solid-state drives or server <code>RAIDs</code>. On traditional <code>HDD</code>, it is recommended to use single thread.</p>
 </div>
-<div id="ii-notes-on-precision" class="section level4">
-<h4 class="hasAnchor">
-<a href="#ii-notes-on-precision" class="anchor"></a>II. Notes on precision</h4>
-<ol>
+<div class="section level4">
+<h4 id="ii-notes-on-precision">II. Notes on precision<a class="anchor" aria-label="anchor" href="#ii-notes-on-precision"></a>
+</h4>
+<ol style="list-style-type: decimal">
 <li><p><code>complex</code> numbers: In native <code>R</code>, complex numbers are combination of two <code>double</code> numbers - real and imaginary (total 16 bytes). In <code>filearray</code>, complex numbers are coerced to two <code>float</code> numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, <code>1.0000001</code> will be store as <code>1</code>, or <code>123456789</code> will be stored as <code>123456792</code> (first 7 digits are accurate).</p></li>
-<li><p><code>float</code> type: Native R does not have float type. All numeric values are stored in double precision. Since float numbers use half of the space, float arrays can be faster when hard drive speed is the bottle-neck (see <a href="https://dipterix.org/filearray/articles/performance.html">performance comparisons</a>). However coercing double to float comes at costs: a). float number has less precision b). float number has smaller range (<span class="math inline">3.4 × 10<sup>38</sup></span>) than double (<span class="math inline">1.7 × 10<sup>308</sup></span>) hence use with caution when data needs high precision or the max is super large.</p></li>
+<li><p><code>float</code> type: Native R does not have float type. All numeric values are stored in double precision. Since float numbers use half of the space, float arrays can be faster when hard drive speed is the bottle-neck (see <a href="https://dipterix.org/filearray/articles/performance.html" class="external-link">performance comparisons</a>). However coercing double to float comes at costs: a). float number has less precision b). float number has smaller range (<span class="math inline">3.4 × 10<sup>38</sup></span>) than double (<span class="math inline">1.7 × 10<sup>308</sup></span>) hence use with caution when data needs high precision or the max is super large.</p></li>
 <li><p><code>collapse</code> function: when data range is large (say <code>x[[1]]=1</code>, but <code>x[[2]]=10^20</code>), <code>collapse</code> method might lose precision. This is <code>double</code> only uses 8 bytes of memory space. When calculating summations, R internally uses <code>long double</code> to prevent precision loss, but current <code>filearray</code> implementation uses <code>double</code>, causing floating error around 16 decimal place.</p></li>
 </ol>
 </div>
-<div id="iii-cold-start-vs-warm-start" class="section level4">
-<h4 class="hasAnchor">
-<a href="#iii-cold-start-vs-warm-start" class="anchor"></a>III. Cold-start vs warm-start</h4>
+<div class="section level4">
+<h4 id="iii-cold-start-vs-warm-start">III. Cold-start vs warm-start<a class="anchor" aria-label="anchor" href="#iii-cold-start-vs-warm-start"></a>
+</h4>
 <p>As of version <code>0.1.1</code>, most file read/write operations are switched from <code>fopen</code> to memory map for two simplify the logic (buffer size, kernel cache…), and to boost the writing/some types of reading speed. While sacrificing the speed of reading large block of data from 2.4GB/s to 1.7GB/s, the writing speed was boosted from 300MB/s to 700MB/s, and the speed of random accessing small slices of data was increased from 900MB/s to 2.5GB/s. As a result, some functions can reach to really high speed (close to in-memory calls) while using much less memory.</p>
 <p>The additional performance improvements brought by the memory mapping approach might be impacted by “cold” start. When reading/writing files, most modern systems will cache the files so that it can load up these files faster next time. I personally call it a cold start. Memory mapping have a little bit extra overhead during the cold start, resulting in decreased performance (but it’s still fast). Accessing the same data after the cold start is called warm start. When operating with warm starts, <code>filearray</code> is as fast as native R arrays (sometimes even faster due to the indexing method and fewer garbage collections). This means <code>filearray</code> reaches its best performance when the arrays are re-used.</p>
 </div>
@@ -238,26 +234,42 @@ curl -O https://mac.r-project.org/openmp/$OMP
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Download from CRAN at <br><a href="https://cloud.r-project.org/package=filearray">https://​cloud.r-project.org/​package=filearray</a>
-</li>
-<li>Browse source code at <br><a href="https://github.com/dipterix/filearray/">https://​github.com/​dipterix/​filearray/​</a>
-</li>
-<li>Report a bug at <br><a href="https://github.com/dipterix/filearray/issues">https://​github.com/​dipterix/​filearray/​issues</a>
-</li>
+<li><a href="https://cloud.r-project.org/package=filearray" class="external-link">View on CRAN</a></li>
+<li><a href="https://github.com/dipterix/filearray/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/dipterix/filearray/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
+
 <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.r-project.org/Licenses/LGPL-3">LGPL-3</a></li>
+<li><a href="https://www.r-project.org/Licenses/LGPL-3" class="external-link">LGPL-3</a></li>
 </ul>
 </div>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing filearray</a></li>
+</ul>
+</div>
+
 <div class="developers">
-<h2>Developers</h2>
+<h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Zhengjia Wang <br><small class="roles"> Author, maintainer, copyright holder </small>  </li>
+</ul>
+</div>
+
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/dipterix/filearray/actions" class="external-link"><img src="https://github.com/dipterix/filearray/workflows/R-CMD-check/badge.svg" alt="R-check"></a></li>
+<li><a href="https://CRAN.R-project.org/package=filearray" class="external-link"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a></li>
+<li><a href="https://dipterix.r-universe.dev/ui#builds" class="external-link"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a></li>
 </ul>
 </div>
 
@@ -266,11 +278,13 @@ curl -O https://mac.r-project.org/openmp/$OMP
 
 
       <footer><div class="copyright">
-  <p>Developed by Zhengjia Wang.</p>
+  <p></p>
+<p>Developed by Zhengjia Wang.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -278,6 +292,8 @@ curl -O https://mac.r-project.org/openmp/$OMP
 
   
 
+
+  
 
   </body>
 </html>

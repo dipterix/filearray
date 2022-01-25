@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://dipterix.org/filearray/404.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/filearray/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/filearray/articles/performance.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/filearray/authors.html</loc>
+  </url>
+  <url>
     <loc>http://dipterix.org/filearray/index.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/filearray/news/index.html</loc>
   </url>
   <url>
     <loc>http://dipterix.org/filearray/reference/FileArray-class.html</loc>
@@ -28,12 +43,12 @@
     <loc>http://dipterix.org/filearray/reference/fwhich.html</loc>
   </url>
   <url>
+    <loc>http://dipterix.org/filearray/reference/index.html</loc>
+  </url>
+  <url>
     <loc>http://dipterix.org/filearray/reference/mapreduce.html</loc>
   </url>
   <url>
     <loc>http://dipterix.org/filearray/reference/typeof.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/filearray/articles/performance.html</loc>
   </url>
 </urlset>
