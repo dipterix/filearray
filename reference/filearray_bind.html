@@ -117,7 +117,7 @@ for details.</p>
 <span class="r-in">    partition_size <span class="op">=</span> <span class="va">partition_size</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">x2</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">5</span><span class="op">:</span><span class="fl">6</span></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="va">y1</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">y1</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, symlink <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">y2</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, symlink <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># y1 copies partition files, and y2 simply creates links </span></span>
