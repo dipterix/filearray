@@ -122,7 +122,10 @@ validate_header <- function(file, fid){
         }
         fz <- file.size(file)
         if(fz < HEADER_SIZE){
-            stop("Invalid `filearray` partition. File size too small.")
+            # Might be on windows and partition files are symlinked
+            if(get_os() != "windows" || fz != 0){
+                stop("Invalid `filearray` partition. File size too small:\n  ", file)
+            }
         }
         fid <- file(description = file, open = "rb")
         on.exit({
