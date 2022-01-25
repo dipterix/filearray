@@ -1,7 +1,7 @@
 Package: filearray
 Type: Package
 Title: File-Backed Array for Out-of-Memory Computation
-Version: 0.1.2
+Version: 0.1.2.9000
 Language: en-US
 Encoding: UTF-8
 License: LGPL-3

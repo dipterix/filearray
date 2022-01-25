@@ -25,10 +25,10 @@ ensure_partition <- function(
     }
     
     if( header$partition != partition ){
-        warning(sprintf("Partition number mismatch: %s != %s", header$partition, partition))
+        quiet_warning(sprintf("Partition number mismatch: %s != %s", header$partition, partition))
     }
     if( prod(dimension) != header$partition_size ){
-        warning(sprintf("Partition size mismatch: %s != %s", header$partition_size, prod(dimension)))
+        quiet_warning(sprintf("Partition size mismatch: %s != %s", header$partition_size, prod(dimension)))
     }
     
     return(header)

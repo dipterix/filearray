@@ -143,6 +143,12 @@ validate_header <- function(file, fid){
 
 set_meta_content <- function(meta_file, data){
     stopifnot(file.exists(meta_file))
+    data <- as.list(data)
+    data$header_version <- HEADER_VER
+    
+    keys <- names(data)
+    names(data) <- sprintf("__%s__", keys)
+    
     conn <- rawConnection(raw(), "w+b")
     saveRDS(file = conn, data, ascii = FALSE)
     v <- rawConnectionValue(conn)

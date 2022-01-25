@@ -11,6 +11,8 @@ to create instances.
 \section{Public Methods}{
 
 \describe{
+\item{\code{get_header(key, default = NULL)}}{Get header information; returns \code{default} if \code{key} is missing}
+\item{\code{set_header(key, value)}}{Set header information; the extra headers will be stored in meta file. Please do not store large headers as they will be loaded into memory frequently.}
 \item{\code{can_write()}}{Whether the array data can be altered}
 \item{\code{create(filebase, dimension, type = "double", partition_size = 1)}}{Create a file array instance}
 \item{\code{delete(force = FALSE)}}{Remove array from local file system and reset}

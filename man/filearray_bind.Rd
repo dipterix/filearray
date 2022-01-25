@@ -4,7 +4,7 @@
 \alias{filearray_bind}
 \title{Merge and bind homogeneous file arrays}
 \usage{
-filearray_bind(..., .list = list(), filebase = tempfile(), symlink = FALSE)
+filearray_bind(..., .list = list(), filebase = tempfile(), symlink = TRUE)
 }
 \arguments{
 \item{..., .list}{file array instances}

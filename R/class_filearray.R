@@ -5,6 +5,8 @@
 #' to create instances.
 #' @section Public Methods:
 #' \describe{
+#' \item{\code{get_header(key, default = NULL)}}{Get header information; returns \code{default} if \code{key} is missing}
+#' \item{\code{set_header(key, value)}}{Set header information; the extra headers will be stored in meta file. Please do not store large headers as they will be loaded into memory frequently.}
 #' \item{\code{can_write()}}{Whether the array data can be altered}
 #' \item{\code{create(filebase, dimension, type = "double", partition_size = 1)}}{Create a file array instance}
 #' \item{\code{delete(force = FALSE)}}{Remove array from local file system and reset}
@@ -55,9 +57,30 @@ load_meta <- function(path){
         v <- readBin(con = fid, what = 'raw', size = 1L, 
                      n = header$content_length)
         conn <- rawConnection(v, open = "rb")
-        dimnames <- readRDS(conn)
+        
+        # .self$.header[c("dimnames", "symlinks")]
+        extra_header <- readRDS(conn)
         close(conn)
-        header$dimnames <- dimnames
+        if(is.list(extra_header)){
+            extra_header_names <- names(extra_header)
+            if("__header_version__" %in% extra_header_names){
+                extra_header_names <- sub("^__", "", extra_header_names)
+                extra_header_names <- sub("__$", "", extra_header_names)
+                extra_header_names <- extra_header_names[!extra_header_names %in% RESERVED_HEADERS]
+                extra_header_names <- c(extra_header_names, "dimnames", "header_version")
+                for(nm in extra_header_names){
+                    header[[nm]] <- extra_header[[sprintf("__%s__", nm)]]
+                }
+            } else {
+                # old format
+                header$dimnames <- extra_header
+                header$header_version <- 0
+            }
+        } else {
+            header$header_version <- 0
+        }
+    } else {
+        header$header_version <- 0
     }
     header
 }
@@ -144,9 +167,9 @@ setRefClass(
                 }), names = nms)
                 # set dimnames
                 meta <- file.path(.self$.filebase, "meta")
-                set_meta_content(meta, v)
-                # header <- load_meta(.self$.filebase)
                 .self$.header$dimnames <- v
+                .self$.save_header()
+                .self$.header$dimnames
             }
             .self$.header$dimnames
         },
@@ -161,6 +184,37 @@ setRefClass(
         },
         partition_size = function(){
             .self$.header$partition
+        },
+        .save_header = function(){
+            if(.self$.mode != "readwrite"){
+                quiet_warning('Cannot save extra headers because the array has no write access.')
+                return(invisible())
+            }
+            # get header version
+            keys <- names(.self$.header)
+            keys <- keys[!keys %in% RESERVED_HEADERS | keys %in% c("dimnames")]
+            extra_header <- .self$.header[keys]
+            meta <- file.path(.self$.filebase, "meta")
+            set_meta_content(meta, extra_header)
+            if(!identical(as.integer(.self$.header$header_version), HEADER_VER)){
+                # old header
+                .self$.header <- load_meta(.self$.filebase)
+            }
+            return(invisible())
+        },
+        get_header = function(key, default = NULL){
+            if(key %in% names(.self$.header)){
+                return(.self$.header[[key]])
+            }
+            return(default)
+        },
+        set_header = function(key, value){
+            force(value)
+            if(key %in% RESERVED_HEADERS){
+                stop("Key `", key, "` is preserved and should be read-only or altered via other methods.")
+            }
+            .self$.header[[key]] <- value
+            .self$.save_header()
         },
         load = function(filebase, mode = c('readwrite', 'readonly')){
             mode <- match.arg(mode)
@@ -214,7 +268,21 @@ setRefClass(
                 }
                 expected_part <- as.integer(gsub("[^0-9]+", "", files)) + 1
                 if(!all(expected_part == partition_info[,1])){
-                    stop("Partition filenames mismatch with partition headers.")
+                    # check if this array is a binded array
+                    bind_info <- .self$.header$filearray_bind
+                    if(is.list(bind_info) && isTRUE(bind_info$is_binded)){
+                        partition_info[,1] <- cumsum(partition_info[,1])
+                        if(!all(expected_part == partition_info[,1])){
+                            stop("Partition filenames mismatch with partition headers.")
+                        }
+                        if(bind_info$symlink && .self$.mode != "readonly"){
+                            # quiet_warning("Partition filenames mismatch with partition headers. This happens when the array partitions are symlinked from other arrays. For safety reasons, switched to read-only mode.")
+                            .self$.mode <- "readonly"
+                        }
+                    } else {
+                        stop("Partition filenames mismatch with partition headers.")
+                    }
+                    
                 }
                 
                 nparts <- max(c(nparts, partition_info[,1]))
@@ -250,7 +318,7 @@ setRefClass(
                     cat("Storage type: ", .self$type(), " (internal size: ", get_elem_size(.self$type()), ")\n", sep = "")
                     
                 }, error = function(e){
-                    warning("Partition information is unavailable: might be broken or improperly set.", immediate. = FALSE)
+                    quiet_warning("Partition information is unavailable: might be broken or improperly set.", immediate. = FALSE)
                 })
                 cat("Location:", .self$.filebase, "\n")
             } else {
@@ -376,7 +444,7 @@ setRefClass(
                 stop("NA or non-positive partition are invalid")
             }
             if(length(value) > 1){
-                warning('`fill_partition` value length coerced to first value')
+                quiet_warning('`fill_partition` value length coerced to first value')
             }
             
             value <- value[[1]]
@@ -472,9 +540,9 @@ setRefClass(
             }
             if(isTRUE(.self$.mode == 'readonly')){
                 if(force){
-                    warning("File array is read-only, but deleted with `force=TRUE`")
+                    quiet_warning("File array is read-only, but deleted with `force=TRUE`")
                 } else {
-                    warning("File array is read-only.")
+                    quiet_warning("File array is read-only.")
                 }
             }
             filebase <- .self$.filebase

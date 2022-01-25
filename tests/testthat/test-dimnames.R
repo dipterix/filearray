@@ -5,6 +5,7 @@ test_that("Subset with dimnames", {
     })
     y <- array(as.double(1:240), c(3,4,5,6))
     x[] <- y
+    expect_identical(dimnames(x[]), dimnames(y))
     
     dnames1 <- list(
         A = 1:3,
@@ -33,6 +34,7 @@ test_that("Subset with dimnames", {
             A = 1:4
         )
     })
+    
     
     dimnames(y) <- dnames1
     dimnames(x) <- dnames1

@@ -4,7 +4,12 @@
 #' @importFrom methods setRefClass
 NULL
 HEADER_SIZE <- 1024
-FILE_VER <- c( 1L, 0L, 0L )
+FILE_VER <- c( 1L, 1L, 0L )
+HEADER_VER <- 1L
+RESERVED_HEADERS <- c("endianness", "version", "sexp_type", 
+                      "unit_bytes", "partition", "partition_size", 
+                      "partition_dim", "header_bytes", "header_version",
+                      "dimnames", "content_length")
 
 # The saved files are always little endian
 ENDIANNESS <- "little"
@@ -26,3 +31,9 @@ max_buffer_size <- local({
         return(size)
     }
 })
+
+quiet_warning <- function(..., call. = FALSE){
+    if(!getOption("filearray.quiet", FALSE)){
+        warning(..., '\n\n* To suppress this message, set `options("filearray.quiet" = TRUE)`', call. = call.)
+    }
+}

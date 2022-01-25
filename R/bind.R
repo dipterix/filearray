@@ -59,7 +59,7 @@
 #' 
 #' @export
 filearray_bind <- function(
-    ..., .list = list(), filebase = tempfile(), symlink = FALSE
+    ..., .list = list(), filebase = tempfile(), symlink = TRUE
 ){
     arrays <- c(list(...), .list)
     if(!length(arrays)){
@@ -100,6 +100,12 @@ filearray_bind <- function(
     start <- 1
     end <- 1
     
+    bind_info <- list(
+        is_binded = TRUE,
+        symlink = as.logical(symlink)
+    )
+    source_info <- list()
+    
     for(ii in seq_along(last_margin)){
         arr <- arrays[[ii]]
         end <- start -1 + last_margin[[ii]]
@@ -115,13 +121,19 @@ filearray_bind <- function(
                 re$partition_path(idx)
             )
         }
+        source_info[[ii]] <- arr$partition_path(seq_len(last_margin[[ii]]))
         
         start <- end + 1
     }
     
     if(symlink){
-        re$.mode <- "readonly"
+        bind_info$source_info <- source_info
     }
+    re$set_header("filearray_bind", bind_info)
+    
+    if(symlink){
+        re$.mode <- "readonly"
+    } 
     re
     
 }
