@@ -57,3 +57,8 @@ get_os <- function(){
     }
     return('unknown')
 }
+
+
+deparse1 <- function (expr, collapse = " ") {
+    paste(deparse(expr), collapse = collapse)
+}

@@ -41,7 +41,12 @@ guess_partition <- function(dim, elem_size){
 #' @param initialize whether to initialize partition files; default is false
 #' for performance considerations. However, if the array is dense, it is 
 #' recommended to set to true
-#' @param ... ignored, reserved for future compatibility
+#' @param ... additional headers to check used by \code{filearray_checkload}
+#' (see 'Details'). This argument is ignored by \code{filearray_create}, 
+#' reserved for future compatibility.
+#' @param symlink_ok whether arrays with symlink partitions can pass the test;
+#' this is usually used on binded arrays with symlinks; see 
+#' \code{\link{filearray_bind}};
 #' @return A \code{\link{FileArray-class}} instance.
 #' 
 #' @details The file arrays partition out-of-memory array objects and store them 
@@ -62,6 +67,15 @@ guess_partition <- function(dim, elem_size){
 #' }
 #' These two rules are not hard requirements. The goal is to reduce the
 #' numbers of partitions as much as possible. 
+#' 
+#' The arguments \code{...} in \code{filearray_checkload} should be named
+#' arguments that provide additional checks for the header information. 
+#' The check will fail if at least one header is not identical. For example,
+#' if an array contains header key-signature pair, one can use 
+#' \code{filearray_checkload(..., key = signature)} to validate the signature.
+#' Note the comparison will be rigid, meaning the storage type of the headers 
+#' will be considered as well. If the signature stored in the array is an 
+#' integer while provided is a double, then the check will result in failure.
 #' 
 #' @examples 
 #' 
@@ -84,6 +98,13 @@ guess_partition <- function(dim, elem_size){
 #' # load existing array
 #' filearray_load(filebase)
 #' 
+#' x$set_header("signature", "tom")
+#' filearray_checkload(filebase, signature = "tom")
+#' 
+#' \dontrun{
+#' # Trying to load with wrong signature
+#' filearray_checkload(filebase, signature = "jerry")
+#' }
 #' 
 #' 
 NULL
@@ -138,3 +159,34 @@ filearray_load <- function(filebase, mode = c('readwrite', 'readonly')){
     arr
 }
 
+#' @rdname filearray
+#' @export
+filearray_checkload <- function(
+    filebase, mode = c("readonly", "readwrite"), ..., symlink_ok = TRUE
+) {
+    mode <- match.arg(mode)
+    if(!dir.exists(filebase)){
+        stop("Filearray does not exists.")
+    }
+    arr <- filearray::filearray_load(filebase, mode = mode)
+    
+    if(!symlink_ok){
+        bind_info <- arr$get_header("filearray_bind", list())
+        if(isTRUE(bind_info$symlink)){
+            stop("The array partition files contain symlinks")
+        }
+    }
+    
+    if(...length() == 0){ return(arr) }
+    header_list <- list(...)
+    header_names <- names(header_list)
+    
+    for(nm in header_names){
+        expected <- arr$get_header(nm)
+        given <- header_list[[nm]]
+        if(nm != "" && !identical(given, expected)){
+            stop("The header `", nm, "` (", deparse1(expected), ") is not identical with given values (", deparse1(given), ").")
+        }
+    }
+    return(arr)
+}

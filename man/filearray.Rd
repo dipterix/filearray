@@ -4,6 +4,7 @@
 \alias{filearray}
 \alias{filearray_create}
 \alias{filearray_load}
+\alias{filearray_checkload}
 \title{Create or load existing file arrays}
 \usage{
 filearray_create(
@@ -16,6 +17,13 @@ filearray_create(
 )
 
 filearray_load(filebase, mode = c("readwrite", "readonly"))
+
+filearray_checkload(
+  filebase,
+  mode = c("readonly", "readwrite"),
+  ...,
+  symlink_ok = TRUE
+)
 }
 \arguments{
 \item{filebase}{a directory path to store arrays in the local file 
@@ -33,10 +41,16 @@ options include \code{'integer'}, \code{'logical'}, and \code{'raw'}.}
 for performance considerations. However, if the array is dense, it is 
 recommended to set to true}
 
-\item{...}{ignored, reserved for future compatibility}
+\item{...}{additional headers to check used by \code{filearray_checkload}
+(see 'Details'). This argument is ignored by \code{filearray_create}, 
+reserved for future compatibility.}
 
 \item{mode}{whether allows writing to the file; choices are 
 \code{'readwrite'} and \code{'readonly'}.}
+
+\item{symlink_ok}{whether arrays with symlink partitions can pass the test;
+this is usually used on binded arrays with symlinks; see 
+\code{\link{filearray_bind}};}
 }
 \value{
 A \code{\link{FileArray-class}} instance.
@@ -62,7 +76,16 @@ are determined internally following these priorities:
 \item{2. }{the number of partitions do not exceed 100}
 }
 These two rules are not hard requirements. The goal is to reduce the
-numbers of partitions as much as possible.
+numbers of partitions as much as possible. 
+
+The arguments \code{...} in \code{filearray_checkload} should be named
+arguments that provide additional checks for the header information. 
+The check will fail if at least one header is not identical. For example,
+if an array contains header key-signature pair, one can use 
+\code{filearray_checkload(..., key = signature)} to validate the signature.
+Note the comparison will be rigid, meaning the storage type of the headers 
+will be considered as well. If the signature stored in the array is an 
+integer while provided is a double, then the check will result in failure.
 }
 \examples{
 
@@ -85,6 +108,13 @@ x[1,2,]
 # load existing array
 filearray_load(filebase)
 
+x$set_header("signature", "tom")
+filearray_checkload(filebase, signature = "tom")
+
+\dontrun{
+# Trying to load with wrong signature
+filearray_checkload(filebase, signature = "jerry")
+}
 
 
 }
