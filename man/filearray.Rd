@@ -48,8 +48,8 @@ reserved for future compatibility.}
 \item{mode}{whether allows writing to the file; choices are 
 \code{'readwrite'} and \code{'readonly'}.}
 
-\item{symlink_ok}{whether arrays with symlink partitions can pass the test;
-this is usually used on binded arrays with symlinks; see 
+\item{symlink_ok}{whether arrays with symbolic-link partitions can pass 
+the test; this is usually used on bound arrays with symbolic-links; see 
 \code{\link{filearray_bind}};}
 }
 \value{

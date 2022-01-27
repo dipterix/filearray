@@ -44,8 +44,8 @@ guess_partition <- function(dim, elem_size){
 #' @param ... additional headers to check used by \code{filearray_checkload}
 #' (see 'Details'). This argument is ignored by \code{filearray_create}, 
 #' reserved for future compatibility.
-#' @param symlink_ok whether arrays with symlink partitions can pass the test;
-#' this is usually used on binded arrays with symlinks; see 
+#' @param symlink_ok whether arrays with symbolic-link partitions can pass 
+#' the test; this is usually used on bound arrays with symbolic-links; see 
 #' \code{\link{filearray_bind}};
 #' @return A \code{\link{FileArray-class}} instance.
 #' 

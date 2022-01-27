@@ -97,7 +97,7 @@ filearray_bind <- function(
     last_margins <- last_margins[nrow(last_margins),]
     
     if(!all(last_margins %% part_size == 0)){
-        quiet_warning("One or more arrays have last margin size that cannot be devided by `partition_size`. This will cause binded arrays to be mis-aligned. ")
+        quiet_warning("One or more arrays have last margin size that cannot be devided by `partition_size`. This will cause binding arrays to be mis-aligned. ")
     }
     
     dim[[length(dim)]] <- sum(last_margin) * part_size
@@ -108,7 +108,7 @@ filearray_bind <- function(
     end <- 1
     
     bind_info <- list(
-        is_binded = TRUE,
+        is_bound = TRUE,
         symlink = as.logical(symlink)
     )
     source_info <- list()

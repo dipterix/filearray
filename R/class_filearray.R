@@ -268,9 +268,9 @@ setRefClass(
                 }
                 expected_part <- as.integer(gsub("[^0-9]+", "", files)) + 1
                 if(!all(expected_part == partition_info[,1])){
-                    # check if this array is a binded array
+                    # check if this array is a bound array
                     bind_info <- .self$.header$filearray_bind
-                    if(is.list(bind_info) && isTRUE(bind_info$is_binded)){
+                    if(is.list(bind_info) && isTRUE(bind_info$is_bound)){
                         partition_info[,1] <- seq_along(partition_info[,1])
                         if(!all(expected_part == partition_info[,1])){
                             stop("Partition filenames mismatch with partition headers.")

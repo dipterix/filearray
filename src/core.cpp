@@ -95,7 +95,7 @@ List FARR_meta(const std::string& filebase) {
         if(TYPEOF(extra_headers) == VECSXP){
             
             // extra_headers is protected
-            SEXP extra_names = Rf_getAttrib(extra_headers, R_NamesSymbol);
+            SEXP extra_names = PROTECT(Rf_getAttrib(extra_headers, R_NamesSymbol));
             R_xlen_t extra_length = Rf_xlength(extra_names);
             
             if(extra_length){
@@ -133,6 +133,9 @@ List FARR_meta(const std::string& filebase) {
                 }
                 has_dimnames = 1;
             }
+            
+            // extra_names
+            UNPROTECT(1);
             
         } else {
             UNPROTECT(1);
@@ -199,7 +202,11 @@ List FARR_meta(const std::string& filebase) {
         _["cumsum_part_sizes"] = cum_part_size,
         _["dimnames"] = dimnames
     );
-    UNPROTECT(3 + has_dimnames);
+    
+    if( has_dimnames ){
+        UNPROTECT(1);
+    }
+    UNPROTECT(3);
     
     return re;
     

@@ -27,6 +27,11 @@ test_that("bind", {
     w <- filearray_bind(y, z, symlink = TRUE)
     l <- filearray_load(w$.filebase, mode = "readonly")
     
+    on.exit({
+        w$delete()
+        l$delete()
+    }, add = TRUE)
+    
     expect_null({
         filearray_checkload(filebase = w$.filebase, symlink_ok = TRUE)
         filearray_checkload(filebase = w$.filebase, partition = 3)
