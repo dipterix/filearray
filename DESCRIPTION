@@ -17,7 +17,7 @@ Description: Stores large arrays in files to avoid occupying large
     reading/writing via 'OpenMP'. Supports multiple non-character data 
     types (double, float, complex, integer, logical, and raw).
 Imports: 
-    digest (>= 0.6.29),
+    digest,
     methods,
     Rcpp
 Suggests: 
