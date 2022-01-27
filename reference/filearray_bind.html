@@ -18,7 +18,7 @@ same data type, partition size, and partition length"><!-- mathjax --><script sr
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.2.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
       </span>
     </div>
 
@@ -65,7 +65,14 @@ same data type, partition size, and partition length</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filearray_bind</span><span class="op">(</span><span class="va">...</span>, .list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, filebase <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, symlink <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filearray_bind</span><span class="op">(</span>
+  <span class="va">...</span>,
+  .list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
+  filebase <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>,
+  symlink <span class="op">=</span> <span class="cn">FALSE</span>,
+  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,
+  cache_ok <span class="op">=</span> <span class="cn">FALSE</span>
+<span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -78,8 +85,17 @@ same data type, partition size, and partition length</p>
 <dd><p>whether to use <code><a href="https://rdrr.io/r/base/files.html" class="external-link">file.symlink</a></code>; if true,
 then partition files will be symbolic-linked to the original arrays,
 otherwise the partition files will be copied over. If you want your data
-to be portable, do not use symbolic-links.</p></dd>
+to be portable, do not use symbolic-links. The default value is <code>FALSE</code></p></dd>
+<dt>overwrite</dt>
+<dd><p>whether to overwrite when <code>filebase</code> already exists;
+default is false, which raises errors</p></dd>
+<dt>cache_ok</dt>
+<dd><p>see 'Details', only used if <code>overwrite</code> is true.</p></dd>
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    <p>A bound array in <code>'FileArray'</code> class.</p>
+    </div>
     <div id="details">
     <h2>Details</h2>
     <p>The input arrays must share the same data type and partition size.
@@ -90,9 +106,25 @@ an array <code>x1</code> has dimension \(100x20x30\) with partition size
 partition size. This means if <code>x2</code> has dimension
 \(100x20x40\) and each partition size is <code>1</code>, then <code>x1</code> and 
 <code>x2</code> can be merged.</p>
-<p>The <code>symlink</code> option should be used with caution. Creating symbolic
-links is definitely faster than copying partition files. However, since 
-the partition files are simply linked to the original partition files, 
+<p>If <code>filebase</code> exists and <code>overwrite</code> is <code>FALSE</code>, an error will 
+always raise. If <code>overwrite=TRUE</code> and <code>cache_ok=FALSE</code>, then
+the existing <code>filebase</code> will be erased and any data stored within will
+be lost. 
+If both <code>overwrite</code> and <code>cache_ok</code> are <code>TRUE</code>, then 
+, before erasing <code>filebase</code>, the function validates the existing
+array header and compare the header signatures. If the existing header
+signature is the same as the array to be created, then the existing array 
+will be returned. This <code>cache_ok</code> could be extremely useful when
+binding large arrays with <code>symlink=FALSE</code> as the cache might avoid
+moving files around. However, <code>cache_ok</code> should be enabled with caution.
+This is because only the header information will be compared, but the 
+partition data will not be compared. If the existing array was generated from
+an old versions of the source arrays, but the data from the source arrays
+has been altered, then the <code>cache_ok=TRUE</code> is rarely proper as the cache
+is outdated.</p>
+<p>The <code>symlink</code> option should be used with extra caution. Creating 
+symbolic links is definitely faster than copying partition files. However, 
+since the partition files are simply linked to the original partition files, 
 changing to the input arrays will also affect the merged arrays, and 
 vice versa; see 'Examples'. Also for arrays created from symbolic links, if 
 the original 
