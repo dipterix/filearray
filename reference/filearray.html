@@ -107,8 +107,8 @@ reserved for future compatibility.</p></dd>
 <dd><p>whether allows writing to the file; choices are 
 <code>'readwrite'</code> and <code>'readonly'</code>.</p></dd>
 <dt>symlink_ok</dt>
-<dd><p>whether arrays with symlink partitions can pass the test;
-this is usually used on binded arrays with symlinks; see 
+<dd><p>whether arrays with symbolic-link partitions can pass 
+the test; this is usually used on bound arrays with symbolic-links; see 
 <code><a href="filearray_bind.html">filearray_bind</a></code>;</p></dd>
 </dl></div>
     <div id="value">
@@ -169,15 +169,15 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmp3g3rjv/file2b2764379f20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpyYWO3A/file2b85699ae465 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Assign values</span></span>
 <span class="r-in"><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">48000</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Subset</span></span>
 <span class="r-in"><span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="op">]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1.1756247  0.2632458 -0.6829763 -1.3918203  0.4321140 -1.2720068  1.3425566</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [8] -1.2564332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.7512006 -3.0609246  1.6106375 -0.7343685  0.7201263  0.1277101 -0.9602544</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [8]  0.4492873</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># load existing array</span></span>
 <span class="r-in"><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span></span>
@@ -187,7 +187,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmp3g3rjv/file2b2764379f20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpyYWO3A/file2b85699ae465 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">x</span><span class="op">$</span><span class="fu">set_header</span><span class="op">(</span><span class="st">"signature"</span>, <span class="st">"tom"</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"tom"</span><span class="op">)</span></span>
@@ -197,7 +197,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmp3g3rjv/file2b2764379f20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpyYWO3A/file2b85699ae465 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
 <span class="r-in"><span class="co"># Trying to load with wrong signature</span></span>
