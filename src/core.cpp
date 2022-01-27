@@ -89,7 +89,6 @@ List FARR_meta(const std::string& filebase) {
     size_t content_len2 = (size_t) content_len;
     
     SEXP dimnames = R_NilValue;
-    int has_dimnames = 0;
     if( content_len2 > 0 ){
         SEXP extra_headers = PROTECT(unserialize_connection(conn, content_len2));
         if(TYPEOF(extra_headers) == VECSXP){
@@ -131,14 +130,11 @@ List FARR_meta(const std::string& filebase) {
                     // extra_headers itself is the dimnames
                     dimnames = extra_headers;
                 }
-                has_dimnames = 1;
             }
             
             // extra_names
             UNPROTECT(1);
             
-        } else {
-            UNPROTECT(1);
         }
     }
     fclose(conn);
@@ -203,10 +199,7 @@ List FARR_meta(const std::string& filebase) {
         _["dimnames"] = dimnames
     );
     
-    if( has_dimnames ){
-        UNPROTECT(1);
-    }
-    UNPROTECT(3);
+    UNPROTECT(3 + (content_len2 > 0));
     
     return re;
     

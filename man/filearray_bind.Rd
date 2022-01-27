@@ -4,7 +4,7 @@
 \alias{filearray_bind}
 \title{Merge and bind homogeneous file arrays}
 \usage{
-filearray_bind(..., .list = list(), filebase = tempfile(), symlink = TRUE)
+filearray_bind(..., .list = list(), filebase = tempfile(), symlink = FALSE)
 }
 \arguments{
 \item{..., .list}{file array instances}
@@ -13,7 +13,8 @@ filearray_bind(..., .list = list(), filebase = tempfile(), symlink = TRUE)
 
 \item{symlink}{whether to use \code{\link[base]{file.symlink}}; if true,
 then partition files will be symbolic-linked to the original arrays,
-otherwise the partition files will be copied over}
+otherwise the partition files will be copied over. If you want your data
+to be portable, do not use symbolic-links.}
 }
 \description{
 The file arrays to be merged must be homogeneous:
@@ -56,9 +57,11 @@ x2 <- filearray_create(
 x2[] <- 5:6
 
 y1 <- filearray_bind(x1, x2, symlink = FALSE)
-y2 <- filearray_bind(x1, x2, symlink = TRUE)
+y2 <- filearray_bind(x1, x2)
 
 # y1 copies partition files, and y2 simply creates links 
+# if symlink is supported
+
 y1[] - y2[]
 
 # change x1

@@ -5,7 +5,8 @@
 #' @param filebase where to create merged array
 #' @param symlink whether to use \code{\link[base]{file.symlink}}; if true,
 #' then partition files will be symbolic-linked to the original arrays,
-#' otherwise the partition files will be copied over
+#' otherwise the partition files will be copied over. If you want your data
+#' to be portable, do not use symbolic-links. 
 #' @details The input arrays must share the same data type and partition size.
 #' The dimension for each partition should also be the same. For example
 #' an array \code{x1} has dimension \eqn{100x20x30} with partition size 
@@ -42,9 +43,11 @@
 #' x2[] <- 5:6
 #' 
 #' y1 <- filearray_bind(x1, x2, symlink = FALSE)
-#' y2 <- filearray_bind(x1, x2, symlink = TRUE)
+#' y2 <- filearray_bind(x1, x2)
 #' 
 #' # y1 copies partition files, and y2 simply creates links 
+#' # if symlink is supported
+#' 
 #' y1[] - y2[]
 #' 
 #' # change x1
@@ -59,8 +62,13 @@
 #' 
 #' @export
 filearray_bind <- function(
-    ..., .list = list(), filebase = tempfile(), symlink = TRUE
+    ..., .list = list(), filebase = tempfile(), 
+    symlink = FALSE
 ){
+    if(symlink && !getOption("filearray.symlink_enabled", FALSE)){
+        symlink <- FALSE
+        quiet_warning("Symbolic link is disabled. Force `symlink` to be FALSE")
+    }
     arrays <- c(list(...), .list)
     if(!length(arrays)){
         stop("`filearray_bind`: No file arrays to bind")
