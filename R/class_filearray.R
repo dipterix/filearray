@@ -619,10 +619,7 @@ setRefClass(
             
             dnames <- .self$dimnames()
             if(length(dnames) == length(dim)){
-                dnames <- structure(
-                    lapply(keep, function(d){ dnames[[keep]] }),
-                    names = names(dnames)[keep]
-                )
+                dnames <- dnames[keep]
                 if(length(keep) == 1){
                     re <- structure(re, names = dnames[[1]])
                 } else {
