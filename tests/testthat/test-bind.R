@@ -5,6 +5,7 @@ test_that("bind", {
     y <- filearray_create(tempfile(), dimension = c(2,3,4,10), partition_size = 3L)
     z <- filearray_create(tempfile(), dimension = c(2,3,4,10), partition_size = 3L)
     
+    options("filearray.quiet" = FALSE)
     on.exit({
         options("filearray.quiet" = FALSE)
         y$delete(force = TRUE)
@@ -17,12 +18,10 @@ test_that("bind", {
         }
     })
     
-    if(getOption("filearray.symlink_enabled", FALSE)){
-        testthat::expect_warning({
-            w <- filearray_bind(y, z, symlink = FALSE)
-            w$delete()
-        }, regexp = "^One or more arrays have last margin size.+")
-    }
+    testthat::expect_warning({
+        w <- filearray_bind(y, z, symlink = FALSE)
+        w$delete()
+    }, regexp = "^One or more arrays have last margin size.+")
     
     
     
@@ -64,7 +63,9 @@ test_that("bind", {
         apply(x, c(2,3), sum) * 2
     )
     
+    # Check if cached bind works
+    l <- filearray_bind(y, z, filebase = w$.filebase, symlink = w$.header$filearray_bind$symlink, overwrite = TRUE, cache_ok = TRUE)
     
-    
+    expect_true(attr(l, "cached_bind"))
     
 })

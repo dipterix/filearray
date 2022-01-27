@@ -40,6 +40,49 @@ in_rcmdcheck <- function (...) {
     return(FALSE)
 }
 
+symlink_enabled <- local({
+    enabled <- NA
+    function(){
+        if(!is.na(enabled)){ return(enabled) }
+        tempdir(check = TRUE)
+        f1 <- tempfile(pattern = 'filearray_simlink_test_from')
+        f2 <- tempfile(pattern = 'filearray_simlink_test_to')
+        on.exit({
+            if(file.exists(f1)){
+                unlink(f1)
+            }
+            if(file.exists(f2)){
+                unlink(f2)
+            }
+        }, add = FALSE)
+        s <- paste(sample(LETTERS), collapse = "")
+        writeLines(s, con = f1)
+        file.symlink(f1, to = f2)
+        en <- tryCatch({
+            if(identical(readLines(f2), s)){
+                TRUE
+            } else {
+                FALSE
+            }
+        }, error = function(e){
+            FALSE
+        }, warning = function(e){
+            FALSE
+        })
+        enabled <<- en
+        
+        if(file.exists(f1)){
+            unlink(f1)
+        }
+        if(file.exists(f2)){
+            unlink(f2)
+        }
+        on.exit({}, add = FALSE)
+        
+        return(enabled)
+    }
+})
+
 
 .onLoad <- function(libname, pkgname){
     if(hasOpenMP()){

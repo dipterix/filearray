@@ -4,7 +4,14 @@
 \alias{filearray_bind}
 \title{Merge and bind homogeneous file arrays}
 \usage{
-filearray_bind(..., .list = list(), filebase = tempfile(), symlink = FALSE)
+filearray_bind(
+  ...,
+  .list = list(),
+  filebase = tempfile(),
+  symlink = FALSE,
+  overwrite = FALSE,
+  cache_ok = FALSE
+)
 }
 \arguments{
 \item{..., .list}{file array instances}
@@ -14,7 +21,15 @@ filearray_bind(..., .list = list(), filebase = tempfile(), symlink = FALSE)
 \item{symlink}{whether to use \code{\link[base]{file.symlink}}; if true,
 then partition files will be symbolic-linked to the original arrays,
 otherwise the partition files will be copied over. If you want your data
-to be portable, do not use symbolic-links.}
+to be portable, do not use symbolic-links. The default value is \code{FALSE}}
+
+\item{overwrite}{whether to overwrite when \code{filebase} already exists;
+default is false, which raises errors}
+
+\item{cache_ok}{see 'Details', only used if \code{overwrite} is true.}
+}
+\value{
+A bound array in \code{'FileArray'} class.
 }
 \description{
 The file arrays to be merged must be homogeneous:
@@ -30,9 +45,26 @@ partition size. This means if \code{x2} has dimension
 \eqn{100x20x40} and each partition size is \code{1}, then \code{x1} and 
 \code{x2} can be merged.
 
-The \code{symlink} option should be used with caution. Creating symbolic
-links is definitely faster than copying partition files. However, since 
-the partition files are simply linked to the original partition files, 
+If \code{filebase} exists and \code{overwrite} is \code{FALSE}, an error will 
+always raise. If \code{overwrite=TRUE} and \code{cache_ok=FALSE}, then
+the existing \code{filebase} will be erased and any data stored within will
+be lost. 
+If both \code{overwrite} and \code{cache_ok} are \code{TRUE}, then 
+, before erasing \code{filebase}, the function validates the existing
+array header and compare the header signatures. If the existing header
+signature is the same as the array to be created, then the existing array 
+will be returned. This \code{cache_ok} could be extremely useful when
+binding large arrays with \code{symlink=FALSE} as the cache might avoid
+moving files around. However, \code{cache_ok} should be enabled with caution.
+This is because only the header information will be compared, but the 
+partition data will not be compared. If the existing array was generated from
+an old versions of the source arrays, but the data from the source arrays
+has been altered, then the \code{cache_ok=TRUE} is rarely proper as the cache
+is outdated.
+
+The \code{symlink} option should be used with extra caution. Creating 
+symbolic links is definitely faster than copying partition files. However, 
+since the partition files are simply linked to the original partition files, 
 changing to the input arrays will also affect the merged arrays, and 
 vice versa; see 'Examples'. Also for arrays created from symbolic links, if 
 the original 

@@ -216,6 +216,16 @@ setRefClass(
             .self$.header[[key]] <- value
             .self$.save_header()
         },
+        header_signature = function(include_path = TRUE){
+            header_sig <- digest::digest(.self$.header, algo = "sha256")
+            if( include_path ){
+                path <- normalizePath(.self$.filebase)
+                header_sig <- digest::digest(c(
+                    header_sig, path
+                ), algo = "sha256")
+            }
+            header_sig
+        },
         load = function(filebase, mode = c('readwrite', 'readonly')){
             mode <- match.arg(mode)
             

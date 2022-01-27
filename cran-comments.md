@@ -1,13 +1,3 @@
-## Reasons:
-
-* Bug fix
-* Fixed a violation of CRAN policy mentioned by Prof. Ripley by restricting 
-number of CPU cores to 2 in R checks:
-
-```
-using 8 threads is a serious violation of the CRAN policy,
-```
-
 ## Dev environment 
 * osx (ARM), R 4.1.2
 
@@ -19,7 +9,7 @@ using 8 threads is a serious violation of the CRAN policy,
 
 ## R CMD check results
 
-On R-4.1 and `devel`
+On `release` and `devel`
 0 errors | 0 warnings | 0 notes
 
 On R-4.0

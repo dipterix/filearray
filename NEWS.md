@@ -1,5 +1,21 @@
 # filearray (development version)
 
+# filearray 0.1.3
+
+* Automatically detect whether symbolic-link works and show warnings
+* Warnings can be suppressed
+* Allow extra headers to be set in `meta` file
+* Added header signature method
+* Fixed symbolic-link issues on `Windows` when partition sizes are 0
+* Added check-load function `filearray_checkload` to validate header
+* Fixed collapse method when `dimnames` are set
+* Fixed an unprotected variable in `C++` code
+* `filearray_bind` can use cache if the header signatures agree
+* `filearray_bind` can choose to force overwrite
+* Added package `digest` to `Imports`
+* Fixed a typo and several small bugs
+
+
 # filearray 0.1.2
 
 * Removed `flush` in saving data to let system decide when to flush to hard drive
