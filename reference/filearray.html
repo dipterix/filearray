@@ -169,15 +169,15 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpLgAbST/file2ac254cb963e </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Assign values</span></span>
 <span class="r-in"><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">48000</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Subset</span></span>
 <span class="r-in"><span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="op">]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.45612907 -0.02925858  0.19678795  1.40939499 -0.87924984  0.21777781</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7] -0.80797851  0.01203912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.47061409 -0.52617940  0.89005807 -1.02745892 -0.54816496 -0.14088318</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] -0.09991437 -1.21060759</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># load existing array</span></span>
 <span class="r-in"><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span></span>
@@ -187,7 +187,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpLgAbST/file2ac254cb963e </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">x</span><span class="op">$</span><span class="fu">set_header</span><span class="op">(</span><span class="st">"signature"</span>, <span class="st">"tom"</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"tom"</span><span class="op">)</span></span>
@@ -197,7 +197,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpLgAbST/file2ac254cb963e </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
 <span class="r-in"><span class="co"># Trying to load with wrong signature</span></span>
