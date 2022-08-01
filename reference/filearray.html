@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9001</span>
       </span>
     </div>
 
@@ -186,15 +186,15 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpz2yQ4Z/file31bd8f66595 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Assign values</span></span></span>
 <span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">48000</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Subset</span></span></span>
 <span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.55643113 -0.94698321 -0.07392371 -1.81383310  0.98230328  0.13706912</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7]  0.15188031  0.31397965</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.93490688  0.46760672 -0.03161758  0.95596442  0.55168231 -1.81589262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7]  1.39570174  0.42371777</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># load existing array</span></span></span>
 <span class="r-in"><span><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span></span></span>
@@ -204,7 +204,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpz2yQ4Z/file31bd8f66595 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x</span><span class="op">$</span><span class="fu">set_header</span><span class="op">(</span><span class="st">"signature"</span>, <span class="st">"tom"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"tom"</span><span class="op">)</span></span></span>
@@ -214,7 +214,7 @@ integer while provided is a double, then the check will result in failure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpz2yQ4Z/file31bd8f66595 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co"># Trying to load with wrong signature</span></span></span>
