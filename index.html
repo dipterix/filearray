@@ -36,7 +36,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -46,7 +46,7 @@
   <a href="reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -86,7 +86,6 @@
 <div class="page-header"><h1 id="file-backed-array-for-out-of-memory-computation">File-Backed Array for Out-of-memory Computation<a class="anchor" aria-label="anchor" href="#file-backed-array-for-out-of-memory-computation"></a>
 </h1></div>
 <!-- badges: start -->
-
 <p>Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via <code>OpenMP</code>. Supports multiple non-character data types (double, float, integer, complex, logical and raw).</p>
 <p><img src="https://raw.githubusercontent.com/dipterix/filearray/main/adhoc/readme-speed.png"></p>
 <p><small> Speed comparisons with <code>lazyarray</code> (<code>zstd</code>-compressed out-of-memory array), and in-memory operation. The speed test was conducted on an <code>MacBook Air (M1, 2020, 8GB RAM)</code>, with 8-threads. <code>filearray</code> is uniformly faster than <code>lazyarray</code>. Random access has almost the same speed as the native array operation in R. <em>(The actual speed may vary depending on the storage type and memory size)</em> </small></p>
@@ -94,21 +93,21 @@
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"filearray"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"filearray"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="install-develop-version">Install Develop Version<a class="anchor" aria-label="anchor" href="#install-develop-version"></a>
 </h3>
 <p>The internal functions are written in <code>C++</code>. To avoid compiling the packages, you can install from my personal repository. It’s automatically updated every hour. Currently available on <code>Windows</code> and <code>osx (Intel chip)</code> only.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>
-    dipterix <span class="op">=</span> <span class="st">'https://dipterix.r-universe.dev'</span>,
-    CRAN <span class="op">=</span> <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    dipterix <span class="op">=</span> <span class="st">'https://dipterix.r-universe.dev'</span>,</span>
+<span>    CRAN <span class="op">=</span> <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span><span class="op">)</span></span></code></pre></div>
 <p>Alternatively, you can compile from <code>Github</code> repository. This requires proper compilers (<code>rtools</code> on <code>windows</code>, or <code>xcode-select --install</code> on <code>osx</code>, or <code>build-essentials</code> on <code>linux</code>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># install.packages("remotes")</span>
-<span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dipterix/filearray"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dipterix/filearray"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -118,53 +117,53 @@
 <h4 id="createload-file-array">Create/load file array<a class="anchor" aria-label="anchor" href="#createload-file-array"></a>
 </h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span>
-<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>
-<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co"># load existing</span>
-<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_load</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span></span>
+<span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># load existing</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/filearray.html">filearray_load</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></code></pre></div>
 <p>See more: <code><a href="reference/filearray.html">help("filearray")</a></code></p>
 </div>
 <div class="section level4">
 <h4 id="assign--subset-array">Assign &amp; subset array<a class="anchor" aria-label="anchor" href="#assign--subset-array"></a>
 </h4>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span>
-<span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e6</span><span class="op">)</span></span>
+<span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="generics">Generics<a class="anchor" aria-label="anchor" href="#generics"></a>
 </h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="reference/typeof.html">typeof</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span>, <span class="va">min</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-
-<span class="va">val</span> <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">5</span>,<span class="fl">1</span><span class="op">]</span>
-<span class="fu"><a href="reference/fwhich.html">fwhich</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">val</span>, arr.ind <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/typeof.html">typeof</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span>, <span class="va">min</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">val</span> <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">5</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/fwhich.html">fwhich</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">val</span>, arr.ind <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>See more: <code><a href="reference/S3-filearray.html">help("S3-filearray")</a></code>, <code><a href="reference/fwhich.html">help("fwhich")</a></code></p>
 </div>
 <div class="section level4">
 <h4 id="map-reduce">Map-reduce<a class="anchor" aria-label="anchor" href="#map-reduce"></a>
 </h4>
 <p>Process segments of array and reduce to save memories.</p>
-<pre><code><span class="co"># Identical to sum(x, na.rm = TRUE)</span>
-<span class="fu"><a href="reference/mapreduce.html">mapreduce</a></span><span class="op">(</span><span class="va">x</span>, 
-          map <span class="op">=</span> \<span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">data</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span>, 
-          reduce <span class="op">=</span> \<span class="op">(</span><span class="va">mapped</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="co"># Identical to sum(x, na.rm = TRUE)</span></span>
+<span><span class="fu"><a href="reference/mapreduce.html">mapreduce</a></span><span class="op">(</span><span class="va">x</span>, </span>
+<span>          map <span class="op">=</span> \<span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">data</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span>, </span>
+<span>          reduce <span class="op">=</span> \<span class="op">(</span><span class="va">mapped</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span></code></pre>
 <p>See more: <code><a href="reference/mapreduce.html">help("mapreduce")</a></code></p>
 </div>
 <div class="section level4">
 <h4 id="collapse">Collapse<a class="anchor" aria-label="anchor" href="#collapse"></a>
 </h4>
 <p>Transform data, and collapse (calculate sum or mean) along margins.</p>
-<pre><code><span class="va">a</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="fl">4</span>, method <span class="op">=</span> <span class="st">"mean"</span>, transform <span class="op">=</span> <span class="st">"asis"</span><span class="op">)</span>
-
-<span class="co"># equivalent to</span>
-<span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="op">]</span>, <span class="fl">4</span>, <span class="va">mean</span><span class="op">)</span>
-
-<span class="va">a</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></code></pre>
+<pre><code><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="fl">4</span>, method <span class="op">=</span> <span class="st">"mean"</span>, transform <span class="op">=</span> <span class="st">"asis"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># equivalent to</span></span>
+<span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="op">]</span>, <span class="fl">4</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">a</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code></pre>
 <p>Available <code>transform</code> for double/integer numbers are:</p>
 <ul>
 <li>
@@ -208,7 +207,7 @@ curl -O https://mac.r-project.org/openmp/$OMP
     sudo tar fvx $OMP -C /</code></pre>
 <p>This is a one-time configuration. After the configuration, please run</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'filearray'</span>, type <span class="op">=</span> <span class="st">'source'</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>OpenMP</code> is detected, then the number of threads the maximum number of <code>CPU</code> cores on your machine, or <code>8</code>, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total processing cores.</p>
 <p>Simultaneous file read/write operation is recommended on modern <code>NVMe</code> solid-state drives or server <code>RAIDs</code>. On traditional <code>HDD</code>, it is recommended to use single thread.</p>
 </div>
@@ -284,7 +283,7 @@ curl -O https://mac.r-project.org/openmp/$OMP
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>

@@ -18,7 +18,7 @@ at C++ level using 'OpenMP'."><!-- mathjax --><script src="https://cdnjs.cloudfl
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -27,7 +27,7 @@ at C++ level using 'OpenMP'."><!-- mathjax --><script src="https://cdnjs.cloudfl
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -65,7 +65,7 @@ at <code>C++</code> level using 'OpenMP'.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filearray_threads</span><span class="op">(</span><span class="va">n</span>, reset_after_fork <span class="op">=</span> <span class="op">-</span><span class="fl">1L</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filearray_threads</span><span class="op">(</span><span class="va">n</span>, reset_after_fork <span class="op">=</span> <span class="op">-</span><span class="fl">1L</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -73,16 +73,21 @@ at <code>C++</code> level using 'OpenMP'.</p>
     <dl><dt>n</dt>
 <dd><p>number of threads to set. If <code>n</code> is negative,
 then default to the number of cores that computer has.</p></dd>
+
+
 <dt>reset_after_fork</dt>
 <dd><p>when forking a cluster (in <code>'osx'</code> or <code>'linux'</code>),
 the number of threads will be set to one to avoid memory issues. 
 Setting this to <code>1</code> will reset threads once forked 
 clusters are shut down. Setting to <code>0</code> will disable reset, 
 and <code>-1</code> to use last set values.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An integer of current number of threads</p>
+    
+
+<p>An integer of current number of threads</p>
     </div>
 
   </div>
@@ -97,7 +102,7 @@ and <code>-1</code> to use last set values.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

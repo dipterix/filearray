@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -43,7 +43,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -99,24 +99,24 @@
 </h2>
 <p>We mainly test the performance of <code>double</code> and <code>float</code> data type. The dimensions for both arrays are <code>100x100x100x100</code>. Both arrays are around <code>800MB</code> in native R. This is because R does not have float precision. However, while <code>double</code> array occupies <code>800MB</code> space on the hard disk, <code>float</code> array only uses half size (<code>400MB</code>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
-<span class="fu"><a href="../reference/filearray_threads.html">filearray_threads</a></span><span class="op">(</span><span class="op">)</span>
-<span class="co">#&gt; [1] 8</span>
-
-<span class="co"># Create file array and initialize partitions</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
-<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">file</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="va">x_dbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>
-<span class="va">x_dbl</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span>
-
-<span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">file</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="va">x_flt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">'float'</span><span class="op">)</span>
-<span class="va">x_flt</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span>
-
-<span class="co"># 800 MB double array</span>
-<span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/filearray_threads.html">filearray_threads</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 8</span></span>
+<span></span>
+<span><span class="co"># Create file array and initialize partitions</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">file</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">x_dbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">x_dbl</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">file</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">x_flt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">'float'</span><span class="op">)</span></span>
+<span><span class="va">x_flt</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 800 MB double array</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="simulation">Simulation<a class="anchor" aria-label="anchor" href="#simulation"></a>
@@ -152,64 +152,64 @@
 <li>partition margin</li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_flt</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr   min    lq mean median   uq  max neval</span>
-<span class="co">#&gt;  double 0.933 0.935 1.44  0.936 1.69 2.45     3</span>
-<span class="co">#&gt;   float 1.027 1.057 1.07  1.086 1.10 1.11     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr   min    lq mean median   uq  max neval</span></span>
+<span><span class="co">#&gt;  double 0.933 0.935 1.44  0.936 1.69 2.45     3</span></span>
+<span><span class="co">#&gt;   float 1.027 1.057 1.07  1.086 1.10 1.11     3</span></span></code></pre></div>
 <ol start="2" style="list-style-type: decimal">
 <li>Write along fast margin</li>
 </ol>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_dbl</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_flt</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;   expr  min   lq mean median   uq  max neval</span>
-<span class="co">#&gt; double 1.23 1.27 1.47   1.30 1.59 1.89     3</span>
-<span class="co">#&gt;  float 1.23 1.24 1.41   1.24 1.50 1.76     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">i</span>,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;   expr  min   lq mean median   uq  max neval</span></span>
+<span><span class="co">#&gt; double 1.23 1.27 1.47   1.30 1.59 1.89     3</span></span>
+<span><span class="co">#&gt;  float 1.23 1.24 1.41   1.24 1.50 1.76     3</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Writing along slow margin</li>
 </ol>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_dbl</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">x_flt</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span>
-<span class="co">#&gt;  double  3.18  3.22  3.28   3.27  3.32  3.38     3</span>
-<span class="co">#&gt;   float 20.04 20.04 20.44  20.05 20.64 21.22     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">i</span>,,,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span></span>
+<span><span class="co">#&gt;  double  3.18  3.22  3.28   3.27  3.32  3.38     3</span></span>
+<span><span class="co">#&gt;   float 20.04 20.04 20.44  20.05 20.64 21.22     3</span></span></code></pre></div>
 <p>In the current version, converting from <code>double</code> to <code>float</code> introduces overhead that delays the procedure.</p>
 </div>
 <div class="section level3">
@@ -220,70 +220,70 @@
 <li>Write blocks of data along the partition margin</li>
 </ol>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_flt</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr   min    lq  mean median    uq  max neval</span>
-<span class="co">#&gt;  double 0.650 0.684 0.911  0.718 1.041 1.37     3</span>
-<span class="co">#&gt;   float 0.626 0.662 0.783  0.698 0.861 1.02     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,,<span class="va">idx</span><span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr   min    lq  mean median    uq  max neval</span></span>
+<span><span class="co">#&gt;  double 0.650 0.684 0.911  0.718 1.041 1.37     3</span></span>
+<span><span class="co">#&gt;   float 0.626 0.662 0.783  0.698 0.861 1.02     3</span></span></code></pre></div>
 <ol start="2" style="list-style-type: decimal">
 <li>Write blocks of data along the fast margin</li>
 </ol>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_dbl</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_flt</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span>
-<span class="co">#&gt;  double 0.582 0.620 0.668  0.657 0.710 0.763     3</span>
-<span class="co">#&gt;   float 0.625 0.652 0.732  0.679 0.786 0.893     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span>,,<span class="va">idx</span>,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span></span>
+<span><span class="co">#&gt;  double 0.582 0.620 0.668  0.657 0.710 0.763     3</span></span>
+<span><span class="co">#&gt;   float 0.625 0.652 0.732  0.679 0.786 0.893     3</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Write blocks of data along slow margin</li>
 </ol>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_dbl</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>
-      <span class="va">x_flt</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span>
-    <span class="op">}</span>
-  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr  min   lq mean median   uq  max neval</span>
-<span class="co">#&gt;  double 4.48 4.48 4.64   4.48 4.72 4.95     3</span>
-<span class="co">#&gt;   float 2.64 2.70 2.73   2.77 2.78 2.79     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_dbl</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">idx</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="fl">10</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<span>      <span class="va">x_flt</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="va">idx</span>,,,<span class="op">]</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span>, unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr  min   lq mean median   uq  max neval</span></span>
+<span><span class="co">#&gt;  double 4.48 4.48 4.64   4.48 4.72 4.95     3</span></span>
+<span><span class="co">#&gt;   float 2.64 2.70 2.73   2.77 2.78 2.79     3</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -293,69 +293,69 @@
 <h3 id="read-the-whole-array">1. Read the whole array<a class="anchor" aria-label="anchor" href="#read-the-whole-array"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="op">]</span> <span class="op">}</span>,
-  float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="op">]</span> <span class="op">}</span>,
-  unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span>
-<span class="co">#&gt;  double 0.155 0.172 0.185  0.188 0.200 0.211     3</span>
-<span class="co">#&gt;   float 0.104 0.106 0.144  0.107 0.164 0.220     3</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">'s'</span>, times <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;    expr   min    lq  mean median    uq   max neval</span></span>
+<span><span class="co">#&gt;  double 0.155 0.172 0.185  0.188 0.200 0.211     3</span></span>
+<span><span class="co">#&gt;   float 0.104 0.106 0.144  0.107 0.164 0.220     3</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="read-along-margins">2. Read along margins<a class="anchor" aria-label="anchor" href="#read-along-margins"></a>
 </h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  farr_double_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,
-  farr_double_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,
-  farr_double_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,
-  farr_float_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,
-  farr_float_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,
-  farr_float_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,
-  native_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,
-  native_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,
-  native_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,
-  times <span class="op">=</span> <span class="fl">100L</span>, unit <span class="op">=</span> <span class="st">"ms"</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;                          expr   min    lq  mean median    uq    max neval</span>
-<span class="co">#&gt;  farr_double_partition_margin  2.01  2.66  4.02   2.85  3.64  71.06   100</span>
-<span class="co">#&gt;       farr_double_fast_margin  1.35  1.99  3.16   2.35  3.79  25.88   100</span>
-<span class="co">#&gt;       farr_double_slow_margin 33.25 36.52 44.11  37.32 38.76 125.61   100</span>
-<span class="co">#&gt;   farr_float_partition_margin  1.77  2.40  3.96   2.61  3.66  58.17   100</span>
-<span class="co">#&gt;        farr_float_fast_margin  1.33  1.85  2.80   2.08  3.43  11.01   100</span>
-<span class="co">#&gt;        farr_float_slow_margin 14.98 18.86 23.42  19.54 20.47 160.90   100</span>
-<span class="co">#&gt;       native_partition_margin  3.42  3.75  4.14   4.02  4.27   6.89   100</span>
-<span class="co">#&gt;            native_fast_margin  3.42  3.96  4.86   4.09  4.64  54.74   100</span>
-<span class="co">#&gt;            native_slow_margin 21.52 22.15 24.34  22.65 23.97  91.06   100</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  farr_double_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_double_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_double_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_float_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_float_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_float_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  native_partition_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span>,,,<span class="fl">1</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  native_fast_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span>,,<span class="fl">1</span>,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  native_slow_margin <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span><span class="fl">1</span>,,,<span class="op">]</span> <span class="op">}</span>,</span>
+<span>  times <span class="op">=</span> <span class="fl">100L</span>, unit <span class="op">=</span> <span class="st">"ms"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: milliseconds</span></span>
+<span><span class="co">#&gt;                          expr   min    lq  mean median    uq    max neval</span></span>
+<span><span class="co">#&gt;  farr_double_partition_margin  2.01  2.66  4.02   2.85  3.64  71.06   100</span></span>
+<span><span class="co">#&gt;       farr_double_fast_margin  1.35  1.99  3.16   2.35  3.79  25.88   100</span></span>
+<span><span class="co">#&gt;       farr_double_slow_margin 33.25 36.52 44.11  37.32 38.76 125.61   100</span></span>
+<span><span class="co">#&gt;   farr_float_partition_margin  1.77  2.40  3.96   2.61  3.66  58.17   100</span></span>
+<span><span class="co">#&gt;        farr_float_fast_margin  1.33  1.85  2.80   2.08  3.43  11.01   100</span></span>
+<span><span class="co">#&gt;        farr_float_slow_margin 14.98 18.86 23.42  19.54 20.47 160.90   100</span></span>
+<span><span class="co">#&gt;       native_partition_margin  3.42  3.75  4.14   4.02  4.27   6.89   100</span></span>
+<span><span class="co">#&gt;            native_fast_margin  3.42  3.96  4.86   4.09  4.64  54.74   100</span></span>
+<span><span class="co">#&gt;            native_slow_margin 21.52 22.15 24.34  22.65 23.97  91.06   100</span></span></code></pre></div>
 <p>The file array indexing is close to handling in-memory arrays in R!</p>
 </div>
 <div class="section level3">
 <h3 id="random-access">3. Random access<a class="anchor" aria-label="anchor" href="#random-access"></a>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># access 50 x 50 x 50 x 50 sub-array, with random indices</span>
-<span class="va">idx1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span>
-<span class="va">idx2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span>
-<span class="va">idx3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span>
-<span class="va">idx4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span>
-
-<span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  farr_double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,
-  farr_float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,
-  native <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,
-  times <span class="op">=</span> <span class="fl">100L</span>, unit <span class="op">=</span> <span class="st">"ms"</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;         expr   min    lq mean median   uq   max neval</span>
-<span class="co">#&gt;  farr_double 11.68 13.13 18.9  13.81 15.2 143.3   100</span>
-<span class="co">#&gt;   farr_float  8.29  8.89 12.0   9.95 10.6  63.6   100</span>
-<span class="co">#&gt;       native 30.86 31.94 34.0  32.62 33.1 103.0   100</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># access 50 x 50 x 50 x 50 sub-array, with random indices</span></span>
+<span><span class="va">idx1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">idx2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">idx3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">idx4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">50</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  farr_double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  farr_float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  native <span class="op">=</span> <span class="op">{</span> <span class="va">y</span><span class="op">[</span><span class="va">idx1</span>, <span class="va">idx2</span>, <span class="va">idx3</span>, <span class="va">idx4</span><span class="op">]</span> <span class="op">}</span>,</span>
+<span>  times <span class="op">=</span> <span class="fl">100L</span>, unit <span class="op">=</span> <span class="st">"ms"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: milliseconds</span></span>
+<span><span class="co">#&gt;         expr   min    lq mean median   uq   max neval</span></span>
+<span><span class="co">#&gt;  farr_double 11.68 13.13 18.9  13.81 15.2 143.3   100</span></span>
+<span><span class="co">#&gt;   farr_float  8.29  8.89 12.0   9.95 10.6  63.6   100</span></span>
+<span><span class="co">#&gt;       native 30.86 31.94 34.0  32.62 33.1 103.0   100</span></span></code></pre></div>
 <p>Random access could be faster than base R (also much less memory!)</p>
 </div>
 </div>
@@ -364,23 +364,23 @@
 </h2>
 <p>Collapse calculates the margin sum/mean. Collapse function in <code>filearray</code> uses single thread. This is because the bottle-neck often comes from hard-disk accessing speed. However, it is still faster than native R, and is more memory-efficient.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">4</span><span class="op">)</span>
-<span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span><span class="op">)</span>
-<span class="va">output</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span>
-<span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span>
-  farr_double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,
-  farr_float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,
-  native <span class="op">=</span> <span class="op">{</span> <span class="fu"><a href="../reference/apply.html">apply</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, <span class="va">sum</span><span class="op">)</span> <span class="op">}</span>,
-  dipsaus <span class="op">=</span> <span class="op">{</span> <span class="fu">dipsaus</span><span class="fu">::</span><span class="fu">collapse</span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, average <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">}</span>,
-  unit <span class="op">=</span> <span class="st">"s"</span>, times <span class="op">=</span> <span class="fl">5</span>
-<span class="op">)</span>
-
-<span class="co">#&gt; Unit: seconds</span>
-<span class="co">#&gt;         expr   min    lq  mean median    uq   max neval</span>
-<span class="co">#&gt;  farr_double 0.782 0.790 1.009  0.799 0.832 1.840     5</span>
-<span class="co">#&gt;   farr_float 0.765 0.779 0.929  0.930 1.043 1.127     5</span>
-<span class="co">#&gt;       native 0.964 1.174 1.222  1.213 1.370 1.390     5</span>
-<span class="co">#&gt;      dipsaus 0.185 0.190 0.202  0.199 0.203 0.233     5</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x_dbl</span><span class="op">)</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">output</span><span class="op">$</span><span class="fu">initialize_partition</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu">microbenchmark</span><span class="op">(</span></span>
+<span>  farr_double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,</span>
+<span>  farr_float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,</span>
+<span>  native <span class="op">=</span> <span class="op">{</span> <span class="fu"><a href="../reference/apply.html">apply</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, <span class="va">sum</span><span class="op">)</span> <span class="op">}</span>,</span>
+<span>  dipsaus <span class="op">=</span> <span class="op">{</span> <span class="fu">dipsaus</span><span class="fu">::</span><span class="fu">collapse</span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, average <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">}</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">"s"</span>, times <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; Unit: seconds</span></span>
+<span><span class="co">#&gt;         expr   min    lq  mean median    uq   max neval</span></span>
+<span><span class="co">#&gt;  farr_double 0.782 0.790 1.009  0.799 0.832 1.840     5</span></span>
+<span><span class="co">#&gt;   farr_float 0.765 0.779 0.929  0.930 1.043 1.127     5</span></span>
+<span><span class="co">#&gt;       native 0.964 1.174 1.222  1.213 1.370 1.390     5</span></span>
+<span><span class="co">#&gt;      dipsaus 0.185 0.190 0.202  0.199 0.203 0.233     5</span></span></code></pre></div>
 <p>The <code>dipsaus</code> package uses multiple threads to collapse arrays in-memory. It is <code>7~8x</code> as fast as base R. File array is <code>1~2x</code> as fast as base R. Both <code>dipsaus</code> and <code>filearray</code> have little memory over-heads.</p>
 </div>
   </div>
@@ -402,7 +402,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>

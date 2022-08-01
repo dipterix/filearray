@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -26,7 +26,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -63,34 +63,45 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S4 method for FileArray,ANY,`function`</span>
-<span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S4 method for FileArray,ANY,`NULL`</span>
-<span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S4 method for FileArray,ANY,missing</span>
-<span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for FileArray,ANY,`function`</span></span>
+<span><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for FileArray,ANY,`NULL`</span></span>
+<span><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for FileArray,ANY,missing</span></span>
+<span><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, <span class="va">map</span>, <span class="va">reduce</span>, buffer_size <span class="op">=</span> <span class="cn">NA</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a file array object</p></dd>
+
+
 <dt>map</dt>
 <dd><p>mapping function that receives 3 arguments; see 'Details'</p></dd>
+
+
 <dt>reduce</dt>
 <dd><p><code>NULL</code>, or a function that takes a list as input</p></dd>
+
+
 <dt>...</dt>
 <dd><p>passed to other methods</p></dd>
+
+
 <dt>buffer_size</dt>
 <dd><p>control how we split the array; see 'Details'</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>If <code>reduce</code> is <code>NULL</code>, return mapped results, otherwise
+    
+
+<p>If <code>reduce</code> is <code>NULL</code>, return mapped results, otherwise
 return reduced results from <code>reduce</code> function</p>
     </div>
     <div id="details">
@@ -136,46 +147,46 @@ partition files exist.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e5</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">## calculate summation</span></span>
-<span class="r-in"><span class="co"># identical to sum(x[]), but is more feasible in large cases</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, map <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">size</span><span class="op">)</span><span class="op">{</span></span>
-<span class="r-in">    <span class="co"># make sure `data` is all from array</span></span>
-<span class="r-in">    <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">!=</span> <span class="va">size</span><span class="op">)</span><span class="op">{</span></span>
-<span class="r-in">        <span class="va">data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">size</span><span class="op">]</span></span>
-<span class="r-in">    <span class="op">}</span></span>
-<span class="r-in">    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span>, reduce <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">mapped_list</span><span class="op">)</span><span class="op">{</span></span>
-<span class="r-in">    <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped_list</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e5</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">## calculate summation</span></span></span>
+<span class="r-in"><span><span class="co"># identical to sum(x[]), but is more feasible in large cases</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">mapreduce</span><span class="op">(</span><span class="va">x</span>, map <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">size</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="co"># make sure `data` is all from array</span></span></span>
+<span class="r-in"><span>    <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">!=</span> <span class="va">size</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span>        <span class="va">data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">size</span><span class="op">]</span></span></span>
+<span class="r-in"><span>    <span class="op">}</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span>, reduce <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">mapped_list</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">sum</span>, <span class="va">mapped_list</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -57.8865</span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">## Find elements are less than -3</span></span>
-<span class="r-in"><span class="va">positions</span> <span class="op">&lt;-</span> <span class="fu">mapreduce</span><span class="op">(</span></span>
-<span class="r-in">    <span class="va">x</span>,</span>
-<span class="r-in">    map <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">size</span>, <span class="va">first_index</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">        <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">!=</span> <span class="va">size</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">            <span class="va">data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">size</span><span class="op">]</span></span>
-<span class="r-in">        <span class="op">}</span></span>
-<span class="r-in">        <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span> <span class="op">&lt;</span> <span class="op">-</span><span class="fl">3</span><span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="va">first_index</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
-<span class="r-in">    <span class="op">}</span>,</span>
-<span class="r-in">    reduce <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">mapped_list</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">        <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">c</span>, <span class="va">mapped_list</span><span class="op">)</span></span>
-<span class="r-in">    <span class="op">}</span></span>
-<span class="r-in"><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">positions</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span class="r-in">    <span class="va">x</span><span class="op">[[</span><span class="va">positions</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">]</span></span>
-<span class="r-in"><span class="op">}</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">## Find elements are less than -3</span></span></span>
+<span class="r-in"><span><span class="va">positions</span> <span class="op">&lt;-</span> <span class="fu">mapreduce</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">x</span>,</span></span>
+<span class="r-in"><span>    map <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">size</span>, <span class="va">first_index</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>        <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">!=</span> <span class="va">size</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>            <span class="va">data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">size</span><span class="op">]</span></span></span>
+<span class="r-in"><span>        <span class="op">}</span></span></span>
+<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span> <span class="op">&lt;</span> <span class="op">-</span><span class="fl">3</span><span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="va">first_index</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">}</span>,</span></span>
+<span class="r-in"><span>    reduce <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">mapped_list</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">c</span>, <span class="va">mapped_list</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">positions</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">x</span><span class="op">[[</span><span class="va">positions</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -3.007064</span>
-<span class="r-in"></span>
-<span class="r-in"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -190,7 +201,7 @@ partition files exist.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

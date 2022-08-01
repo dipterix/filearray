@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -26,7 +26,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -108,48 +108,69 @@ range(x, na.rm = FALSE, ...)
 sum(x, na.rm = FALSE, ...)
 
 # S3 method for FileArray
-subset(x, ..., drop = FALSE)</code></pre></div>
+subset(x, ..., drop = FALSE, .env = parent.frame())</code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a file array</p></dd>
+
+
 <dt>drop</dt>
 <dd><p>whether to drop dimensions; see topic <code><a href="https://rdrr.io/r/base/Extract.html" class="external-link">Extract</a></code></p></dd>
+
+
 <dt>reshape</dt>
 <dd><p>a new dimension to set before returning subset results; default is <code>NULL</code> (use default dimensions)</p></dd>
+
+
 <dt>strict</dt>
 <dd><p>whether to allow indices to exceed bound; currently only accept <code>TRUE</code></p></dd>
+
+
 <dt>dimnames</dt>
 <dd><p>whether to preserve <code><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></code></p></dd>
+
+
 <dt>split_dim</dt>
 <dd><p>internally used; split dimension and calculate indices to
 manually speed up the subset; value ranged from 0 to size of dimension minus
 one.</p></dd>
+
+
 <dt>value</dt>
 <dd><p>value to substitute or set</p></dd>
+
+
 <dt>i, ...</dt>
 <dd><p>index set, or passed to other methods</p></dd>
+
+
 <dt>na.rm</dt>
 <dd><p>whether to remove <code>NA</code> values during the calculation</p></dd>
+
+
+<dt>.env</dt>
+<dd><p>environment to evaluate formula when evaluating subset margin indices.</p></dd>
+
 </dl></div>
     <div id="functions">
     <h2>Functions</h2>
     
-<ul><li><p><code>[.FileArray</code>: get element by position</p></li>
-<li><p><code>[&lt;-.FileArray</code>: assign array values</p></li>
-<li><p><code>[[.FileArray</code>: get element by index</p></li>
-<li><p><code>as.array.FileArray</code>: converts file array to native array in R</p></li>
-<li><p><code>dim.FileArray</code>: get dimensions</p></li>
-<li><p><code>dimnames.FileArray</code>: get dimension names</p></li>
-<li><p><code>dimnames&lt;-.FileArray</code>: set dimension names</p></li>
-<li><p><code>length.FileArray</code>: get array length</p></li>
-<li><p><code>max.FileArray</code>: get max value</p></li>
-<li><p><code>min.FileArray</code>: get min value</p></li>
-<li><p><code>range.FileArray</code>: get value range</p></li>
-<li><p><code>sum.FileArray</code>: get summation</p></li>
-<li><p><code>subset.FileArray</code>: get subset file array with formulae</p></li>
+<ul><li><p><code>[</code>: get element by position</p></li>
+<li><p><code>`[`(FileArray) &lt;- value</code>: assign array values</p></li>
+<li><p><code>[[</code>: get element by index</p></li>
+<li><p><code>as.array(FileArray)</code>: converts file array to native array in R</p></li>
+<li><p><code>dim(FileArray)</code>: get dimensions</p></li>
+<li><p><code>dimnames(FileArray)</code>: get dimension names</p></li>
+<li><p><code>dimnames(FileArray) &lt;- value</code>: set dimension names</p></li>
+<li><p><code>length(FileArray)</code>: get array length</p></li>
+<li><p><code>max(FileArray)</code>: get max value</p></li>
+<li><p><code>min(FileArray)</code>: get min value</p></li>
+<li><p><code>range(FileArray)</code>: get value range</p></li>
+<li><p><code>sum(FileArray)</code>: get summation</p></li>
+<li><p><code>subset(FileArray)</code>: get subset file array with formulae</p></li>
 </ul></div>
 
   </div>
@@ -164,7 +185,7 @@ one.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -18,7 +18,7 @@ same data type, partition size, and partition length"><!-- mathjax --><script sr
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -27,7 +27,7 @@ same data type, partition size, and partition length"><!-- mathjax --><script sr
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -65,36 +65,47 @@ same data type, partition size, and partition length</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filearray_bind</span><span class="op">(</span>
-  <span class="va">...</span>,
-  .list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  filebase <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>,
-  symlink <span class="op">=</span> <span class="cn">FALSE</span>,
-  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,
-  cache_ok <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filearray_bind</span><span class="op">(</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  .list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  filebase <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  symlink <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cache_ok <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>..., .list</dt>
 <dd><p>file array instances</p></dd>
+
+
 <dt>filebase</dt>
 <dd><p>where to create merged array</p></dd>
+
+
 <dt>symlink</dt>
 <dd><p>whether to use <code><a href="https://rdrr.io/r/base/files.html" class="external-link">file.symlink</a></code>; if true,
 then partition files will be symbolic-linked to the original arrays,
 otherwise the partition files will be copied over. If you want your data
 to be portable, do not use symbolic-links. The default value is <code>FALSE</code></p></dd>
+
+
 <dt>overwrite</dt>
 <dd><p>whether to overwrite when <code>filebase</code> already exists;
 default is false, which raises errors</p></dd>
+
+
 <dt>cache_ok</dt>
 <dd><p>see 'Details', only used if <code>overwrite</code> is true.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A bound array in <code>'FileArray'</code> class.</p>
+    
+
+<p>A bound array in <code>'FileArray'</code> class.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -139,44 +150,44 @@ for details.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">partition_size</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
-<span class="r-in"><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"double"</span></span>
-<span class="r-in"><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span></span>
-<span class="r-in">    <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="va">type</span>,</span>
-<span class="r-in">    partition_size <span class="op">=</span> <span class="va">partition_size</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">x1</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span></span>
-<span class="r-in"><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span></span>
-<span class="r-in">    <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">)</span>, type <span class="op">=</span> <span class="va">type</span>,</span>
-<span class="r-in">    partition_size <span class="op">=</span> <span class="va">partition_size</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">x2</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">5</span><span class="op">:</span><span class="fl">6</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">y1</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, symlink <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">y2</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># y1 copies partition files, and y2 simply creates links </span></span>
-<span class="r-in"><span class="co"># if symlink is supported</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">y1</span><span class="op">[</span><span class="op">]</span> <span class="op">-</span> <span class="va">y2</span><span class="op">[</span><span class="op">]</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">partition_size</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"double"</span></span></span>
+<span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="va">type</span>,</span></span>
+<span class="r-in"><span>    partition_size <span class="op">=</span> <span class="va">partition_size</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x1</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span></span></span>
+<span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">)</span>, type <span class="op">=</span> <span class="va">type</span>,</span></span>
+<span class="r-in"><span>    partition_size <span class="op">=</span> <span class="va">partition_size</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x2</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">5</span><span class="op">:</span><span class="fl">6</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">y1</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, symlink <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">y2</span> <span class="op">&lt;-</span> <span class="fu">filearray_bind</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># y1 copies partition files, and y2 simply creates links </span></span></span>
+<span class="r-in"><span><span class="co"># if symlink is supported</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">y1</span><span class="op">[</span><span class="op">]</span> <span class="op">-</span> <span class="va">y2</span><span class="op">[</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    0    0    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    0    0    0</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># change x1</span></span>
-<span class="r-in"><span class="va">x1</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># y1 is not affected</span></span>
-<span class="r-in"><span class="va">y1</span><span class="op">[</span><span class="op">]</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># change x1</span></span></span>
+<span class="r-in"><span><span class="va">x1</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># y1 is not affected</span></span></span>
+<span class="r-in"><span><span class="va">y1</span><span class="op">[</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    3    5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    2    4    6</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># y2 changes </span></span>
-<span class="r-in"><span class="va">y2</span><span class="op">[</span><span class="op">]</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># y2 changes </span></span></span>
+<span class="r-in"><span><span class="va">y2</span><span class="op">[</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    3    5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    2    4    6</span>
-<span class="r-in"></span>
-<span class="r-in"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -191,7 +202,7 @@ for details.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

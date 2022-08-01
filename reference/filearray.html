@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9000</span>
       </span>
     </div>
 
@@ -26,7 +26,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -63,23 +63,23 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filearray_create</span><span class="op">(</span>
-  <span class="va">filebase</span>,
-  <span class="va">dimension</span>,
-  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"double"</span>, <span class="st">"float"</span>, <span class="st">"integer"</span>, <span class="st">"logical"</span>, <span class="st">"raw"</span>, <span class="st">"complex"</span><span class="op">)</span>,
-  partition_size <span class="op">=</span> <span class="cn">NA</span>,
-  initialize <span class="op">=</span> <span class="cn">FALSE</span>,
-  <span class="va">...</span>
-<span class="op">)</span>
-
-<span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span>, mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"readwrite"</span>, <span class="st">"readonly"</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">filearray_checkload</span><span class="op">(</span>
-  <span class="va">filebase</span>,
-  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"readonly"</span>, <span class="st">"readwrite"</span><span class="op">)</span>,
-  <span class="va">...</span>,
-  symlink_ok <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filearray_create</span><span class="op">(</span></span>
+<span>  <span class="va">filebase</span>,</span>
+<span>  <span class="va">dimension</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"double"</span>, <span class="st">"float"</span>, <span class="st">"integer"</span>, <span class="st">"logical"</span>, <span class="st">"raw"</span>, <span class="st">"complex"</span><span class="op">)</span>,</span>
+<span>  partition_size <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  initialize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span>, mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"readwrite"</span>, <span class="st">"readonly"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">filearray_checkload</span><span class="op">(</span></span>
+<span>  <span class="va">filebase</span>,</span>
+<span>  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"readonly"</span>, <span class="st">"readwrite"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  symlink_ok <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -87,33 +87,50 @@
     <dl><dt>filebase</dt>
 <dd><p>a directory path to store arrays in the local file 
 system. When creating an array, the path must not exist.</p></dd>
+
+
 <dt>dimension</dt>
 <dd><p>dimension of the array, at least length of 2</p></dd>
+
+
 <dt>type</dt>
 <dd><p>storage type of the array; default is <code>'double'</code>. Other
 options include <code>'integer'</code>, <code>'logical'</code>, and <code>'raw'</code>.</p></dd>
+
+
 <dt>partition_size</dt>
 <dd><p>positive partition size for the last margin, or
 <code>NA</code> to automatically guess; see 'Details'.</p></dd>
+
+
 <dt>initialize</dt>
 <dd><p>whether to initialize partition files; default is false
 for performance considerations. However, if the array is dense, it is 
 recommended to set to true</p></dd>
+
+
 <dt>...</dt>
 <dd><p>additional headers to check used by <code>filearray_checkload</code>
 (see 'Details'). This argument is ignored by <code>filearray_create</code>, 
 reserved for future compatibility.</p></dd>
+
+
 <dt>mode</dt>
 <dd><p>whether allows writing to the file; choices are 
 <code>'readwrite'</code> and <code>'readonly'</code>.</p></dd>
+
+
 <dt>symlink_ok</dt>
 <dd><p>whether arrays with symbolic-link partitions can pass 
 the test; this is usually used on bound arrays with symbolic-links; see 
 <code><a href="filearray_bind.html">filearray_bind</a></code>;</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code><a href="FileArray-class.html">FileArray-class</a></code> instance.</p>
+    
+
+<p>A <code><a href="FileArray-class.html">FileArray-class</a></code> instance.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -153,58 +170,58 @@ integer while provided is a double, then the check will result in failure.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Prepare </span></span>
-<span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span></span>
-<span class="r-in"><span class="va">filebase</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">filebase</span>, <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># create array</span></span>
-<span class="r-in"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">filearray_create</span><span class="op">(</span><span class="va">filebase</span>, dimension <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">30</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Prepare </span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">filebase</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span><span class="op">)</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">filebase</span>, <span class="cn">TRUE</span><span class="op">)</span> <span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># create array</span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">filearray_create</span><span class="op">(</span><span class="va">filebase</span>, dimension <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">30</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reference class object of class "FileArray"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mode: readwrite </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension: 200x30x8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Assign values</span></span>
-<span class="r-in"><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">48000</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Subset</span></span>
-<span class="r-in"><span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="op">]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.47061409 -0.52617940  0.89005807 -1.02745892 -0.54816496 -0.14088318</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7] -0.09991437 -1.21060759</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># load existing array</span></span>
-<span class="r-in"><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Assign values</span></span></span>
+<span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">48000</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Subset</span></span></span>
+<span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.55643113 -0.94698321 -0.07392371 -1.81383310  0.98230328  0.13706912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7]  0.15188031  0.31397965</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># load existing array</span></span></span>
+<span class="r-in"><span><span class="fu">filearray_load</span><span class="op">(</span><span class="va">filebase</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reference class object of class "FileArray"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mode: readwrite </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension: 200x30x8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">x</span><span class="op">$</span><span class="fu">set_header</span><span class="op">(</span><span class="st">"signature"</span>, <span class="st">"tom"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"tom"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">x</span><span class="op">$</span><span class="fu">set_header</span><span class="op">(</span><span class="st">"signature"</span>, <span class="st">"tom"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"tom"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reference class object of class "FileArray"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mode: readonly </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension: 200x30x8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> # of partitions: 8 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpKbYnN6/file2b56608977af </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="co"># Trying to load with wrong signature</span></span>
-<span class="r-in"><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"jerry"</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmpdq3As3/file367154ca1b62 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># Trying to load with wrong signature</span></span></span>
+<span class="r-in"><span><span class="fu">filearray_checkload</span><span class="op">(</span><span class="va">filebase</span>, signature <span class="op">=</span> <span class="st">"jerry"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -219,7 +236,7 @@ integer while provided is a double, then the check will result in failure.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
