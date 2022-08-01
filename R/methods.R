@@ -15,6 +15,7 @@
 #' manually speed up the subset; value ranged from 0 to size of dimension minus
 #' one.
 #' @param i,... index set, or passed to other methods
+#' @param .env environment to evaluate formula when evaluating subset margin indices.
 NULL
 
 #' @describeIn S3-filearray get element by position
@@ -381,7 +382,7 @@ sum.FileArray <- function(x, na.rm = FALSE, ...){
 
 #' @describeIn S3-filearray get subset file array with formulae
 #' @export
-subset.FileArray <- function(x, ..., drop = FALSE){
+subset.FileArray <- function(x, ..., drop = FALSE, .env = parent.frame()){
     if(...length() == 0){
         stop("No filters to subset")
     }
@@ -412,9 +413,7 @@ subset.FileArray <- function(x, ..., drop = FALSE){
         if(is.null(criteria[[name]])){
             return(seq_len(dim[[ii]]))
         }
-        with(dnames, {
-            eval(criteria[[name]])
-        })
+        eval(criteria[[name]], envir = dnames, enclos = .env)
     })
     do.call(`[`, c(list(x = quote(x), drop = drop), locs))
 }

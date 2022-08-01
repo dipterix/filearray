@@ -49,7 +49,7 @@
 
 \method{sum}{FileArray}(x, na.rm = FALSE, ...)
 
-\method{subset}{FileArray}(x, ..., drop = FALSE)
+\method{subset}{FileArray}(x, ..., drop = FALSE, .env = parent.frame())
 }
 \arguments{
 \item{x}{a file array}
@@ -71,36 +71,38 @@ one.}
 \item{i, ...}{index set, or passed to other methods}
 
 \item{na.rm}{whether to remove \code{NA} values during the calculation}
+
+\item{.env}{environment to evaluate formula when evaluating subset margin indices.}
 }
 \description{
 These are 'S3' methods for 'FileArray'
 }
 \section{Functions}{
 \itemize{
-\item \code{[.FileArray}: get element by position
+\item \code{[}: get element by position
 
-\item \code{[<-.FileArray}: assign array values
+\item \code{`[`(FileArray) <- value}: assign array values
 
-\item \code{[[.FileArray}: get element by index
+\item \code{[[}: get element by index
 
-\item \code{as.array.FileArray}: converts file array to native array in R
+\item \code{as.array(FileArray)}: converts file array to native array in R
 
-\item \code{dim.FileArray}: get dimensions
+\item \code{dim(FileArray)}: get dimensions
 
-\item \code{dimnames.FileArray}: get dimension names
+\item \code{dimnames(FileArray)}: get dimension names
 
-\item \code{dimnames<-.FileArray}: set dimension names
+\item \code{dimnames(FileArray) <- value}: set dimension names
 
-\item \code{length.FileArray}: get array length
+\item \code{length(FileArray)}: get array length
 
-\item \code{max.FileArray}: get max value
+\item \code{max(FileArray)}: get max value
 
-\item \code{min.FileArray}: get min value
+\item \code{min(FileArray)}: get min value
 
-\item \code{range.FileArray}: get value range
+\item \code{range(FileArray)}: get value range
 
-\item \code{sum.FileArray}: get summation
+\item \code{sum(FileArray)}: get summation
 
-\item \code{subset.FileArray}: get subset file array with formulae
+\item \code{subset(FileArray)}: get subset file array with formulae
+
 }}
-

@@ -1,7 +1,7 @@
 Package: filearray
 Type: Package
 Title: File-Backed Array for Out-of-Memory Computation
-Version: 0.1.3
+Version: 0.1.3.9000
 Language: en-US
 Encoding: UTF-8
 License: LGPL-3
@@ -24,7 +24,7 @@ Suggests:
     rmarkdown,
     knitr,
     testthat (>= 3.0.0)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 LinkingTo: 
     BH,
     Rcpp
