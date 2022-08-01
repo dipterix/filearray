@@ -255,26 +255,26 @@ SEXP FARR_subset_assign_template(
     int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
     const boost::interprocess::mode_t mode = boost::interprocess::read_write;
     
-    std::map<int64_t, boost::interprocess::file_mapping*> conn_map;
-    std::map<int64_t, bool> conn_exist;
-
-    std::map<int64_t, bool>::iterator it2;
-
-    // it = conn_map.find(part);
-    for(IntegerVector::iterator partptr = partitions.begin();
-        partptr != partitions.end(); partptr++){
-        it2 = conn_exist.find(*partptr);
-        if(it2 == conn_exist.end()){
-            try {
-                std::string file = filebase + std::to_string(*partptr) + ".farr";
-                boost::interprocess::file_mapping *fm = new boost::interprocess::file_mapping(file.c_str(), mode);
-                conn_map.insert( std::pair<int64_t, boost::interprocess::file_mapping*>(*partptr, fm) );
-                conn_exist.insert( std::pair<int64_t, bool>(*partptr, true) );
-            } catch (...){
-                conn_exist.insert( std::pair<int64_t, bool>(*partptr, false) );
-            }
-        }
-    }
+    // std::map<int64_t, boost::interprocess::file_mapping*> conn_map;
+    // std::map<int64_t, bool> conn_exist;
+    // 
+    // std::map<int64_t, bool>::iterator it2;
+    // 
+    // // it = conn_map.find(part);
+    // for(IntegerVector::iterator partptr = partitions.begin();
+    //     partptr != partitions.end(); partptr++){
+    //     it2 = conn_exist.find(*partptr);
+    //     if(it2 == conn_exist.end()){
+    //         try {
+    //             std::string file = filebase + std::to_string(*partptr) + ".farr";
+    //             boost::interprocess::file_mapping *fm = new boost::interprocess::file_mapping(file.c_str(), mode);
+    //             conn_map.insert( std::pair<int64_t, boost::interprocess::file_mapping*>(*partptr, fm) );
+    //             conn_exist.insert( std::pair<int64_t, bool>(*partptr, true) );
+    //         } catch (...){
+    //             conn_exist.insert( std::pair<int64_t, bool>(*partptr, false) );
+    //         }
+    //     }
+    // }
     
 #pragma omp parallel num_threads(ncores)
 {
@@ -321,19 +321,42 @@ SEXP FARR_subset_assign_template(
         
         
         try{
-            // boost::interprocess::file_mapping fm(file.c_str(), mode);
-            std::map<int64_t, boost::interprocess::file_mapping*>::const_iterator it = conn_map.find(part);
-
-            if(it == conn_map.end()){
-                has_error = part;
-                error_msg = "Cannot open partition " + std::to_string(part + 1);
-                continue;
-            }
+            /*
+             * On most OS, there is a limit on how many descriptors that open
+             * simultaneously:
+             * (OSX) launchctl limit maxfiles
+             * 
+             * Besides, the closed file descriptor will be reused quickly on 
+             * many Unix systems
+             * 
+             * https://docs.fedoraproject.org/en-US/Fedora_Security_Team/1/html/Defensive_Coding/sect-Defensive_Coding-Tasks-Descriptors.html
+             * 
+             * Unlike process IDs, which are recycle only gradually, the kernel 
+             * always allocates the lowest unused file descriptor when a new 
+             * descriptor is created. This means that in a multi-threaded 
+             * program which constantly opens and closes file descriptors, 
+             * descriptors are reused very quickly. Unless descriptor closing 
+             * and other operations on the same file descriptor are synchronized 
+             * (typically, using a mutex), there will be race coniditons and 
+             * I/O operations will be applied to the wrong file descriptor. 
+             * 
+             * https://stackoverflow.com/questions/52087692/can-multiple-file-objects-share-the-same-file-descriptor
+             */
+            boost::interprocess::file_mapping fm(file.c_str(), mode);
+            // std::map<int64_t, boost::interprocess::file_mapping*>::const_iterator it = conn_map.find(part);
+            // 
+            // if(it == conn_map.end()){
+            //     has_error = part;
+            //     error_msg = "Cannot open partition " + std::to_string(part + 1);
+            //     continue;
+            // }
             
             int64_t region_len = elem_size * (idx1_end - idx1_start + 1 + block_size * (idx2_end - idx2_start));
             int64_t region_offset = FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start);
+            // boost::interprocess::mapped_region region(
+            //         *(it->second), mode, region_offset, region_len);
             boost::interprocess::mapped_region region(
-                    *(it->second), mode, region_offset, region_len);
+                    fm, mode, region_offset, region_len);
             region.advise(boost::interprocess::mapped_region::advice_sequential);
             
             char* begin = static_cast<char*>(region.get_address());
@@ -352,6 +375,7 @@ SEXP FARR_subset_assign_template(
                 idx1_start, idx2_start, 
                 idx2_ptr, idx2_len );
             
+            
             // region.flush();
         } catch(std::exception &ex){
             has_error = part;
@@ -364,10 +388,10 @@ SEXP FARR_subset_assign_template(
     }
 }
 
-    std::map<int64_t, boost::interprocess::file_mapping*>::iterator it1 = conn_map.begin();
-    for(; it1 != conn_map.end(); it1++){
-        delete it1->second;
-    }
+    // std::map<int64_t, boost::interprocess::file_mapping*>::iterator it1 = conn_map.begin();
+    // for(; it1 != conn_map.end(); it1++){
+    //     delete it1->second;
+    // }
 
     // UNPROTECT(ncores);
     if( has_error >= 0 ){
