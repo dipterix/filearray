@@ -518,6 +518,7 @@ List schedule(const SEXP listOrEnv,
     
     // get idx1 range
     SEXP idx1range = PROTECT(Rf_allocVector(REALSXP, 2));
+    Rf_setAttrib(idx1range, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
     n_protected++;
     int64_t* idx1_start = (int64_t*) REAL(idx1range);
     int64_t* idx1_end = idx1_start + 1;
