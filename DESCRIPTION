@@ -1,11 +1,11 @@
 Package: filearray
 Type: Package
 Title: File-Backed Array for Out-of-Memory Computation
-Version: 0.1.3.9001
+Version: 0.1.4
 Language: en-US
 Encoding: UTF-8
 License: LGPL-3
-URL: http://dipterix.org/filearray/, https://github.com/dipterix/filearray
+URL: https://dipterix.org/filearray/, https://github.com/dipterix/filearray
 BugReports: https://github.com/dipterix/filearray/issues
 Authors@R: c(
     person(

@@ -1,5 +1,12 @@
 # filearray (development version)
 
+# filearray 0.1.4
+
+* Fixed a bug when allocated memory is one byte short than requested. The bug would crash R when triggered in certain cases.
+* Removed limit to the maximum number of partitions when writing. The previous implementation creates and opens related file descriptors all at once before writing. This setup will raise errors when the number of connections reach to certain limit, often defined by the operating systems. This update only opens the connection on demand. The performance might be impacted when writing to disk, but in return, the program will be more robust
+* Fixed `subset` function environment not resolved correctly when using formula
+* Added `filearray_load_or_create` as an alternative to `filearray_checkload` by automatically replace existing obsolete array files if the headers, dimensions, or data types don't match. Also `on_missing` argument is provided to allow array initialization if new array is created.
+
 # filearray 0.1.3
 
 * Automatically detect whether symbolic-link works and show warnings

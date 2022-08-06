@@ -5,6 +5,7 @@
 \alias{filearray_create}
 \alias{filearray_load}
 \alias{filearray_checkload}
+\alias{filearray_load_or_create}
 \title{Create or load existing file arrays}
 \usage{
 filearray_create(
@@ -23,6 +24,19 @@ filearray_checkload(
   mode = c("readonly", "readwrite"),
   ...,
   symlink_ok = TRUE
+)
+
+filearray_load_or_create(
+  filebase,
+  dimension,
+  on_missing = NULL,
+  type = NA,
+  ...,
+  mode = c("readonly", "readwrite"),
+  symlink_ok = TRUE,
+  initialize = FALSE,
+  partition_size = NA,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -51,6 +65,11 @@ reserved for future compatibility.}
 \item{symlink_ok}{whether arrays with symbolic-link partitions can pass 
 the test; this is usually used on bound arrays with symbolic-links; see 
 \code{\link{filearray_bind}};}
+
+\item{on_missing}{function to handle file array (such as initialization)
+when a new array is created; must take only one argument, the array object}
+
+\item{verbose}{whether to print out some debug messages}
 }
 \value{
 A \code{\link{FileArray-class}} instance.
@@ -116,6 +135,28 @@ filearray_checkload(filebase, signature = "tom")
 filearray_checkload(filebase, signature = "jerry")
 }
 
+
+# check-load, and create a new array if fail
+x <- filearray_load_or_create(
+    filebase = filebase, dimension = c(200, 30, 8),
+    verbose = TRUE, signature = "henry"
+)
+x$get_header("signature")
+
+# check-load with initialization
+x <- filearray_load_or_create(
+    filebase = filebase, 
+    dimension = c(3, 4, 5),
+    verbose = TRUE, mode = "readonly",
+    on_missing = function(array) {
+        array[] <- seq_len(60)
+    }
+)
+
+x[1:3,1,1]
+
+# Clean up
+unlink(filebase, recursive = TRUE)
 
 }
 \author{

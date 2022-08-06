@@ -208,13 +208,16 @@ setRefClass(
             }
             return(default)
         },
-        set_header = function(key, value){
+        set_header = function(key, value, save = TRUE){
             force(value)
             if(key %in% RESERVED_HEADERS){
                 stop("Key `", key, "` is preserved and should be read-only or altered via other methods.")
             }
             .self$.header[[key]] <- value
-            .self$.save_header()
+            if( save ) {
+                .self$.save_header()
+            }
+            invisible(value)
         },
         header_signature = function(include_path = TRUE){
             header_sig <- digest::digest(.self$.header, algo = "sha256")

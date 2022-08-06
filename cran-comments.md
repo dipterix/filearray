@@ -1,5 +1,5 @@
 ## Dev environment 
-* osx (ARM), R 4.1.2
+* osx (ARM), R 4.2.1
 
 ## Test environments
 * osx (x64, github-action), R-release
@@ -9,19 +9,5 @@
 
 ## R CMD check results
 
-On `release` and `devel`
+On `oldrelease`, `release` and `devel`
 0 errors | 0 warnings | 0 notes
-
-On R-4.0
-0 errors | 1 warning | 0 notes
-
-```
-Codoc mismatches from documentation object 'apply':
-apply
-  Code: function(X, MARGIN, FUN, ...)
-  Docs: function(X, MARGIN, FUN, ..., simplify = TRUE)
-  Argument names in docs not in code:
-    simplify
-```
-
-This is because `simplify` was added to `apply` function since R-4.1.
