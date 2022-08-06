@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.3.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.4</span>
       </span>
     </div>
 
@@ -99,7 +99,7 @@
 </h2>
 <p>We mainly test the performance of <code>double</code> and <code>float</code> data type. The dimensions for both arrays are <code>100x100x100x100</code>. Both arrays are around <code>800MB</code> in native R. This is because R does not have float precision. However, while <code>double</code> array occupies <code>800MB</code> space on the hard disk, <code>float</code> array only uses half size (<code>400MB</code>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://dipterix.org/filearray/">filearray</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dipterix.org/filearray/" class="external-link">filearray</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/filearray_threads.html">filearray_threads</a></span><span class="op">(</span><span class="op">)</span></span>
