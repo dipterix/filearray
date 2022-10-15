@@ -139,6 +139,7 @@ SEXP FARR_buffer_map(
                 }
             }
             convert_as2(tmp, tmp_val, out_array_type);
+            UNPROTECT(1); // tmp
             
             FARR_subset_assign_sequential_bare(
                 out_fbase, out_unit_partlen,
@@ -147,7 +148,6 @@ SEXP FARR_buffer_map(
             );
             current_pos_save += expected_res_nelem;
             
-            UNPROTECT(1);
         } catch(std::exception &ex){
             UNPROTECT(2 + narrays);
             forward_exception_to_r(ex);
@@ -237,12 +237,12 @@ SEXP FARR_buffer_map2(
 #pragma omp for schedule(static, 1) nowait
         for(int ii = 0; ii < narrays; ii++){
             FARR_subset_sequential(
-            input_filebases[ii],
-            in_unit_partlen,
-            cumparts[ii],
-            arr_types[ii],
-            VECTOR_ELT(argbuffers, ii),
-            current_pos, buffer_nelems
+                input_filebases[ii],
+                in_unit_partlen,
+                cumparts[ii],
+                arr_types[ii],
+                VECTOR_ELT(argbuffers, ii),
+                current_pos, buffer_nelems
             );
         }
 }   

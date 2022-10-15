@@ -59,28 +59,48 @@ SEXP FARR_subset_sequential(
     std::string fbase = correct_filebase(filebase);
     R_len_t nparts = Rf_length(cum_partsizes);
     
-    // calculate the first partition
+    // calculate the first partition, should start from 1
     int64_t slice_idx1 = 0;
+    
+    // partition number cannot go beyond nparts + 1 (can equal)
     int64_t slice_idx2 = 0;
     int64_t tmp = 0;
-    for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
-    for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
-    // Rcout << slice_idx1 << "  -  " << slice_idx2 << "\n";
     
+    // Rcout << "From: " << from << " - len: " << len << " nparts: " << nparts << "\n";
+    for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
+    
+    for(slice_idx2 = slice_idx1; tmp < from + len && slice_idx2 < nparts; tmp+= unit_partlen, slice_idx2++){}
+    
+    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << "\n";
+    
+    // Which partition to start: min = 0
     int part_start = 0;
     int part_end = 0;
     int64_t skip_start = 0;
-    int64_t skip_end = 0;
+    // int64_t skip_end = 0;
     
     int64_t* cum_part = INTEGER64(cum_partsizes);
-    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
+    for(; *cum_part < slice_idx1; cum_part++, part_start++){}
     if( part_start == 0 ){
         skip_start = from;
     } else {
         skip_start = from - (*(cum_part - 1)) * unit_partlen;
     }
-    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
-    skip_end = (*cum_part) * unit_partlen - (from + len);
+    for(part_end = part_start; *cum_part < slice_idx2; cum_part++, part_end++){}
+    // if(part_end == 0) {
+    //     skip_end = unit_partlen - (from + len);
+    //     // Rcout << part_start << " " << part_end << " " << *cum_part << std::endl; 
+    // } else {
+    //     skip_end = (*(cum_part - 1)) * unit_partlen - (from + len);
+    //     // Rcout << part_start << " " << part_end << " " << *(cum_part-1) << std::endl; 
+    // }
+    // // This happens when buffer size is longer than array length
+    // if(skip_end < 0) {
+    //     skip_end = 0;
+    // }
+    
+    // Rcpp::print(cum_partsizes);
+    
     
     // Rcout << part_start << "  -  " << part_end << "\n";
     // Rcout << skip_start << "  -  " << skip_end << "\n";
@@ -88,32 +108,45 @@ SEXP FARR_subset_sequential(
     int64_t read_start = 0;
     int64_t read_len = 0;
     int64_t part_nelem = 0;
-    int64_t last_part_nelem = 0;
-    cum_part = INTEGER64(cum_partsizes);
+    cum_part = INTEGER64(cum_partsizes) + part_start;
     
     int64_t nread = 0;
     
     const boost::interprocess::mode_t mode = boost::interprocess::read_only;
+    
     
     for(int part = part_start; part <= part_end; part++, cum_part++, nread += read_len){
         if( part >= nparts ){
             continue;
         }
         // get partition n_elems
-        part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
-        last_part_nelem = (*cum_part) * unit_partlen;
+        if(part == 0) {
+            part_nelem = (*cum_part) * unit_partlen;
+        } else {
+            part_nelem = (*cum_part - *(cum_part - 1)) * unit_partlen;
+        }
+        // Rcout << "Starting with " << *cum_part << ", current partition contains elements: " << part_nelem << "\n";
+        
         
         // skip read_start elements
-        read_start = 0;
         if( part == part_start ) {
             read_start = skip_start;
+        } else {
+            read_start = 0;
         }
+        read_len = part_nelem - read_start;
+        if( read_len > len - nread ) {
+            read_len = len - nread;
+        }
+        // Rcout << "n read: " << nread << ", plan to read more: " << read_len << " from " << read_start << "\n";
+        
         // Rcout << part_nelem << "--\n";
         // then read read_len elements
-        read_len = part_nelem - read_start;
-        if( part == part_end ){
-            read_len -= skip_end;
-        }
+        // if( part == part_end ){
+        //     read_len -= skip_end;
+        // }
+        
+        // Rcout << "reading from partition: " << part << "\n";
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
         

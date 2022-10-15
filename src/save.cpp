@@ -32,12 +32,16 @@ SEXP FARR_subset_assign_sequential_bare(
     int64_t slice_idx2 = 0;
     int64_t tmp = 0;
     for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
-    for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    
+    for(slice_idx2 = slice_idx1; tmp < from + len && slice_idx2 < nparts; tmp+= unit_partlen, slice_idx2++){}
+    // for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    
+    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << "\n";
     
     int part_start = 0;
     int part_end = 0;
     int64_t skip_start = 0;
-    int64_t skip_end = 0;
+    // --- // int64_t skip_end = 0;
     
     int64_t* cum_part = INTEGER64(cum_partsizes);
     for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
@@ -47,13 +51,26 @@ SEXP FARR_subset_assign_sequential_bare(
         skip_start = from - (*(cum_part - 1)) * unit_partlen;
     }
     for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
-    skip_end = (*cum_part) * unit_partlen - (from + len);
+    
+    /*
+    // skip_end = (*cum_part) * unit_partlen - (from + len);
+    if(part_end == 0) {
+        skip_end = unit_partlen - (from + len);
+        // Rcout << part_start << " " << part_end << " " << *cum_part << std::endl; 
+    } else {
+        skip_end = (*(cum_part - 1)) * unit_partlen - (from + len);
+        // Rcout << part_start << " " << part_end << " " << *(cum_part-1) << std::endl; 
+    }
+    // This happens when buffer size is longer than array length
+    if(skip_end < 0) {
+        skip_end = 0;
+    }
+     */
     
     int64_t read_start = 0;
     int64_t write_len = 0;
     int64_t part_nelem = 0;
-    int64_t last_part_nelem = 0;
-    cum_part = INTEGER64(cum_partsizes);
+    cum_part = INTEGER64(cum_partsizes) + part_start;
     
     int64_t nwrite = 0;
     
@@ -65,20 +82,33 @@ SEXP FARR_subset_assign_sequential_bare(
             continue;
         }
         // get partition n_elems
-        part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
-        last_part_nelem = (*cum_part) * unit_partlen;
+        // part_nelem = (*cum_part) * unit_partlen - last_part_nelem;
+        // last_part_nelem = (*cum_part) * unit_partlen;
         
         // skip read_start elements
-        read_start = 0;
+        if(part == 0) {
+            part_nelem = (*cum_part) * unit_partlen;
+        } else {
+            part_nelem = (*cum_part - *(cum_part - 1)) * unit_partlen;
+        }
         if( part == part_start ) {
             read_start = skip_start;
+        } else {
+            read_start = 0;
         }
         // Rcout << part_nelem << "--\n";
         // then read read_len elements
         write_len = part_nelem - read_start;
-        if( part == part_end ){
-            write_len -= skip_end;
+        
+        if(nwrite + write_len > len) {
+            write_len = len - nwrite;
         }
+        if(write_len <= 0) {
+            break;
+        }
+        // if( part == part_end ){
+        //     write_len -= skip_end;
+        // }
         
         std::string part_file = fbase + std::to_string(part) + ".farr";
         
