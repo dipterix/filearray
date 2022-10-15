@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.4.9000</span>
       </span>
     </div>
 
@@ -59,7 +59,7 @@
 
     <div class="section level2"><h2 class="page-header" data-toc-text="development version" id="filearray-development-version">filearray (development version)<a class="anchor" aria-label="anchor" href="#filearray-development-version"></a></h2></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.4" id="filearray-014">filearray 0.1.4<a class="anchor" aria-label="anchor" href="#filearray-014"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.4" id="filearray-014">filearray 0.1.4<small>2022-08-06</small><a class="anchor" aria-label="anchor" href="#filearray-014"></a></h2>
 <ul><li>Fixed a bug when allocated memory is one byte short than requested. The bug would crash R when triggered in certain cases.</li>
 <li>Removed limit to the maximum number of partitions when writing. The previous implementation creates and opens related file descriptors all at once before writing. This setup will raise errors when the number of connections reach to certain limit, often defined by the operating systems. This update only opens the connection on demand. The performance might be impacted when writing to disk, but in return, the program will be more robust</li>
 <li>Fixed <code>subset</code> function environment not resolved correctly when using formula</li>
