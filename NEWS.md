@@ -1,5 +1,9 @@
 # filearray (development version)
 
+# filearray 0.1.5
+
+* Fixed a bug when trying to read array data sequentially. The bug is caused by buffer size being greater than the array length, making in a pointer that controls the partition number exceed the end of vector, resulting in undefined behavior. The functions affected are: `fmap`, `fmap2`. The bug has been fixed and passed `valgrind` memory check.
+
 # filearray 0.1.4
 
 * Fixed a bug when allocated memory is one byte short than requested. The bug would crash R when triggered in certain cases.
