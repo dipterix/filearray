@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">filearray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.4.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.5</span>
       </span>
     </div>
 
@@ -58,6 +58,9 @@
     </div>
 
     <div class="section level2"><h2 class="page-header" data-toc-text="development version" id="filearray-development-version">filearray (development version)<a class="anchor" aria-label="anchor" href="#filearray-development-version"></a></h2></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.1.5" id="filearray-015">filearray 0.1.5<a class="anchor" aria-label="anchor" href="#filearray-015"></a></h2>
+<ul><li>Fixed a bug when trying to read array data sequentially. The bug is caused by buffer size being greater than the array length, making in a pointer that controls the partition number exceed the end of vector, resulting in undefined behavior. The functions affected are: <code>fmap</code>, <code>fmap2</code>. The bug has been fixed and passed <code>valgrind</code> memory check.</li></ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.4" id="filearray-014">filearray 0.1.4<small>2022-08-06</small><a class="anchor" aria-label="anchor" href="#filearray-014"></a></h2>
 <ul><li>Fixed a bug when allocated memory is one byte short than requested. The bug would crash R when triggered in certain cases.</li>
