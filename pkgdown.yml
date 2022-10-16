@@ -3,7 +3,7 @@ pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
   performance: performance.html
-last_built: 2022-10-15T13:48Z
+last_built: 2022-10-16T12:08Z
 urls:
   reference: http://dipterix.org/filearray/reference
   article: http://dipterix.org/filearray/articles
