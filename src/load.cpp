@@ -2,7 +2,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 // [[Rcpp::depends(BH)]]
 
-#include "openmp.h"
+#include "TinyParallel.h"
+#include "threadSettings.h"
 #include "serialize.h"
 #include "core.h"
 #include "utils.h"
@@ -209,308 +210,344 @@ SEXP FARR_subset_sequential(
 }
 
 template <typename T, typename B>
-bool FARR_subset_mmap(
+struct FARRSubsetter : public TinyParallel::Worker {
+    const std::string& filebase;
+    const List& sch;
+    const T na; 
+    const R_xlen_t& retlen;
+    T* ret_ptr;
+    void (*transform)(const B*, T*, const bool&);
+    const int elem_size;
+    
+    SEXP idx1;
+    SEXP idx1range;
+    R_xlen_t idx1len;
+    int64_t idx1_start;
+    int64_t idx1_end;
+    List idx2s;
+    int64_t block_size;
+    IntegerVector partitions;
+    IntegerVector idx2lens;
+    
+    bool skip_all;
+    bool swap_endian;
+    boost::interprocess::mode_t mode;
+    int has_error;
+    std::string error_msg;
+    
+    bool use_mmap;
+    std::vector<B*> buf_ptrs;
+    
+    FARRSubsetter(
+        const std::string& filebase, 
+        const List& sch,
+        T* ret_ptr, const T na, const R_xlen_t& retlen,
+        void (*transform)(const B*, T*, const bool&),
+        const bool& use_mmap
+    ): filebase(filebase), sch(sch), na(na), retlen(retlen),
+    ret_ptr(ret_ptr), transform(transform), elem_size(sizeof(B)){
+        
+        this->idx1 = sch["idx1"];
+        this->idx1range = sch["idx1range"];
+        this->idx1len = Rf_xlength(idx1);
+        int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+        this->idx1_start = *idx1rangeptr;
+        this->idx1_end = *(idx1rangeptr + 1);
+        
+        this->idx2s = sch["idx2s"];
+        this->block_size = (int64_t) (sch["block_size"]);
+        this->partitions = sch["partitions"];
+        this->idx2lens = sch["idx2lens"];
+        
+        
+        if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
+            // idx1 are all NAs, no need to subset, return NA
+
+            T* retptr = ret_ptr;
+            for(R_xlen_t jj = 0; jj < retlen; jj++){
+                *retptr++ = na;
+            }
+            this->skip_all = true;
+        } else {
+            this->skip_all = false;
+        }
+        
+        this->mode = boost::interprocess::read_only;
+        this->swap_endian = !isLittleEndian();
+        
+        this->has_error = -1;
+        this->error_msg = "";
+        // char* buffer[nbuffers];
+        
+        // R_xlen_t niter = partitions.length();
+        // int ncores = getThreads();
+        // if(ncores > niter){
+        //     ncores = niter;
+        // }
+        this->use_mmap = use_mmap;
+        
+    }
+    
+    void operator_mmap(std::size_t begin, std::size_t end) {
+        
+        for(R_xlen_t ii = begin; ii < end; ii++){
+            
+            int part = partitions[ii];
+            int64_t skips = 0;
+            if(ii > 0){
+                skips = idx2lens[ii - 1];
+            }
+            int64_t idx2len = idx2lens[ii] - skips;
+            
+            // TODO: change
+            T* retptr = ret_ptr + skips * idx1len;
+            for(R_xlen_t jj = 0; jj < idx2len * idx1len; jj++, retptr++ ){
+                *retptr = na;
+            }
+            
+            // TODO: change
+            retptr = ret_ptr + skips * idx1len;
+            
+            SEXP idx2 = idx2s[ii];
+            int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
+            int64_t* ptr2 = (int64_t*) REAL(idx1); 
+            for(ptr2 = (int64_t*) REAL(idx2); idx2len > 0; idx2len--, ptr2++ ){
+                if( *ptr2 == NA_INTEGER64 ){
+                    continue;
+                }
+                if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
+                    idx2_start = *ptr2;
+                }
+                if( idx2_end < *ptr2 ){
+                    idx2_end = *ptr2;
+                }
+            }
+            
+            if( idx2_start == NA_INTEGER64 || idx2_end < 0 || idx2_start < 0 ){
+                // This is NA partition, no need to subset
+                continue;
+            }
+            
+            // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
+            std::string file = filebase + std::to_string(part) + ".farr";
+            
+            try{
+                boost::interprocess::file_mapping fm(file.c_str(), mode);
+                boost::interprocess::mapped_region region(
+                        fm, mode, 
+                        FARR_HEADER_LENGTH + elem_size * (
+                                idx2_start * block_size + idx1_start
+                        ), 
+                        elem_size * (
+                                idx1_end - idx1_start + 1 +
+                                    block_size * (idx2_end - idx2_start)
+                        ));
+                // region.advise(boost::interprocess::mapped_region::advice_sequential);
+                const B* mmap_ptr = static_cast<const B*>(region.get_address());
+                // const int64_t content_size = region.get_size() / elem_size;
+                
+                
+                // prepare for all the pointers, local variables
+                int64_t* idx2ptr = INTEGER64(idx2);
+                R_xlen_t idx2len = Rf_xlength(idx2);
+                R_xlen_t ii_idx2 = 0;
+                int64_t start_idx = idx1_start;
+                
+                int64_t* idx1ptr = INTEGER64(idx1);
+                
+                R_xlen_t jj = 0;
+                T* retptr2 = retptr;
+                
+                for(; ii_idx2 < idx2len; ii_idx2++, idx2ptr++) {
+                    
+                    if ( *idx2ptr == NA_INTEGER64 ){
+                        continue;
+                    }
+                    
+                    // Rcout << block << "\n";
+                    
+                    // read current block!
+                    retptr2 = retptr + ii_idx2 * idx1len;
+                    start_idx = block_size * (*idx2ptr - idx2_start);
+                    
+                    idx1ptr = INTEGER64(idx1);
+                    start_idx -= idx1_start;
+                    
+                    for(jj = 0; jj < idx1len; jj++, idx1ptr++, retptr2++) {
+                        if(*idx1ptr != NA_INTEGER64){
+                            transform(mmap_ptr + (start_idx + *idx1ptr), retptr2, swap_endian);
+                        }
+                        
+                    }
+                    
+                }
+            } catch(...) {
+                // Debug use
+                // err = part;
+            }
+            
+        }
+    }
+    
+    void operator_fread(std::size_t begin, std::size_t end) {
+        std::size_t ncores = buf_ptrs.size();
+        for(R_xlen_t ii = begin; ii < end; ii++){
+            
+            int part = partitions[ii];
+            int64_t skips = 0;
+            if(ii > 0){
+                skips = idx2lens[ii - 1];
+            }
+            int64_t idx2len = idx2lens[ii] - skips;
+            
+            // TODO: change
+            T* retptr = ret_ptr + skips * idx1len;
+            for(R_xlen_t jj = 0; jj < idx2len * idx1len; jj++, retptr++ ){
+                *retptr = na;
+            }
+            
+            // TODO: change
+            retptr = ret_ptr + skips * idx1len;
+            
+            SEXP idx2 = idx2s[ii];
+            int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
+            int64_t* ptr2 = (int64_t*) REAL(idx1); 
+            for(ptr2 = (int64_t*) REAL(idx2); idx2len > 0; idx2len--, ptr2++ ){
+                if( *ptr2 == NA_INTEGER64 ){
+                    continue;
+                }
+                if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
+                    idx2_start = *ptr2;
+                }
+                if( idx2_end < *ptr2 ){
+                    idx2_end = *ptr2;
+                }
+            }
+            
+            if( idx2_start == NA_INTEGER64 || idx2_end < 0 || idx2_start < 0 ){
+                // This is NA partition, no need to subset
+                continue;
+            }
+            
+            // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
+            std::string file = filebase + std::to_string(part) + ".farr";
+            
+            FILE* conn = fopen(file.c_str(), "rb");
+            if( conn == NULL ){
+                continue;
+            }
+            
+            try{
+                B* buf_ptr = buf_ptrs[ii % ncores];
+                
+                // prepare for all the pointers, local variables
+                int64_t* idx2ptr = INTEGER64(idx2);
+                R_xlen_t idx2len = Rf_xlength(idx2);
+                R_xlen_t ii_idx2 = 0;
+                // int64_t start_idx = idx1_start;
+                
+                int64_t* idx1ptr = INTEGER64(idx1);
+                
+                R_xlen_t jj = 0;
+                T* retptr2 = retptr;
+                
+                for(; ii_idx2 < idx2len; ii_idx2++, idx2ptr++) {
+                    
+                    if ( *idx2ptr == NA_INTEGER64 ){
+                        continue;
+                    }
+                    
+                    // Rcout << block << "\n";
+                    
+                    // read current block!
+                    retptr2 = retptr + ii_idx2 * idx1len;
+                    idx1ptr = INTEGER64(idx1);
+                    
+                    fseek(conn, FARR_HEADER_LENGTH + elem_size * (
+                            *idx2ptr * block_size + idx1_start
+                    ), SEEK_SET);
+                    lendian_fread(buf_ptr, elem_size, idx1_end - idx1_start + 1, conn);
+                    
+                    for(jj = 0; jj < idx1len; jj++, idx1ptr++, retptr2++) {
+                        if(*idx1ptr != NA_INTEGER64){
+                            transform(buf_ptr + (*idx1ptr - idx1_start), retptr2, false);
+                        }
+                        
+                    }
+                    
+                }
+            } catch(...) {
+                // Debug use
+                // err = part;
+            }
+            
+            if( conn != NULL ){
+                fclose(conn);
+            }
+            
+        }
+    }
+    
+    void operator()(std::size_t begin, std::size_t end) {
+        if( this->skip_all ) { return; }
+        if( this->use_mmap ) {
+            this->operator_mmap(begin, end);
+        } else {
+            this->operator_fread(begin, end);
+        }
+    }
+    
+    void load() {
+        if( this->skip_all ) { return; }
+        
+        int ncores = (int)(this->buf_ptrs.size());
+        
+        if( !this->use_mmap ) {
+            
+            if( ncores == 0 ) {
+                this->use_mmap = true;
+            }
+        }
+        
+        if( this->use_mmap ) {
+            parallelFor(0, partitions.length(), *this);
+        } else {
+            // TODO: calculate grain size
+            parallelFor(0, partitions.length(), *this, 1, ncores);
+        }
+        
+        if( has_error >= 0 ){
+            stop("Error while trying to read partition " + 
+                std::to_string(has_error + 1) + 
+                ". Reason: " + error_msg);
+        }
+    }
+    
+};
+
+
+template <typename T, typename B>
+void FARR_subset_mmap(
         const std::string& filebase, 
         const List& sch,
         T* ret_ptr, const T na, const R_xlen_t& retlen,
         void (*transform)(const B*, T*, const bool&)
-){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    
-    R_xlen_t niter = partitions.length();
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
-        // idx1 are all NAs, no need to subset, return NA
-        
-        T* retptr = ret_ptr;
-        for(R_xlen_t jj = 0; jj < retlen; jj++){
-            *retptr++ = na;
-        }
-        return(false);
-    }
-    
-    int err = -1;
-    std::string error_msg = "";
-    // char* buffer[nbuffers];
-    
-    int ncores = getThreads();
-    if(ncores > niter){
-        ncores = niter;
-    }
-    const boost::interprocess::mode_t mode = boost::interprocess::read_only;
-    const int elem_size = sizeof(B);
-    const bool swap_endian = !isLittleEndian();
-    
-#pragma omp parallel num_threads(ncores) 
-{
-#pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t ii = 0; ii < niter; ii++){
-        
-        int part = partitions[ii];
-        int64_t skips = 0;
-        if(ii > 0){
-            skips = idx2lens[ii - 1];
-        }
-        int64_t idx2len = idx2lens[ii] - skips;
-        
-        // TODO: change
-        T* retptr = ret_ptr + skips * idx1len;
-        for(R_xlen_t jj = 0; jj < idx2len * idx1len; jj++, retptr++ ){
-            *retptr = na;
-        }
-        
-        // TODO: change
-        retptr = ret_ptr + skips * idx1len;
-        
-        SEXP idx2 = idx2s[ii];
-        int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
-        int64_t* ptr2 = (int64_t*) REAL(idx1); 
-        for(ptr2 = (int64_t*) REAL(idx2); idx2len > 0; idx2len--, ptr2++ ){
-            if( *ptr2 == NA_INTEGER64 ){
-                continue;
-            }
-            if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
-                idx2_start = *ptr2;
-            }
-            if( idx2_end < *ptr2 ){
-                idx2_end = *ptr2;
-            }
-        }
-        
-        if( idx2_start == NA_INTEGER64 || idx2_end < 0 || idx2_start < 0 ){
-            // This is NA partition, no need to subset
-            continue;
-        }
-        
-        // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
-        std::string file = filebase + std::to_string(part) + ".farr";
-        
-        try{
-            boost::interprocess::file_mapping fm(file.c_str(), mode);
-            boost::interprocess::mapped_region region(
-                    fm, mode, 
-                    FARR_HEADER_LENGTH + elem_size * (
-                            idx2_start * block_size + idx1_start
-                    ), 
-                    elem_size * (
-                            idx1_end - idx1_start + 1 +
-                                block_size * (idx2_end - idx2_start)
-                    ));
-            // region.advise(boost::interprocess::mapped_region::advice_sequential);
-            const B* mmap_ptr = static_cast<const B*>(region.get_address());
-            // const int64_t content_size = region.get_size() / elem_size;
-            
-            
-            // prepare for all the pointers, local variables
-            int64_t* idx2ptr = INTEGER64(idx2);
-            R_xlen_t idx2len = Rf_xlength(idx2);
-            R_xlen_t ii_idx2 = 0;
-            int64_t start_idx = idx1_start;
-            
-            int64_t* idx1ptr = INTEGER64(idx1);
-            
-            R_xlen_t jj = 0;
-            T* retptr2 = retptr;
-            
-            for(; ii_idx2 < idx2len; ii_idx2++, idx2ptr++) {
-                
-                if ( *idx2ptr == NA_INTEGER64 ){
-                    continue;
-                }
-                
-                // Rcout << block << "\n";
-                
-                // read current block!
-                retptr2 = retptr + ii_idx2 * idx1len;
-                start_idx = block_size * (*idx2ptr - idx2_start);
-                
-                idx1ptr = INTEGER64(idx1);
-                start_idx -= idx1_start;
-                
-                for(jj = 0; jj < idx1len; jj++, idx1ptr++, retptr2++) {
-                    if(*idx1ptr != NA_INTEGER64){
-                        transform(mmap_ptr + (start_idx + *idx1ptr), retptr2, swap_endian);
-                    }
-                    
-                }
-                
-            }
-        } catch(...) {
-            // Debug use
-            // err = part;
-        }
-        
-    }
-}
-
-    if( err >= 0 ){
-        stop("Error while trying to read partition "+std::to_string(err+1)+
-            ". Reason: " + error_msg);
-        // Rcout << error_msg << "\n";
-    }
-    return(true);
+) {
+    FARRSubsetter<T, B> subsetter(filebase, sch, ret_ptr, na, retlen, transform, false);
+    subsetter.load();
 }
 
 template <typename T, typename B>
-bool FARR_subset_fread(
+void FARR_subset_fread(
         const std::string& filebase, 
         const List& sch,
         T* ret_ptr, const T na, const R_xlen_t& retlen,
         const std::vector<B*> buf_ptrs,
         void (*transform)(const B*, T*, const bool&)
 ){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    
-    R_xlen_t niter = partitions.length();
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < 0 || idx1_start < 0 ){
-        // idx1 are all NAs, no need to subset, return NA
-        
-        T* retptr = ret_ptr;
-        for(R_xlen_t jj = 0; jj < retlen; jj++){
-            *retptr++ = na;
-        }
-        return(false);
-    }
-    
-    int err = -1;
-    std::string error_msg = "";
-    // char* buffer[nbuffers];
-    
-    int ncores = getThreads();
-    if(ncores > niter){
-        ncores = niter;
-    }
-    // const boost::interprocess::mode_t mode = boost::interprocess::read_only;
-    const int elem_size = sizeof(B);
-    // const bool swap_endian = !isLittleEndian();
-    
-#pragma omp parallel num_threads(ncores) 
-{
-#pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t ii = 0; ii < niter; ii++){
-        
-        int part = partitions[ii];
-        int64_t skips = 0;
-        if(ii > 0){
-            skips = idx2lens[ii - 1];
-        }
-        int64_t idx2len = idx2lens[ii] - skips;
-        
-        // TODO: change
-        T* retptr = ret_ptr + skips * idx1len;
-        for(R_xlen_t jj = 0; jj < idx2len * idx1len; jj++, retptr++ ){
-            *retptr = na;
-        }
-        
-        // TODO: change
-        retptr = ret_ptr + skips * idx1len;
-        
-        SEXP idx2 = idx2s[ii];
-        int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
-        int64_t* ptr2 = (int64_t*) REAL(idx1); 
-        for(ptr2 = (int64_t*) REAL(idx2); idx2len > 0; idx2len--, ptr2++ ){
-            if( *ptr2 == NA_INTEGER64 ){
-                continue;
-            }
-            if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
-                idx2_start = *ptr2;
-            }
-            if( idx2_end < *ptr2 ){
-                idx2_end = *ptr2;
-            }
-        }
-        
-        if( idx2_start == NA_INTEGER64 || idx2_end < 0 || idx2_start < 0 ){
-            // This is NA partition, no need to subset
-            continue;
-        }
-        
-        // const int idx2_sorted = kinda_sorted(idx2, idx2_start, 1);
-        std::string file = filebase + std::to_string(part) + ".farr";
-        
-        FILE* conn = fopen(file.c_str(), "rb");
-        if( conn == NULL ){
-            continue;
-        }
-        
-        try{
-            B* buf_ptr = buf_ptrs[ii % ncores];
-            
-            // prepare for all the pointers, local variables
-            int64_t* idx2ptr = INTEGER64(idx2);
-            R_xlen_t idx2len = Rf_xlength(idx2);
-            R_xlen_t ii_idx2 = 0;
-            // int64_t start_idx = idx1_start;
-
-            int64_t* idx1ptr = INTEGER64(idx1);
-            
-            R_xlen_t jj = 0;
-            T* retptr2 = retptr;
-            
-            for(; ii_idx2 < idx2len; ii_idx2++, idx2ptr++) {
-                
-                if ( *idx2ptr == NA_INTEGER64 ){
-                    continue;
-                }
-                
-                // Rcout << block << "\n";
-                
-                // read current block!
-                retptr2 = retptr + ii_idx2 * idx1len;
-                idx1ptr = INTEGER64(idx1);
-                
-                fseek(conn, FARR_HEADER_LENGTH + elem_size * (
-                        *idx2ptr * block_size + idx1_start
-                ), SEEK_SET);
-                lendian_fread(buf_ptr, elem_size, idx1_end - idx1_start + 1, conn);
-                
-                for(jj = 0; jj < idx1len; jj++, idx1ptr++, retptr2++) {
-                    if(*idx1ptr != NA_INTEGER64){
-                        transform(buf_ptr + (*idx1ptr - idx1_start), retptr2, false);
-                    }
-                    
-                }
-                
-            }
-        } catch(...) {
-            // Debug use
-            // err = part;
-        }
-        
-        if( conn != NULL ){
-            fclose(conn);
-        }
-        
-    }
-}
-
-    if( err >= 0 ){
-        stop("Error while trying to read partition "+std::to_string(err+1)+
-            ". Reason: " + error_msg);
-        // Rcout << error_msg << "\n";
-    }
-    return(true);
+    FARRSubsetter<T, B> subsetter(filebase, sch, ret_ptr, na, retlen, transform, true);
+    subsetter.buf_ptrs = buf_ptrs;
+    subsetter.load();
 }
 
 SEXP FARR_subset(const std::string& filebase, 

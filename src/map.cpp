@@ -8,8 +8,45 @@
 #include "utils.h"
 #include "load.h"
 #include "save.h"
-#include "openmp.h"
+#include "threadSettings.h"
+#include "TinyParallel.h"
 using namespace Rcpp;
+
+struct FARRSequentialSubsetter : public TinyParallel::Worker {
+    
+    const std::vector<std::string>& input_filebases;
+    int64_t in_unit_partlen;
+    std::vector<SEXP> cumparts;
+    std::vector<SEXPTYPE> arr_types;
+    SEXP argbuffers;
+    int64_t current_pos;
+    int buffer_nelems;
+    
+    FARRSequentialSubsetter(
+        const std::vector<std::string>& input_filebases,
+        int64_t in_unit_partlen,
+        std::vector<SEXP> cumparts,
+        std::vector<SEXPTYPE> arr_types,
+        SEXP argbuffers,
+        int64_t current_pos,
+        int buffer_nelems
+    ) : input_filebases(input_filebases), in_unit_partlen(in_unit_partlen),
+    cumparts(cumparts), arr_types(arr_types), argbuffers(argbuffers),
+    current_pos(current_pos), buffer_nelems(buffer_nelems) {}
+        
+    void operator()(std::size_t begin, std::size_t end) {
+        for(std::size_t ii = begin; ii < end; ii++) {
+            FARR_subset_sequential(
+                input_filebases[ii],
+                in_unit_partlen,
+                cumparts[ii],
+                arr_types[ii],
+                VECTOR_ELT(argbuffers, ii),
+                current_pos, buffer_nelems
+            );
+        }
+    }
+};
 
 // [[Rcpp::export]]
 SEXP FARR_buffer_map(
@@ -105,23 +142,15 @@ SEXP FARR_buffer_map(
      */
     int nprot = 0;
     
+    FARRSequentialSubsetter seqsubsetter(
+            input_filebases, in_unit_partlen, cumparts,
+            arr_types, argbuffers, 0, buffer_nelems
+    );
     
     for( ; current_pos < in_array_length; current_pos += buffer_nelems ){
         
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
-        for(int ii = 0; ii < narrays; ii++){
-            FARR_subset_sequential(
-                input_filebases[ii],
-                in_unit_partlen,
-                cumparts[ii],
-                arr_types[ii],
-                VECTOR_ELT(argbuffers, ii),
-                current_pos, buffer_nelems
-            );
-        }
-}   
+        seqsubsetter.current_pos = current_pos;
+        TinyParallel::parallelFor(0, narrays, seqsubsetter);
         
         nprot = 0;
         try{
@@ -230,22 +259,16 @@ SEXP FARR_buffer_map2(
     SEXP ret = PROTECT(Rf_allocVector(VECSXP, niters));
     R_xlen_t iter = 0;
     
+    FARRSequentialSubsetter seqsubsetter(
+            input_filebases, in_unit_partlen, cumparts,
+            arr_types, argbuffers, 0, buffer_nelems
+    );
+    
+    
     for( ; current_pos < in_array_length; current_pos += buffer_nelems, iter++ ){
         
-#pragma omp parallel num_threads(ncores)
-{
-#pragma omp for schedule(static, 1) nowait
-        for(int ii = 0; ii < narrays; ii++){
-            FARR_subset_sequential(
-                input_filebases[ii],
-                in_unit_partlen,
-                cumparts[ii],
-                arr_types[ii],
-                VECTOR_ELT(argbuffers, ii),
-                current_pos, buffer_nelems
-            );
-        }
-}   
+        seqsubsetter.current_pos = current_pos;
+        TinyParallel::parallelFor(0, narrays, seqsubsetter);
 
         try{
             SET_VECTOR_ELT(ret, iter, Shield<SEXP>(map(argbuffers)));

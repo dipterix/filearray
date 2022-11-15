@@ -85,42 +85,35 @@ symlink_enabled <- local({
 
 
 .onLoad <- function(libname, pkgname){
-    if(hasOpenMP()){
-        
-        # Check if in R CMD check mode
-        if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
-            #  R CMD check with --as-cran
-            n <- 2L
-        } else if(in_rcmdcheck()){
-            #  R CMD check (without CRAN)
-            n <- 2L
-        } else {
-            n <- filearray_threads(-1)
-            if(n > 8L){
-                n <- 8L
-            }
+    # Check if in R CMD check mode
+    if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
+        #  R CMD check with --as-cran
+        n <- 2L
+    } else if(in_rcmdcheck()){
+        #  R CMD check (without CRAN)
+        n <- 2L
+    } else {
+        n <- filearray_threads(-1)
+        if(n > 8L){
+            n <- 8L
         }
-        
-        filearray_threads(n)
     }
+    
+    filearray_threads(n)
     ns <- asNamespace(pkgname)
     ns$NA_float_ <- get_float_na()
 }
 
 .onAttach <- function(libname, pkgname){
-    if(hasOpenMP()){
-        if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
-            packageStartupMessage(
-                "Found environment variable `_R_CHECK_LIMIT_CORES_`=TRUE. Using ",
-                filearray_threads(), " threads.")
-        } else if(in_rcmdcheck()){
-            packageStartupMessage("R CMD check mode. Using ", 
-                                  filearray_threads(), " threads.")
-        } else {
-            packageStartupMessage(
-                "OpenMP detected: currently using ", filearray_threads(), " threads.")
-        }
+    if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
+        packageStartupMessage(
+            "Found environment variable `_R_CHECK_LIMIT_CORES_`=TRUE. Using ",
+            filearray_threads(), " threads.")
+    } else if(in_rcmdcheck()){
+        packageStartupMessage("R CMD check mode. Using ", 
+                              filearray_threads(), " threads.")
     } else {
-        packageStartupMessage("OpenMP not detected. Using single thread only.")
+        packageStartupMessage(
+            "Filearray is using ", filearray_threads(), " threads.")
     }
 }

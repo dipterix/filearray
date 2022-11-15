@@ -130,7 +130,7 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
     
     if(is.na(buffer_size)){
         elem_size <- get_elem_size(x$type())
-        mbsz <- max_buffer_size() * getThreads() / elem_size
+        mbsz <- max_buffer_size() * getThreads(FALSE) / elem_size
         
         sel <- cumprod(dim) <= mbsz
         if(any(sel)){
