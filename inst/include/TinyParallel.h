@@ -4,9 +4,6 @@
 // TinyThread implementation
 #include "TinyParallel/TinyThread.h"
 
-#include "TinyParallel/RVector.h"
-#include "TinyParallel/RMatrix.h"
-
 namespace TinyParallel {
 
 inline void parallelFor(std::size_t begin,
