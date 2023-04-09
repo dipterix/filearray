@@ -246,9 +246,7 @@ fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
 
 is_filearray <- function(object){
     if(!isS4(object)){ return(FALSE) }
-    cls <- class(object)
-    if(!"FileArray" %in% cls){ return(FALSE) }
-    return(TRUE)
+    return(inherits(object, c("FileArray", "FileArrayProxy")))
 }
 
 #' @rdname fmap
