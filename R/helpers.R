@@ -21,6 +21,39 @@ is_same_dim <- function(x, y) {
     return(FALSE)
 }
 
+#' @noRd 
+#' Guess partition size from given dimensions and element size.
+#' This function is used to estimate a decent partition size when creating 
+#' arrays
+guess_partition <- function(dim, elem_size){
+    last_margin <- dim[[length(dim)]]
+    unit_size <- prod(dim) / last_margin * elem_size
+    
+    # 1: partition size cannot go beyond 1GB
+    max_ <- floor(2^30 / unit_size)
+    if(max_ <= 1L){
+        return(1L)
+    }
+    # 2: n partitions <= 100
+    if(last_margin <= 100){
+        return(1L)
+    }
+    # 3: at most max_ units, at least fct units
+    fct <- ceiling(last_margin / max_)
+    if(fct > 50){
+        return(max_)
+    }
+    while(fct <= 50){
+        max_ <- max_ - 1L
+        fct <- ceiling(last_margin / max_)
+        if(max_ <= 1L){
+            return(1L)
+        }
+    }
+    return(max_)
+}
+
+
 
 # ---- data type helpers ----------------------------------------------------
 
