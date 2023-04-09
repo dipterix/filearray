@@ -18,8 +18,10 @@ Description: Stores large arrays in files to avoid occupying large
     types (double, float, complex, integer, logical, and raw).
 Imports: 
     digest,
+    fastmap (>= 1.1.1),
     methods,
-    Rcpp
+    Rcpp,
+    uuid (>= 1.1.0)
 Suggests: 
     rmarkdown,
     knitr,
