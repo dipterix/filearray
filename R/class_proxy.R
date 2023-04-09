@@ -16,7 +16,8 @@ FileArrayProxy <- setRefClass(
     fields = list(
         .uuid = "character",
         .ops = "list",
-        .linked = "list"
+        .linked = "list",
+        persist = "logical"
     ),
     methods = list(
         initialize = function() {
@@ -165,7 +166,7 @@ as_filearrayproxy.default <- function(x, ...) {
 }
 
 # Be careful when using addon, must be deterministic, or signature will be invalid
-fa_eval_ops <- function(x, addon = NULL, verbose = FALSE) {
+fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_) {
     
     has_addon <- is.function(addon)
     if( has_addon ) {
@@ -230,9 +231,19 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE) {
         }
     )
     
-    if(!isTRUE(re$get_header("matured"))) {
+    if(!isTRUE(re$get_header("matured")) || has_addon) {
         
-        input_size <- get_buffer_size() / re$element_size()
+        
+        
+        if( length(input_size) == 1 && !is.na(input_size) ) {
+            nruns <- length(x) / input_size
+            if(!isTRUE(nruns == round(nruns))) {
+                input_size <- NULL
+            }
+        } 
+        if( length(input_size) != 1 || is.na(input_size) ) {
+            input_size <- guess_fmap_input_size(dim(x), x$element_size())
+        }
         
         fmap_element_wise(arrays, function(data) {
             env <- new.env(parent = emptyenv(), hash = TRUE)

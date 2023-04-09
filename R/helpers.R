@@ -54,6 +54,32 @@ guess_partition <- function(dim, elem_size){
 }
 
 
+guess_fmap_input_size <- function(dim, element_size = 16L) {
+    buffer_len <- get_buffer_size() / element_size
+    buffer_large <- max(buffer_len, 1048576) # 8.5MB, 1024 x 1024
+    
+    
+    dimcprod <- cumprod(dim)
+    len <- dimcprod[[length(dimcprod)]]
+    min_partition_size <- dimcprod[[length(dimcprod) - 1]]
+    
+    # tiny array
+    if( buffer_len >= len ) { return(len) }
+    
+    # small array
+    if( buffer_large >= min_partition_size ) { return(min_partition_size) }
+    
+    # large array
+    dimcprod <- dimcprod[dimcprod <= buffer_large]
+    if(!length(dimcprod)) { return(buffer_large) }
+    
+    # mid array
+    unit_size <- dimcprod[[length(dimcprod)]]
+    fct <- floor(buffer_large / unit_size)
+    if(fct < 1) { fct <- 1 }
+    return( unit_size * fct )
+}
+
 
 # ---- data type helpers ----------------------------------------------------
 
