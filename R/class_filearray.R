@@ -99,7 +99,7 @@ get_elem_size <- function(type){
 }
 
 
-setRefClass(
+FileArray <- setRefClass(
     "FileArray",
     fields = list(
         .mode = 'character',
@@ -326,7 +326,7 @@ setRefClass(
                 cat('Mode:', .self$.mode, "\n")
                 tryCatch({
                     cat("Dimension:", paste(.self$dimension(), collapse = "x"), "\n")
-                    cat("# of partitions:", nrow(.self$.partition_info), "\n")
+                    cat("Partition count:", nrow(.self$.partition_info), "\n")
                     cat("Partition size:", .self$partition_size(), "\n")
                     cat("Storage type: ", .self$type(), " (internal size: ", get_elem_size(.self$type()), ")\n", sep = "")
                     
@@ -651,3 +651,37 @@ setRefClass(
 )
 
 
+
+#' @export
+as_filearray <- function(x, ...) {
+    UseMethod("as_filearray")
+}
+
+#' @export
+as_filearray.default <- function(x, filebase = NULL, ...) {
+    if(!length(filebase)) {
+        filebase <- tempfile()
+    }
+    x <- as.array(x)
+    re <- filearray_create(filebase = filebase, dimension = dim(x), type = typeof(x))
+    re[] <- x
+    
+    dimnames(re) <- dimnames(x)
+    return(re)
+}
+
+#' @export
+as_filearray.character <- function(x, mode = c("readonly", "readwrite"), ...) {
+    mode <- match.arg(mode)
+    filearray_load(filebase = x, mode = mode)
+}
+
+#' @export
+as_filearray.FileArray <- function(x, ...) {
+    x
+}
+
+#' @export
+as_filearray.FileArrayProxy <- function(x, ...) {
+    x
+}
