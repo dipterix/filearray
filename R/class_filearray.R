@@ -663,7 +663,13 @@ as_filearray.default <- function(x, filebase = NULL, ...) {
         filebase <- tempfile()
     }
     x <- as.array(x)
-    re <- filearray_create(filebase = filebase, dimension = dim(x), type = typeof(x))
+    
+    expected_type <- typeof(x)
+    if(expected_type %in% c("double", "float")) {
+        expected_type <- getOption("filearray.operator.precision", "double")
+    }
+    
+    re <- filearray_create(filebase = filebase, dimension = dim(x), type = expected_type)
     re[] <- x
     
     dimnames(re) <- dimnames(x)
