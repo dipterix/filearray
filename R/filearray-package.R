@@ -45,8 +45,8 @@ symlink_enabled <- local({
     function(){
         if(!is.na(enabled)){ return(enabled) }
         tempdir(check = TRUE)
-        f1 <- tempfile(pattern = 'filearray_simlink_test_from')
-        f2 <- tempfile(pattern = 'filearray_simlink_test_to')
+        f1 <- temp_path(pattern = 'filearray_simlink_test_from')
+        f2 <- temp_path(pattern = 'filearray_simlink_test_to')
         on.exit({
             if(file.exists(f1)){
                 unlink(f1)

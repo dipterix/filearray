@@ -154,7 +154,7 @@ fmap <- function(x, fun, .y, .input_size = NA, .output_size = NA, ...){
     })
     
     if(missing(.y)){
-        .y <- filearray_create(tempfile(), dim)
+        .y <- filearray_create(temp_path(), dim)
     } else {
         stopifnot(is_filearray(.y))
     }
@@ -270,7 +270,7 @@ fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
     
     miss_y <- missing(.y)
     if(miss_y){
-        .y <- filearray_create(tempfile(), dim, type = x[[1]]$type())
+        .y <- filearray_create(temp_path(), dim, type = x[[1]]$type())
     } else {
         if(length(dim) != length(.y$dimension()) ||
            any(.y$dimension() - dim != 0)){

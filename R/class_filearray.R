@@ -658,18 +658,23 @@ as_filearray <- function(x, ...) {
 }
 
 #' @export
-as_filearray.default <- function(x, filebase = NULL, ...) {
+as_filearray.default <- function(x, filebase = NULL, type = NULL, dimension = dim(x), ...) {
     if(!length(filebase)) {
-        filebase <- tempfile()
+        filebase <- temp_path(check = TRUE)
     }
     x <- as.array(x)
     
-    expected_type <- typeof(x)
-    if(expected_type %in% c("double", "float")) {
-        expected_type <- getOption("filearray.operator.precision", "double")
+    if(length(type) == 1) {
+        expected_type <- type
+    } else {
+        expected_type <- typeof(x)
+        if(expected_type %in% c("double", "float")) {
+            expected_type <- getOption("filearray.operator.precision", "double")
+        }
     }
     
-    re <- filearray_create(filebase = filebase, dimension = dim(x), type = expected_type)
+    
+    re <- filearray_create(filebase = filebase, dimension = dimension, type = expected_type, ...)
     re[] <- x
     
     dimnames(re) <- dimnames(x)

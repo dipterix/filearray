@@ -62,3 +62,22 @@ get_os <- function(){
 deparse1 <- function (expr, collapse = " ") {
     paste(deparse(expr), collapse = collapse)
 }
+
+temp_dir <- function(check = FALSE) {
+    re <- file.path(getOption("filearray.temporary.path", tempdir()), "_filearray_tempdir")
+    if(check && !dir.exists(re)) {
+        dir.create(re, showWarnings = FALSE, recursive = TRUE)
+    }
+    re
+}
+
+temp_path <- function(pattern = "tmpfilearray", fileext = ".farr", check = FALSE) {
+    tempfile(pattern = pattern, tmpdir = temp_dir(check = check), fileext = fileext)
+}
+
+clear_cache <- function() {
+    tdir <- temp_dir()
+    if(dir.exists(tdir)) {
+        unlink(tdir, recursive = TRUE)
+    }
+}
