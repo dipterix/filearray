@@ -1,15 +1,19 @@
 test_that("method: addition", {
+    on.exit({
+        options("filearray.operator.precision" = NULL)
+        clear_cache()
+    })
     
-    dm <- c(2,3,4)
+    dm <- c(2,3,4, 10)
     len <- prod(dm)
     
     x_dbl <- array(rnorm(len), dim = dm)
     x_int <- array(seq_len(len), dim = dm)
     x_lgl <- x_dbl > 0
         
-    arr_dbl <- as_filearray(x_dbl, type = "double", partition_size = 1)
-    arr_int <- as_filearray(x_int, type = "integer", partition_size = 1)
-    arr_lgl <- as_filearray(x_lgl, type = "logical", partition_size = 1)
+    arr_dbl <- as_filearray(x_dbl, type = "double", partition_size = 2)
+    arr_int <- as_filearray(x_int, type = "integer", partition_size = 3)
+    arr_lgl <- as_filearray(x_lgl, type = "logical", partition_size = 4)
     
     
     proxy_dbl <- as_filearrayproxy(arr_dbl)
@@ -37,9 +41,6 @@ test_that("method: addition", {
     }
     
     options("filearray.operator.precision" = "double")
-    on.exit({
-        options("filearray.operator.precision" = NULL)
-    })
     
     # filearrayproxy - Double
     check_add(proxy_dbl, proxy_dbl, x_dbl, x_dbl, "double", 1e-5)
@@ -150,10 +151,22 @@ test_that("method: addition", {
     # wrong dimensions
     testthat::expect_error(arr_int + array(0L, c(10,20,1)))
     testthat::expect_error(arr_int + 1:10)
+    tmp <- arr_int[]
+    dm <- dim(arr_int)
+    dm <- c(dm[1] * dm[2], dm[-c(1,2)])
+    dim(tmp) <- dm
+    tmp_arr <- as_filearray(tmp)
+    testthat::expect_error( arr_int + tmp )
+    testthat::expect_error( tmp + arr_int )
+    testthat::expect_error( arr_int + tmp_arr )
+    testthat::expect_error( tmp_arr + arr_int )
     testthat::expect_equal(
         (arr_int + 1:length(arr_int))[dimnames = NULL],
         arr_int[dimnames = NULL] + 1:length(arr_int)
     )
+    testthat::expect_equal(
+        (1:length(arr_int) + arr_int)[dimnames = NULL],
+        1:length(arr_int) + arr_int[dimnames = NULL]
+    )
     
-    clear_cache()
 })
