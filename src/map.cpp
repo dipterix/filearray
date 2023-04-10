@@ -15,22 +15,24 @@ using namespace Rcpp;
 struct FARRSequentialSubsetter : public TinyParallel::Worker {
     
     const std::vector<std::string>& input_filebases;
-    int64_t in_unit_partlen;
+    std::vector<int64_t> slice_sizes;
     std::vector<SEXP> cumparts;
     std::vector<SEXPTYPE> arr_types;
     SEXP argbuffers;
+    
+    // current_pos * buffer_nelems is the pointer position in the array
     int64_t current_pos;
-    int buffer_nelems;
+    std::vector<int> buffer_nelems;
     
     FARRSequentialSubsetter(
         const std::vector<std::string>& input_filebases,
-        int64_t in_unit_partlen,
+        std::vector<int64_t> slice_sizes,
         std::vector<SEXP> cumparts,
         std::vector<SEXPTYPE> arr_types,
         SEXP argbuffers,
         int64_t current_pos,
-        int buffer_nelems
-    ) : input_filebases(input_filebases), in_unit_partlen(in_unit_partlen),
+        std::vector<int> buffer_nelems
+    ) : input_filebases(input_filebases), slice_sizes(slice_sizes),
     cumparts(cumparts), arr_types(arr_types), argbuffers(argbuffers),
     current_pos(current_pos), buffer_nelems(buffer_nelems) {}
         
@@ -38,11 +40,11 @@ struct FARRSequentialSubsetter : public TinyParallel::Worker {
         for(std::size_t ii = begin; ii < end; ii++) {
             FARR_subset_sequential(
                 input_filebases[ii],
-                in_unit_partlen,
+                slice_sizes[ii],
                 cumparts[ii],
                 arr_types[ii],
                 VECTOR_ELT(argbuffers, ii),
-                current_pos, buffer_nelems
+                current_pos * buffer_nelems[ii], buffer_nelems[ii]
             );
         }
     }
@@ -63,7 +65,7 @@ SEXP FARR_buffer_map(
         std::vector<std::string>& input_filebases,
         const std::string& output_filebase,
         const Function& map,
-        const int& buffer_nelems,
+        std::vector<int>& buffer_nelems,
         int result_nelems = 0
 ){
     // Prepare outputs
@@ -84,15 +86,24 @@ SEXP FARR_buffer_map(
     
     // prepare inputs
     int narrays = input_filebases.size();
+    
+    if(buffer_nelems.size() - narrays < 0) {
+        Rcpp::stop("C++: `FARR_buffer_map`: vector buffer_nelems is too short. The length must be consistent with number of input arrays.");
+    }
+    
     std::vector<List> metas(narrays);
     std::vector<SEXPTYPE> arr_types(narrays);
     std::vector<SEXPTYPE> file_buffer_types(narrays);
     std::vector<SEXPTYPE> memory_buffer_types(narrays);
     
     std::vector<SEXP> cumparts(narrays);
-    std::vector<int64_t> part_lengths(narrays);
+    std::vector<int64_t> slice_sizes(narrays);
+    std::vector<int64_t> input_lens(narrays);
     
+    // dimensions of the first input array
     SEXP in_dim = R_NilValue;
+    R_xlen_t in_ndims;
+    int64_t* in_dimptr;
     
     for(int ii = 0; ii < narrays; ii++){
         std::string fbase = correct_filebase(input_filebases[ii]);
@@ -103,29 +114,31 @@ SEXP FARR_buffer_map(
         file_buffer_types[ii] = file_buffer_sxptype(arr_types[ii]);
         memory_buffer_types[ii] = array_memory_sxptype(arr_types[ii]);
         cumparts[ii] = realToInt64_inplace(meta["cumsum_part_sizes"]);
+        
+        in_dim = meta["dimension"];
         if( in_dim == R_NilValue ){
-            in_dim = meta["dimension"];
-            realToInt64_inplace(in_dim);
+            stop("Cannot obtain dimensions from the inputs");
         }
+        realToInt64_inplace(in_dim);
+        in_ndims = Rf_length(in_dim);
+        in_dimptr = INTEGER64(in_dim);
+        
+        // slice length
+        slice_sizes[ii] = 1;
+        for(R_xlen_t jj = 0; jj <in_ndims - 1; jj++, in_dimptr++){
+            slice_sizes[ii] *= *in_dimptr;
+        }
+        in_dimptr = INTEGER64(in_dim) + (in_ndims - 1);
+        
+        // length of input array
+        input_lens[ii] = slice_sizes[ii] * (*in_dimptr);
     }
-    
-    if( in_dim == R_NilValue ){
-        stop("Cannot obtain input dimensions");
-    }
-    
-    R_xlen_t in_ndims = Rf_length(in_dim);
-    int64_t* in_dimptr = INTEGER64(in_dim);
-    int64_t in_unit_partlen = 1;
-    for(R_xlen_t jj = 0; jj <in_ndims - 1; jj++, in_dimptr++){
-        in_unit_partlen *= *in_dimptr;
-    }
-    int64_t in_array_length = in_unit_partlen * *(INTEGER64(in_dim) + (in_ndims - 1));
     
     
     // allocate buffers
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems)));
+        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
     }
     
     int64_t current_pos = 0;
@@ -133,7 +146,7 @@ SEXP FARR_buffer_map(
     SEXP tmp = R_NilValue;
     
     if( result_nelems <= 0 ){
-        result_nelems = buffer_nelems;
+        result_nelems = buffer_nelems[0];
     }
     R_xlen_t expected_res_nelem = result_nelems;
     
@@ -150,32 +163,36 @@ SEXP FARR_buffer_map(
     /**
      * Repeat meself
      */
-    int nprot = 0;
     
     FARRSequentialSubsetter seqsubsetter(
-            input_filebases, in_unit_partlen, cumparts,
+            input_filebases, slice_sizes, cumparts,
             arr_types, argbuffers, 0, buffer_nelems
     );
     
     
-    for( ; current_pos < in_array_length; current_pos += buffer_nelems ){
+    try{
+    
+        for( ; current_pos < input_lens[0]; current_pos += buffer_nelems[0] ){
+            
+            seqsubsetter.current_pos = current_pos / buffer_nelems[0]; 
+            TinyParallel::parallelFor(0, narrays, seqsubsetter);
         
-        seqsubsetter.current_pos = current_pos;
-        TinyParallel::parallelFor(0, narrays, seqsubsetter);
         
-        nprot = 0;
-        try{
             tmp = PROTECT(map(argbuffers));
-            nprot++;
             
             R_xlen_t tmplen = Rf_xlength(tmp);
             if( result_nelems <= 0 ){
                 expected_res_nelem = tmplen;
             } else {
                 expected_res_nelem = result_nelems;
-                if(tmplen != result_nelems){
+                if(tmplen - expected_res_nelem != 0){
+                    // Rcout << tmplen << " vs. " << result_nelems << "\n";
                     UNPROTECT(1);
-                    stop("Function `map` return length is inconsistent with `result_nelems`");
+                    stop(
+                        "Function `map` return length is inconsistent with `result_nelems` (expected: " + 
+                            std::to_string(expected_res_nelem) + ", actual: " + 
+                            std::to_string(tmplen) + ")"
+                    );
                 }
             }
             convert_as2(tmp, tmp_val, out_array_type);
@@ -187,16 +204,14 @@ SEXP FARR_buffer_map(
                 tmp_val, current_pos_save
             );
             current_pos_save += expected_res_nelem;
-            
-        } catch(std::exception &ex){
-            UNPROTECT(2 + narrays);
-            forward_exception_to_r(ex);
-        } catch(...){
-            UNPROTECT(2 + narrays);
-            stop("Unknown error.");
+        
         }
-        
-        
+    } catch(std::exception &ex){
+        UNPROTECT(2 + narrays);
+        forward_exception_to_r(ex);
+    } catch(...){
+        // UNPROTECT(2 + narrays);
+        Rcpp::warning("C++ `FARR_buffer_map`: cannot finish map");
     }
     
     UNPROTECT(2 + narrays);
@@ -208,19 +223,27 @@ SEXP FARR_buffer_map(
 SEXP FARR_buffer_map2(
         std::vector<std::string>& input_filebases,
         const Function& map,
-        const int& buffer_nelems
+        std::vector<int>& buffer_nelems
 ){
     // prepare inputs
     int narrays = input_filebases.size();
+    if(buffer_nelems.size() - narrays < 0) {
+        Rcpp::stop("C++: `FARR_buffer_map2`: vector buffer_nelems is too short. The length must be consistent with number of input arrays.");
+    }
+    
     std::vector<List> metas(narrays);
     std::vector<SEXPTYPE> arr_types(narrays);
     std::vector<SEXPTYPE> file_buffer_types(narrays);
     std::vector<SEXPTYPE> memory_buffer_types(narrays);
     
     std::vector<SEXP> cumparts(narrays);
-    std::vector<int64_t> part_lengths(narrays);
+    std::vector<int64_t> slice_sizes(narrays);
+    std::vector<int64_t> input_lens(narrays);
     
+    // dimensions of the first input array
     SEXP in_dim = R_NilValue;
+    R_xlen_t in_ndims;
+    int64_t* in_dimptr;
     
     for(int ii = 0; ii < narrays; ii++){
         std::string fbase = correct_filebase(input_filebases[ii]);
@@ -231,29 +254,31 @@ SEXP FARR_buffer_map2(
         file_buffer_types[ii] = file_buffer_sxptype(arr_types[ii]);
         memory_buffer_types[ii] = array_memory_sxptype(arr_types[ii]);
         cumparts[ii] = realToInt64_inplace(meta["cumsum_part_sizes"]);
+        
+        in_dim = meta["dimension"];
         if( in_dim == R_NilValue ){
-            in_dim = meta["dimension"];
-            realToInt64_inplace(in_dim);
+            stop("Cannot obtain dimensions from the inputs");
         }
+        realToInt64_inplace(in_dim);
+        in_ndims = Rf_length(in_dim);
+        in_dimptr = INTEGER64(in_dim);
+        
+        // slice length
+        slice_sizes[ii] = 1;
+        for(R_xlen_t jj = 0; jj <in_ndims - 1; jj++, in_dimptr++){
+            slice_sizes[ii] *= *in_dimptr;
+        }
+        in_dimptr = INTEGER64(in_dim) + (in_ndims - 1);
+        
+        // length of input array
+        input_lens[ii] = slice_sizes[ii] * (*in_dimptr);
     }
-    
-    if( in_dim == R_NilValue ){
-        stop("Cannot obtain input dimensions");
-    }
-    
-    R_xlen_t in_ndims = Rf_length(in_dim);
-    int64_t* in_dimptr = INTEGER64(in_dim);
-    int64_t in_unit_partlen = 1;
-    for(R_xlen_t jj = 0; jj <in_ndims - 1; jj++, in_dimptr++){
-        in_unit_partlen *= *in_dimptr;
-    }
-    int64_t in_array_length = in_unit_partlen * *(INTEGER64(in_dim) + (in_ndims - 1));
     
     
     // allocate buffers
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems)));
+        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
     }
     
     int64_t current_pos = 0;
@@ -263,22 +288,25 @@ SEXP FARR_buffer_map2(
         ncores = narrays;
     }
     
-    R_xlen_t niters = in_array_length / buffer_nelems;
-    if( niters * buffer_nelems < in_array_length ){
+    R_xlen_t niters = input_lens[0] / buffer_nelems[0];
+    if( niters * buffer_nelems[0] < input_lens[0] ){
         niters++;
     }
     SEXP ret = PROTECT(Rf_allocVector(VECSXP, niters));
     R_xlen_t iter = 0;
     
     FARRSequentialSubsetter seqsubsetter(
-            input_filebases, in_unit_partlen, cumparts,
+            input_filebases, slice_sizes, cumparts,
             arr_types, argbuffers, 0, buffer_nelems
     );
     
     
-    for( ; current_pos < in_array_length; current_pos += buffer_nelems, iter++ ){
+    // current_pos < input_lens[0]; 
+    for( iter = 0, current_pos = 0 ; 
+         iter < niters;
+         current_pos += buffer_nelems[0], iter++ ){
         
-        seqsubsetter.current_pos = current_pos;
+        seqsubsetter.current_pos = iter;
         TinyParallel::parallelFor(0, narrays, seqsubsetter);
 
         try{

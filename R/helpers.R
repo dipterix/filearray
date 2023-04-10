@@ -54,9 +54,9 @@ guess_partition <- function(dim, elem_size){
 }
 
 
-guess_fmap_input_size <- function(dim, element_size = 16L) {
+guess_fmap_buffer_size <- function(dim, element_size = 16L) {
     buffer_len <- get_buffer_size() / element_size
-    buffer_large <- max(buffer_len, 1048576) # 8.5MB, 1024 x 1024
+    buffer_large <- max(buffer_len, 1048576L) # 8.5MB, 1024 x 1024
     
     
     dimcprod <- cumprod(dim)
@@ -64,24 +64,78 @@ guess_fmap_input_size <- function(dim, element_size = 16L) {
     min_partition_size <- dimcprod[[length(dimcprod) - 1]]
     
     # tiny array
-    if( buffer_len >= len ) { return(len) }
+    if( buffer_len >= len ) { return( as.integer(len) ) }
     
     # small array
-    if( buffer_large >= min_partition_size ) { return(min_partition_size) }
+    if( buffer_large >= min_partition_size ) { return( as.integer(min_partition_size) ) }
     
     # large array
     dimcprod <- dimcprod[dimcprod <= buffer_large]
-    if(!length(dimcprod)) { return(buffer_large) }
+    if(!length(dimcprod)) { return( dim[[1]] * dim[[2]] ) }
     
     # mid array
     unit_size <- dimcprod[[length(dimcprod)]]
     fct <- floor(buffer_large / unit_size)
     if(fct < 1) { fct <- 1 }
-    return( unit_size * fct )
+    return( as.integer(unit_size * fct) )
 }
 
+# Run this with caveat! must have GCD > 1... we don't check
+common_fmap_buffer_size <- function(..., .list = NULL) {
+    stopifnot(...length() + length(.list) > 0)
+    sizes <- sapply(c(list(...), .list), function(x){
+        if(length(x) == 1L) { return(as.integer(x)) }
+        guess_fmap_buffer_size(x)
+    }, simplify = TRUE)
+    # sizes <- sizes[sizes < 1048576L]
+    # if(!length(sizes)) { return(1048576L) }
+    if(length(sizes) == 1L) { return( sizes ) }
+    
+    Reduce(function(a, b) {
+        if( a <= 0 || b <= 0 ) {
+            stop("Cannot find proper input buffer size when data has zero length")
+        }
+        rem <- a %% b
+        if( rem == 0 ) { return( b ) }
+        return( Recall(b, rem) )
+    }, sizes)
+}
+
+validate_fmap_buffer_size <- function(size, input_lens) {
+    size <- size[[1]]
+    if( any(input_lens == 0) ) { return(FALSE) }
+    if( is.na(size) || size != round(size) ) {
+        return(FALSE)
+    }
+    
+    # number of runs for each buffer is `min(input_lens) / size`
+    # # elems in buffer is input_lens / count
+    buffer_nelems <- input_lens / (min(input_lens) / size)
+    
+    if(any( buffer_nelems != round(buffer_nelems))) {
+        return(FALSE)
+    }
+    if( size == 1 && any(buffer_nelems > 1) ) {
+        return(FALSE)
+    }
+    return(structure(TRUE, buffer_nelems = buffer_nelems))
+}
 
 # ---- data type helpers ----------------------------------------------------
+
+is_filearray <- function(object, proxy_ok = TRUE){
+    if(!isS4(object)){ return(FALSE) }
+    if( !proxy_ok && is_fileproxy(object) ) {
+        return( FALSE )
+    }
+    return(inherits(object, c("FileArray", "FileArrayProxy")))
+}
+
+is_fileproxy <- function(object){
+    if(!isS4(object)){ return(FALSE) }
+    return(inherits(object, "FileArrayProxy"))
+}
+
 
 #' @noRd 
 #' Guess output data types for meth operators such as \code{+-*/}

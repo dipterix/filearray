@@ -260,7 +260,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_buffer_map
-SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, const int& buffer_nelems, int result_nelems);
+SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, std::vector<int>& buffer_nelems, int result_nelems);
 RcppExport SEXP _filearray_FARR_buffer_map(SEXP input_filebasesSEXP, SEXP output_filebaseSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP, SEXP result_nelemsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -268,21 +268,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type output_filebase(output_filebaseSEXP);
     Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
-    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type buffer_nelems(buffer_nelemsSEXP);
     Rcpp::traits::input_parameter< int >::type result_nelems(result_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_map(input_filebases, output_filebase, map, buffer_nelems, result_nelems));
     return rcpp_result_gen;
 END_RCPP
 }
 // FARR_buffer_map2
-SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, const int& buffer_nelems);
+SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, std::vector<int>& buffer_nelems);
 RcppExport SEXP _filearray_FARR_buffer_map2(SEXP input_filebasesSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
     Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
-    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type buffer_nelems(buffer_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_map2(input_filebases, map, buffer_nelems));
     return rcpp_result_gen;
 END_RCPP

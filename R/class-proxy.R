@@ -185,7 +185,8 @@ as_filearrayproxy.default <- function(x, ...) {
 
 
 # Be careful when using addon, must be deterministic, or signature will be invalid
-fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_, filebase = NULL) {
+fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_, 
+                        filebase = NULL, use_cache = is.null(filebase)) {
     
     # DIPSAUS DEBUG START
     # verbose <- TRUE
@@ -268,7 +269,7 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
         }
     )
     
-    if(!isTRUE(re$get_header("matured")) || has_addon) {
+    if(!use_cache || !isTRUE(re$get_header("matured")) || has_addon) {
         
         if( length(input_size) == 1 && !is.na(input_size) ) {
             nruns <- length(x) / input_size
@@ -277,7 +278,7 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
             }
         } 
         if( length(input_size) != 1 || is.na(input_size) ) {
-            input_size <- guess_fmap_input_size(dim(x), x$element_size())
+            input_size <- guess_fmap_buffer_size(dim(x), x$element_size())
         }
         
         matured <- tryCatch({
