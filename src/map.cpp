@@ -48,6 +48,16 @@ struct FARRSequentialSubsetter : public TinyParallel::Worker {
     }
 };
 
+
+/**
+# DIPSAUS DEBUG START
+# devtools::load_all()
+# e1 <- as_filearray(1:240, dimension = c(2,3,4,10), type = "integer", partition_size = 3L)
+# e2 <- as_filearray(rnorm(240), dimension = c(2,3,4,10), type = "double", partition_size = 3L)
+# 
+# x <- e1+e2
+# print(x[][240])
+**/
 // [[Rcpp::export]]
 SEXP FARR_buffer_map(
         std::vector<std::string>& input_filebases,
@@ -146,6 +156,7 @@ SEXP FARR_buffer_map(
             input_filebases, in_unit_partlen, cumparts,
             arr_types, argbuffers, 0, buffer_nelems
     );
+    
     
     for( ; current_pos < in_array_length; current_pos += buffer_nelems ){
         
@@ -289,39 +300,57 @@ SEXP FARR_buffer_map2(
 }
 
 /*** R
-# devtools::load_all()
-require(filearray)
-dim <- 3:5
-set.seed(1); 
-fbases <- sapply(1:4, function(i){
-    file <- tempfile(); unlink(file, recursive = TRUE)
-    x <- filearray_create(file, dim, type = 'double')
-    x[] <- seq_len(prod(dim))
-    x$.filebase
-})
-set.seed(2); file <- tempfile(); unlink(file, recursive = TRUE)
-y <- filearray_create(file, 4:5, type = 'complex')
-y$initialize_partition()
-    
-FARR_buffer_map(
-    fbases,
-    y$.filebase,
-    function(x){
-        print(c(x[[1]], sum(x[[1]])))
-        sum(x[[1]])
-    },
-    3L,
-    1L
-)
-res <- FARR_buffer_map2(
-    fbases,
-    function(x){
-        print(c(x[[1]], sum(x[[1]])))
-        sum(x[[1]])
-    },
-    3L,
-    1L
-)
-# y[] - simplify2array(res)
+devtools::load_all()
+e1 <- as_filearray(1:240, dimension = c(2,3,4,10), type = "integer", partition_size = 3L)
+e2 <- as_filearray(rnorm(240), dimension = c(2,3,4,10), type = "double", partition_size = 3L)
+
+x <- e1+e2
+invisible(x[])
+
+tmp <- integer(240)
+current_pos <- 0L
+FARR_subset_sequential(
+    x$.filebase,
+    24L,
+    bit64::as.integer64(c(3,6, 9, 10)),
+    13L,
+    tmp,
+    current_pos, 24L
+);
+
+# # devtools::load_all()
+# require(filearray)
+# dim <- 3:5
+# set.seed(1); 
+# fbases <- sapply(1:4, function(i){
+#     file <- tempfile(); unlink(file, recursive = TRUE)
+#     x <- filearray_create(file, dim, type = 'double')
+#     x[] <- seq_len(prod(dim))
+#     x$.filebase
+# })
+# set.seed(2); file <- tempfile(); unlink(file, recursive = TRUE)
+# y <- filearray_create(file, 4:5, type = 'complex')
+# y$initialize_partition()
+#     
+# FARR_buffer_map(
+#     fbases,
+#     y$.filebase,
+#     function(x){
+#         print(c(x[[1]], sum(x[[1]])))
+#         sum(x[[1]])
+#     },
+#     3L,
+#     1L
+# )
+# res <- FARR_buffer_map2(
+#     fbases,
+#     function(x){
+#         print(c(x[[1]], sum(x[[1]])))
+#         sum(x[[1]])
+#     },
+#     3L,
+#     1L
+# )
+# # y[] - simplify2array(res)
 
 */

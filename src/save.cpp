@@ -27,31 +27,55 @@ SEXP FARR_subset_assign_sequential_bare(
     int file_buffer_elemsize = file_element_size(array_type);
     std::string fbase = correct_filebase(filebase);
     R_len_t nparts = Rf_length(cum_partsizes);
+    int64_t* cum_part = INTEGER64(cum_partsizes);
     
-    // calculate the first partition
+    // We want to calculate which partitions are used, saved to part_start and part_end
+    // However, each partition may contain multiple slices, hence we first decide
+    // slices that's being used, stored in slice_idx1 and slice_idx2
+    // in R's index format (startwith 1 and ends with to # of partitions)
+    // calculate the first partition, should start from 1
     int64_t slice_idx1 = 0;
+    // partition number cannot go beyond nparts + 1 (can equal)
     int64_t slice_idx2 = 0;
     int64_t tmp = 0;
+    
+    // printed message means get element from `from` (C index) and length of 
+    // `len` across `nparts` partitions
+    // Rcout << "From: " << from << " - len: " << len << " nparts: " << nparts << "\n";
     for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
     
-    for(slice_idx2 = slice_idx1; tmp < from + len && slice_idx2 < nparts; tmp+= unit_partlen, slice_idx2++){}
-    // for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    cum_part = INTEGER64(cum_partsizes) + (nparts - 1);
+    const int64_t max_slices = unit_partlen * (*cum_part);
+    for(
+        slice_idx2 = slice_idx1; 
+        tmp < from + len && slice_idx2 < max_slices; 
+        tmp+= unit_partlen, slice_idx2++
+    ){}
     
-    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << "\n";
+    if( slice_idx2 > *cum_part ) {
+        slice_idx2 = *cum_part;
+    }
     
+    // which slices to start and which to end
+    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << 
+    //     " (max: " << *cum_part << ")\n";
+    
+    // Which file partition to start: min = 0
+    // unlike slice_idx1/2, part_start and part_end are index in C-style
+    // That is: they starting from 0, and max is number of partitions-1
     int part_start = 0;
     int part_end = 0;
     int64_t skip_start = 0;
-    // --- // int64_t skip_end = 0;
-    
-    int64_t* cum_part = INTEGER64(cum_partsizes);
-    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
+
+    for(cum_part = INTEGER64(cum_partsizes); *cum_part < slice_idx1; cum_part++, part_start++){}
     if( part_start == 0 ){
         skip_start = from;
     } else {
         skip_start = from - (*(cum_part - 1)) * unit_partlen;
     }
-    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
+    for(part_end = part_start; *cum_part < slice_idx2; cum_part++, part_end++){
+        // Rcout << *cum_part << std::endl; 
+    }
     
     /*
     // skip_end = (*cum_part) * unit_partlen - (from + len);
