@@ -70,8 +70,8 @@ fa_subtract_internal <- function(e1, e2, label = "subtract array") {
 
 fa_subtract <- function(e1, e2) {
     call <- match.call()
-    call[[1]] <- quote(`+`)
-    label <- sprintf("Calculating: %s", deparse1(call))
+    call[[1]] <- quote(`-`)
+    label <- sprintf("Calculating: %s (fa_subtract)", deparse1(call))
     
     fa_subtract_internal(e1, e2, label)
 }

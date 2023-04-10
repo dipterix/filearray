@@ -246,20 +246,7 @@ fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
     res
 }
 
-is_filearray <- function(object){
-    if(!isS4(object)){ return(FALSE) }
-    return(inherits(object, c("FileArray", "FileArrayProxy")))
-}
-
-is_fileproxy <- function(object){
-    if(!isS4(object)){ return(FALSE) }
-    return(inherits(object, "FileArrayProxy"))
-}
-
-
-#' @rdname fmap
-#' @export
-fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
+fmap_element_wise_internal <- function(x, fun, .y, ..., .input_size = NA){
     if(!is.list(x)){
         if(!is_filearray(x)){ stop("`x` must be a list of file arrays") }
         x <- list(x)
@@ -276,7 +263,7 @@ fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
         stop("Input `x` array dimensions must match")
     }
     
-    miss_y <- missing(.y)
+    miss_y <- missing(.y) || is.null(.y)
     if(miss_y){
         .y <- filearray_create(temp_path(), dim, type = typeof(x[[1]]))
     } else {
@@ -326,5 +313,21 @@ fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
         return(.y)
     } else {
         return(invisible(.y))
+    }
+}
+
+#' @rdname fmap
+#' @export
+fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA) {
+    if(!is_fileproxy(x)) {
+        return(fmap_element_wise_internal(x = x, fun = fun, .y = .y, ..., .input_size = .input_size))
+    } else{
+        .NotYetImplemented()
+        # uuid <- x$uuid()
+        # # proxy!
+        # fa_eval_ops(x = x, addon = function(env, v) {
+        #     env[[]]fun(v)
+        # })
+        
     }
 }

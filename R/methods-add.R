@@ -71,7 +71,7 @@ fa_add_internal <- function(e1, e2, label = "add array") {
 fa_add <- function(e1, e2) {
     call <- match.call()
     call[[1]] <- quote(`+`)
-    label <- sprintf("Calculating: %s", deparse1(call))
+    label <- sprintf("Calculating: %s (fa_add)", deparse1(call))
     
     fa_add_internal(e1, e2, label)
 }

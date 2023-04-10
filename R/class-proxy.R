@@ -20,17 +20,14 @@ FileArrayProxy <- setRefClass(
         persist = "logical"
     ),
     methods = list(
-        .mature = function(v, input_size, verbose = FALSE) {
-            # internally used
-            force(verbose)
-            
+        .mature = function(env, data, verbose = FALSE) {
             # make sure the elements of .linked are matured
             lapply(.self$.linked, function(arr) { 
-                arr$.mature(v, input_size = input_size, verbose = verbose) 
+                arr$.mature(env = env, data = data, verbose = verbose) 
             })
             
             lapply(.self$.ops, function(op) {
-                op$op_func(v, verbose = verbose, input_size = input_size)
+                op$op_func(env = env, data = data, verbose = verbose)
                 return(NULL)
             })
             return(invisible())
@@ -95,16 +92,16 @@ FileArrayProxy <- setRefClass(
                 context = context,
                 
                 # operation function
-                op_func = function(v, input_size, verbose = FALSE) {
-                    if(is.null(v[[ output_uuid ]])) {
+                op_func = function(env, data, verbose = FALSE) {
+                    if(is.null(env[[ output_uuid ]])) {
                         if( verbose ) {
                             message(label)
                         }
-                        tmp <- operator(v, input_size)
+                        tmp <- operator(env, data)
                         if(!identical(typeof(tmp), out_mode)) {
                             storage.mode(tmp) <- out_mode
                         }
-                        v[[ output_uuid ]] <- tmp
+                        env[[ output_uuid ]] <- tmp
                     }
                 }
             )
@@ -186,14 +183,28 @@ as_filearrayproxy.default <- function(x, ...) {
     ))
 }
 
+
 # Be careful when using addon, must be deterministic, or signature will be invalid
-fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_) {
+fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_, filebase = NULL) {
+    
+    # DIPSAUS DEBUG START
+    # verbose <- TRUE
+    # addon <- NULL
+    # input_size <- NA
+    # filebase <- NULL
+    # z = filearray_create(tempfile(), c(2,3,4))
+    # z[] <- 1:24
+    # y <- (z + 1 + (z - 1))
+    # x <- y + (1+y)
+    # result <- fa_eval_ops(x, verbose = TRUE)
+    # print(result[])
+    
     
     has_addon <- is.function(addon)
     if( has_addon ) {
         fml <- formals(addon)
-        if(length(fml) < 2 && !"..." %in% names(fml)) {
-            stop("`fa_eval_ops`: addon function must take 2 parameters")
+        if(length(fml) < 3 && !"..." %in% names(fml)) {
+            stop("`fa_eval_ops`: addon function must take 3 parameters (environment, list of data, output UUID)")
         }
     }
     
@@ -232,7 +243,12 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
         x$get_all_uuids(),
         addon = addon
     ))
-    fbase <- file.path(tempdir(check = TRUE), sprintf("filearrayproxy_%s", signature))
+    if(length(filebase) != 1 || !is.character(filebase) || is.na(filebase)) {
+        fbase <- file.path(tempdir(check = TRUE), sprintf("filearrayproxy_%s", signature))
+    } else {
+        fbase <- filebase
+    }
+    
     
     if(verbose) {
         message("Results will be saved to: ", fbase)
@@ -265,19 +281,19 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
         }
         
         matured <- tryCatch({
-            fmap_element_wise(arrays, function(data) {
+            fmap_element_wise_internal(arrays, function(data) {
                 env <- new.env(parent = emptyenv(), hash = TRUE)
                 lapply(seq_along(uuids), function(i) {
                     env[[ uuids[[i]] ]] <- data[[ i ]]
                     return(NULL)
                 })
-                x$.mature(env, verbose = verbose, input_size = input_size)
+                x$.mature(env, data = data, verbose = verbose)
                 
                 # tmp <- as.list(env)
                 # print(tmp[order(names(tmp))])
                 
                 if(has_addon) {
-                    addon_func(env[[ uuid_x ]], input_size)
+                    addon_func(env, data, uuid_x)
                 }
                 
                 env[[ uuid_x ]]
@@ -311,11 +327,4 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
 # op = .self$.ops[[1]]
 # verbose <- TRUE
 
-# DIPSAUS DEBUG START
-# verbose <- TRUE
-# z = filearray_create(tempfile(), c(2,3,4))
-# z[] <- 1:24
-# aaa = fa_add_filearray(fa_add_scalar(z,1), fa_add_scalar(z, -1))
-# bbb = fa_add_filearray(aaa, fa_add_scalar(aaa, 1))
-# result <- fa_eval_ops(bbb, verbose = TRUE)
-# print(result[])
+
