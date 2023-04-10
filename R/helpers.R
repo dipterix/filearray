@@ -5,8 +5,7 @@ new_uuid <- function(prefix = 0L) {
 
 # ---- Index helpers --------------------------------------------------------
 
-#' @noRd 
-#' Check if two arrays share the same dimension
+# Check if two arrays share the same dimension
 is_same_dim <- function(x, y) {
     dx <- dim(x)
     if(length(dx) >= 2L) {
@@ -21,10 +20,9 @@ is_same_dim <- function(x, y) {
     return(FALSE)
 }
 
-#' @noRd 
-#' Guess partition size from given dimensions and element size.
-#' This function is used to estimate a decent partition size when creating 
-#' arrays
+# Guess partition size from given dimensions and element size.
+# This function is used to estimate a decent partition size when creating 
+# arrays
 guess_partition <- function(dim, elem_size){
     last_margin <- dim[[length(dim)]]
     unit_size <- prod(dim) / last_margin * elem_size
@@ -137,8 +135,7 @@ is_fileproxy <- function(object){
 }
 
 
-#' @noRd 
-#' Guess output data types for meth operators such as \code{+-*/}
+# Guess output data types for meth operators such as \code{+-*/}
 operation_output_type <- function(
         type1, type2, 
         logical = c("integer", "logical"), raw = c("error", "integer"),

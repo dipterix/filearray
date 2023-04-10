@@ -251,52 +251,10 @@ fmap <- function(x, fun, .y = NULL, .input_size = NA_integer_, .output_size = NA
 #' @rdname fmap
 #' @export
 fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
-    if(!length(x)){
-        stop("`x` must be a list of file arrays")
-    }
     
-    if(inherits(x, "FileArray")){
-        x <- list(x)
-    }
+    # TODO mature arrays
     
-    dims <- sapply(x, dim)
-    dim <- dims[,1, drop = TRUE]
-    
-    if(any(dims - dim != 0)){
-        stop("Input `x` array dimensions must match")
-    }
-    
-    fbases <- sapply(x, function(el){
-        if( !is_filearray(el) ){
-            stop("Input `x` must only contains file arrays")
-        }
-        el$initialize_partition()
-        el$.filebase
-    })
-    
-    if(is.na(.input_size)){
-        # .input_size <- get_buffer_size() / 8L
-        .input_size <- guess_fmap_buffer_size(dim(x[[1]]))
-    }
-    if(.input_size <= 0){
-        stop("`.input_size` must be postive")
-    }
-    .input_size <- as.integer(.input_size)
-    
-    args <- list(quote(input), ...)
-    map <- function(input){
-        do.call(fun, args)
-    }
-    
-    res <- FARR_buffer_map2(
-        input_filebases = fbases,
-        map = map,
-        buffer_nelems = .input_size
-    )
-    if(.simplify){
-        res <- simplify2array(res)
-    }
-    res
+    filearray_map_internal(x = x, fun = fun, y = .y, .input_size = .input_size, output_is_filearray = FALSE, .simplify = .simplify, ...)
 }
 
 # only use values on hard disk
