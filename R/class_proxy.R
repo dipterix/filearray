@@ -20,6 +20,21 @@ FileArrayProxy <- setRefClass(
         persist = "logical"
     ),
     methods = list(
+        .mature = function(v, input_size, verbose = FALSE) {
+            # internally used
+            force(verbose)
+            
+            # make sure the elements of .linked are matured
+            lapply(.self$.linked, function(arr) { 
+                arr$.mature(v, input_size = input_size, verbose = verbose) 
+            })
+            
+            lapply(.self$.ops, function(op) {
+                op$op_func(v, verbose = verbose, input_size = input_size)
+                return(NULL)
+            })
+            return(invisible())
+        },
         initialize = function() {
             # callNextMethod()
             if(length(.self$.filebase) == 1) {
@@ -59,20 +74,6 @@ FileArrayProxy <- setRefClass(
             .self$.linked[[x$uuid()]] <- x
             return(invisible())
         },
-        mature = function(v, input_size, verbose = FALSE) {
-            force(verbose)
-            
-            # make sure the elements of .linked are matured
-            lapply(.self$.linked, function(arr) { 
-                arr$mature(v, input_size = input_size, verbose = verbose) 
-            })
-            
-            lapply(.self$.ops, function(op) {
-                op$op_func(v, verbose = verbose, input_size = input_size)
-                return(NULL)
-            })
-            return(invisible())
-        },
         add_operator = function(
             operator, context = "element_wise", label = "Unknown operator",
             out_type = c("double", "complex", "float", "integer", "raw", "logical")
@@ -108,6 +109,23 @@ FileArrayProxy <- setRefClass(
                 }
             )
         },
+        collapse = function(
+            keep, method = c('mean', 'sum'),
+            transform = c('asis', '10log10', 'square', 'sqrt', 'normalize'), 
+            na.rm = FALSE
+        ) {
+            # TODO This is a quick fix
+            method <- match.arg(method)
+            transform <- match.arg(transform)
+            fa_eval_ops(.self)$collapse(
+                keep = keep, method = method,
+                transform = transform, 
+                na.rm = na.rm
+            )
+        },
+        expand = function(n) {
+            stop("Cannot expand a proxy array. Please mature the array first before expanding.")
+        },
         show = function(){
             if(.self$valid()){
                 cat('Reference class object of class "FileArrayProxy"\n')
@@ -131,6 +149,9 @@ FileArrayProxy <- setRefClass(
                 }
             }
             
+        },
+        mature = function(...) {
+            return(fa_eval_ops(.self, ...))
         }
     )
 )
@@ -233,8 +254,6 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
     
     if(!isTRUE(re$get_header("matured")) || has_addon) {
         
-        
-        
         if( length(input_size) == 1 && !is.na(input_size) ) {
             nruns <- length(x) / input_size
             if(!isTRUE(nruns == round(nruns))) {
@@ -245,25 +264,31 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
             input_size <- guess_fmap_input_size(dim(x), x$element_size())
         }
         
-        fmap_element_wise(arrays, function(data) {
-            env <- new.env(parent = emptyenv(), hash = TRUE)
-            lapply(seq_along(uuids), function(i) {
-                env[[ uuids[[i]] ]] <- data[[ i ]]
-                return(NULL)
-            })
-            x$mature(env, verbose = verbose, input_size = input_size)
-            
-            # tmp <- as.list(env)
-            # print(tmp[order(names(tmp))])
-            
-            if(has_addon) {
-                addon_func(env[[ uuid_x ]], input_size)
-            }
-            
-            env[[ uuid_x ]]
-        }, .y = re, .input_size = input_size)
+        matured <- tryCatch({
+            fmap_element_wise(arrays, function(data) {
+                env <- new.env(parent = emptyenv(), hash = TRUE)
+                lapply(seq_along(uuids), function(i) {
+                    env[[ uuids[[i]] ]] <- data[[ i ]]
+                    return(NULL)
+                })
+                x$.mature(env, verbose = verbose, input_size = input_size)
+                
+                # tmp <- as.list(env)
+                # print(tmp[order(names(tmp))])
+                
+                if(has_addon) {
+                    addon_func(env[[ uuid_x ]], input_size)
+                }
+                
+                env[[ uuid_x ]]
+            }, .y = re, .input_size = input_size)
+            TRUE
+        }, error = function(e) {
+            stop(e)
+            FALSE
+        })
         
-        re$set_header(key = "matured", value = TRUE, save = TRUE)
+        re$set_header(key = "matured", value = matured, save = TRUE)
     }
     re$.mode <- "readonly"
     return(re)
