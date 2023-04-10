@@ -102,7 +102,9 @@ filearray_bind <- function(
     if(!all(sapply(arrays, is_filearray))){
         stop("`filearray_bind`: All inputs must be file arrays")
     }
-    type <- arrays[[1]]$type()
+    # TODO: This is quick fix, should change this
+    arrays <- lapply(arrays, fa_eval_ops)
+    type <- typeof(arrays[[1]])
     part_size <- arrays[[1]]$partition_size()
     dim <- arrays[[1]]$dimension()
     dim[[length(dim)]] <- part_size

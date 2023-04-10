@@ -2,7 +2,6 @@
 % Please edit documentation in R/methods.R
 \name{S3-filearray}
 \alias{S3-filearray}
-\alias{[.FileArray}
 \alias{[<-.FileArray}
 \alias{[[.FileArray}
 \alias{as.array.FileArray}
@@ -17,16 +16,6 @@
 \alias{subset.FileArray}
 \title{'S3' methods for 'FileArray'}
 \usage{
-\method{[}{FileArray}(
-  x,
-  ...,
-  drop = TRUE,
-  reshape = NULL,
-  strict = TRUE,
-  dimnames = TRUE,
-  split_dim = 0
-)
-
 \method{[}{FileArray}(x, ...) <- value
 
 \method{[[}{FileArray}(x, i)
@@ -54,9 +43,17 @@
 \arguments{
 \item{x}{a file array}
 
-\item{drop}{whether to drop dimensions; see topic \code{\link[base]{Extract}}}
+\item{value}{value to substitute or set}
+
+\item{i, ...}{index set, or passed to other methods}
 
 \item{reshape}{a new dimension to set before returning subset results; default is \code{NULL} (use default dimensions)}
+
+\item{drop}{whether to drop dimensions; see topic \code{\link[base]{Extract}}}
+
+\item{na.rm}{whether to remove \code{NA} values during the calculation}
+
+\item{.env}{environment to evaluate formula when evaluating subset margin indices.}
 
 \item{strict}{whether to allow indices to exceed bound; currently only accept \code{TRUE}}
 
@@ -65,22 +62,12 @@
 \item{split_dim}{internally used; split dimension and calculate indices to
 manually speed up the subset; value ranged from 0 to size of dimension minus
 one.}
-
-\item{value}{value to substitute or set}
-
-\item{i, ...}{index set, or passed to other methods}
-
-\item{na.rm}{whether to remove \code{NA} values during the calculation}
-
-\item{.env}{environment to evaluate formula when evaluating subset margin indices.}
 }
 \description{
 These are 'S3' methods for 'FileArray'
 }
 \section{Functions}{
 \itemize{
-\item \code{[}: get element by position
-
 \item \code{`[`(FileArray) <- value}: assign array values
 
 \item \code{[[}: get element by index

@@ -1,6 +1,6 @@
 test_that("method: addition", {
     
-    dm <- c(10,20,30)
+    dm <- c(2,3,4)
     len <- prod(dm)
     
     x_dbl <- array(rnorm(len), dim = dm)
@@ -80,8 +80,6 @@ test_that("method: addition", {
     check_add(proxy_lgl, 1L, x_lgl, 1L, "integer", 1e-5)
     check_add(proxy_lgl, TRUE, x_lgl, TRUE, "integer", 1e-5)
     
-    
-    
     # filearray - Double
     check_add(arr_dbl, proxy_dbl, x_dbl, x_dbl, "double", 1e-5)
     check_add(arr_dbl, proxy_int, x_dbl, x_int, "double", 1e-5)
@@ -149,6 +147,13 @@ test_that("method: addition", {
     check_add(FALSE, arr_int, FALSE, x_int, "integer", 1e-5)
     check_add(FALSE, arr_lgl, FALSE, x_lgl, "integer", 1e-5)
     
+    # wrong dimensions
+    testthat::expect_error(arr_int + array(0L, c(10,20,1)))
+    testthat::expect_error(arr_int + 1:10)
+    testthat::expect_equal(
+        (arr_int + 1:length(arr_int))[dimnames = NULL],
+        arr_int[dimnames = NULL] + 1:length(arr_int)
+    )
     
     clear_cache()
 })
