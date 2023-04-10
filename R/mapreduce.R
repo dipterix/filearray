@@ -96,6 +96,9 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
     if(!x$valid()){
         stop("Invalid file array")
     }
+    if( is_fileproxy(x) ) {
+        x <- fa_eval_ops(x)
+    }
     
     current_bsz <- get_buffer_size()
     on.exit({
@@ -129,7 +132,7 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
     sexp_type <- x$sexp_type()
     
     if(is.na(buffer_size)){
-        elem_size <- get_elem_size(x$type())
+        elem_size <- get_elem_size(typeof(x))
         mbsz <- max_buffer_size() * getThreads(FALSE) / elem_size
         
         sel <- cumprod(dim) <= mbsz

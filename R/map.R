@@ -161,7 +161,8 @@ fmap <- function(x, fun, .y, .input_size = NA, .output_size = NA, ...){
     .y$initialize_partition()
     
     if(is.na(.input_size)){
-        .input_size <- get_buffer_size() / .y$element_size()
+        # .input_size <- get_buffer_size() / .y$element_size()
+        .input_size <- guess_fmap_input_size(dim(.y), .y$element_size())
     }
     if(is.na(.output_size)){
         .output_size <- 0L
@@ -221,7 +222,8 @@ fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
     })
     
     if(is.na(.input_size)){
-        .input_size <- get_buffer_size() / 8L
+        # .input_size <- get_buffer_size() / 8L
+        .input_size <- guess_fmap_input_size(dim(x[[1]]))
     }
     if(.input_size <= 0){
         stop("`.input_size` must be postive")
@@ -249,6 +251,12 @@ is_filearray <- function(object){
     return(inherits(object, c("FileArray", "FileArrayProxy")))
 }
 
+is_fileproxy <- function(object){
+    if(!isS4(object)){ return(FALSE) }
+    return(inherits(object, "FileArrayProxy"))
+}
+
+
 #' @rdname fmap
 #' @export
 fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
@@ -270,7 +278,7 @@ fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
     
     miss_y <- missing(.y)
     if(miss_y){
-        .y <- filearray_create(temp_path(), dim, type = x[[1]]$type())
+        .y <- filearray_create(temp_path(), dim, type = typeof(x[[1]]))
     } else {
         if(length(dim) != length(.y$dimension()) ||
            any(.y$dimension() - dim != 0)){
@@ -280,7 +288,8 @@ fmap_element_wise <- function(x, fun, .y, ..., .input_size = NA){
     .y$initialize_partition()
     
     if(is.na(.input_size)){
-        .input_size <- get_buffer_size() / .y$element_size()
+        .input_size <- guess_fmap_input_size(dim(.y), .y$element_size())
+        # .input_size <- get_buffer_size() / .y$element_size()
     }
     if(.input_size <= 0){
         stop("`.input_size` must be postive")
