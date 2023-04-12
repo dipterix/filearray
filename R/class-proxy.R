@@ -185,8 +185,9 @@ as_filearrayproxy.default <- function(x, ...) {
 
 
 # Be careful when using addon, must be deterministic, or signature will be invalid
-fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_integer_, 
-                        filebase = NULL, use_cache = is.null(filebase)) {
+fa_eval_ops <- function(
+        x, addon = NULL, verbose = FALSE, input_size = NA_integer_, 
+        filebase = NULL, use_cache = is.null(filebase)) {
     
     # DIPSAUS DEBUG START
     # verbose <- TRUE
@@ -266,6 +267,7 @@ fa_eval_ops <- function(x, addon = NULL, verbose = FALSE, input_size = NA_intege
         on_missing = function(arr) {
             headers <- x$.header
             arr$.header <- headers[!names(headers) %in% RESERVED_HEADERS]
+            arr$.header$dimnames <- x$.header$dimnames
         }
     )
     
