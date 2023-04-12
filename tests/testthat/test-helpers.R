@@ -74,3 +74,21 @@ test_that("operation_output_type", {
     
 })
 
+test_that("fmap_buffer", {
+    
+    buffer_large <- get_buffer_size() * 16
+    
+    testthat::expect_equal(common_fmap_buffer_count(84, 12, 96), 1)
+    testthat::expect_equal(common_fmap_buffer_count(84, 12, 97), 1)
+    
+    testthat::expect_equal(common_fmap_buffer_count(buffer_large*2, 12, 1024), 2)
+    testthat::expect_equal(common_fmap_buffer_count(buffer_large*2 + 2, 12, 1024), 2)
+    testthat::expect_equal(common_fmap_buffer_count(buffer_large*4096, buffer_large, 1024), 1024)
+    testthat::expect_equal(common_fmap_buffer_count(buffer_large*2, 13, 1024), 1)
+    
+    expect_true(validate_fmap_buffer_count(12, input_lens = c(84, 12, 96)))
+    expect_true(validate_fmap_buffer_count(1, input_lens = c(84, 12, 96)))
+    expect_false(validate_fmap_buffer_count(15, input_lens = c(84, 12, 96)))
+    expect_true(validate_fmap_buffer_count(1, input_lens = c(84, 12, 97)))
+    
+})

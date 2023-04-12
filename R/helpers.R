@@ -54,7 +54,7 @@ guess_partition <- function(dim, elem_size){
 
 guess_fmap_buffer_size <- function(dim, element_size = 16L) {
     buffer_len <- get_buffer_size() / element_size
-    buffer_large <- max(buffer_len, 1048576L) # 8.5MB, 1024 x 1024
+    buffer_large <- get_buffer_size() * 16L # default is 8.5MB, 1024 x 1024
     
     
     dimcprod <- cumprod(dim)
@@ -78,18 +78,16 @@ guess_fmap_buffer_size <- function(dim, element_size = 16L) {
     return( as.integer(unit_size * fct) )
 }
 
-# Run this with caveat! must have GCD > 1... we don't check
-common_fmap_buffer_size <- function(..., .list = NULL) {
+common_fmap_buffer_count <- function(..., .list = NULL) {
     stopifnot(...length() + length(.list) > 0)
-    sizes <- sapply(c(list(...), .list), function(x){
-        if(length(x) == 1L) { return(as.integer(x)) }
-        guess_fmap_buffer_size(x)
-    }, simplify = TRUE)
-    # sizes <- sizes[sizes < 1048576L]
-    # if(!length(sizes)) { return(1048576L) }
+    buffer_large <- get_buffer_size() * 16L
+    sizes <- vapply(c(list(...), .list), function(x){
+        as.double(prod(x))
+    }, FUN.VALUE = 0.0)
     if(length(sizes) == 1L) { return( sizes ) }
+    if(all(sizes <= buffer_large)) { return(1) }
     
-    Reduce(function(a, b) {
+    gcd <- Reduce(function(a, b) {
         if( a <= 0 || b <= 0 ) {
             stop("Cannot find proper input buffer size when data has zero length")
         }
@@ -97,23 +95,29 @@ common_fmap_buffer_size <- function(..., .list = NULL) {
         if( rem == 0 ) { return( b ) }
         return( Recall(b, rem) )
     }, sizes)
+    max_buffer <- max(sizes / gcd)
+    
+    max_mult <- floor(buffer_large / max_buffer)
+    if(max_mult <= 1) { return(gcd) }
+    
+    guess_factors <- seq_len(min(max_mult, gcd))
+    guess_factors <- guess_factors[floor(gcd / guess_factors) * guess_factors == gcd]
+    return(gcd / max(guess_factors))
 }
 
-validate_fmap_buffer_size <- function(size, input_lens) {
-    size <- size[[1]]
-    if( any(input_lens == 0) ) { return(FALSE) }
-    if( is.na(size) || size != round(size) ) {
+validate_fmap_buffer_count <- function(count, input_lens) {
+    count <- count[[1]]
+    if( is.na(count) || count != round(count) ) {
         return(FALSE)
     }
     
-    # number of runs for each buffer is `min(input_lens) / size`
+    sizes <- input_lens[input_lens > 0]
+    if( !length(sizes) ) { return(TRUE) }
+    
     # # elems in buffer is input_lens / count
-    buffer_nelems <- input_lens / (min(input_lens) / size)
+    buffer_nelems <- input_lens / count
     
     if(any( buffer_nelems != round(buffer_nelems))) {
-        return(FALSE)
-    }
-    if( size == 1 && any(buffer_nelems > 1) ) {
         return(FALSE)
     }
     return(structure(TRUE, buffer_nelems = buffer_nelems))

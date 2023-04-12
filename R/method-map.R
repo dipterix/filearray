@@ -132,24 +132,30 @@ NULL
 
 # DIPSAUS DEBUG START
 # x1 <- filearray_create(tempfile(), dimension = c(2,3,12), partition_size = 5L)
-# x1[] <- rnorm(length(x1))
+# x1[,,] <- rnorm(prod(dim(x1)[1:3]))
 # x2 <- filearray_create(tempfile(), dimension = c(4,3,4), partition_size = 3L)
 # x2[] <- rnorm(length(x2))
+# x3 <- x1 + x1
 # # Add two arrays
 # y <- filearray_create(tempfile(), dimension = c(3,4))
-# x <- list(x1, x2)
+# x <- list(x1, x2, x3)
 # .input_size <- 12
 # fun <- function(input){
-#    # print(input)
-#     colSums(matrix(input[[1]], nrow = 6)) + colSums(matrix(input[[2]], nrow = 4))
+#     nc <- length(input[[1]]) / 6
+#     rowSums(sapply(input, function(v) {
+#         colSums(matrix(v, ncol = nc))
+#     }))
 # }
-# y <- filearray_map_internal(x, fun, y)
-# # print(y[] - (colSums(matrix(x1[], nrow = 6)) + colSums(matrix(x2[], nrow = 4))))
-# print(filearray_map_internal(x, fun, output_is_filearray = FALSE))
+# y <- filearray_map_internal(x, fun, y, .input_size = .input_size)
+# expected <- rowSums(sapply(x, function(arr) {
+#     colSums(matrix(arr[], ncol = 12))
+# }))
+# print(y[] - expected)
+# print(expected - unlist(filearray_map_internal(x, fun, .output_is_filearray = FALSE)))
 
 
-filearray_map_internal <- function(x, fun, y = NULL, .input_size = NA_integer_, 
-                                   output_is_filearray = TRUE, .simplify = FALSE, ...) {
+filearray_map_internal <- function(x, fun, y = NULL, .buffer_count = NA_integer_, 
+                                   .output_is_filearray = TRUE, .simplify = FALSE, ...) {
     if(!length(x)){
         stop("`x` must be a list of file arrays")
     }
@@ -158,20 +164,43 @@ filearray_map_internal <- function(x, fun, y = NULL, .input_size = NA_integer_,
     }
     
     x <- lapply(x, function(arr) {
-        if(!is_filearray(arr)) {
-            return(as_filearray(arr))
-        }
-        fa_eval_ops(arr)
+        return(as_filearrayproxy(arr))
     })
     
-    fbases <- vapply(x, function(el){
-        el$initialize_partition()
-        el$.filebase
-    }, "")
-    input_types <- vapply(x, typeof, "")
-    output_type <- Reduce(operation_output_type, input_types)
+    # Expand x to get all potential filearrays to load
+    arrays <- unlist(lapply(x, function(arr) {
+        arr$linked_arrays()
+    }))
+    uuids <- get_inital_uuids(arrays)
+    uuids_x <- get_uuids(x)
+    is_unique <- !duplicated(uuids)
     
-    if( output_is_filearray ) {
+    uuids <- uuids[is_unique]
+    arrays <- arrays[is_unique]
+    
+    fbases <- unname(vapply(arrays, function(el){
+        # el$initialize_partition()
+        el$.filebase
+    }, "", USE.NAMES = FALSE))
+    
+    # prepare mapping function
+    args <- list(quote(data), ...)
+    mapping_func <- function(data){
+        env <- new.env(parent = emptyenv())
+        lapply(seq_along(uuids), function(i) {
+            env[[ uuids[[i]] ]] <- data[[ i ]]
+            return(NULL)
+        })
+        lapply(x, function(arr) {
+            arr$.mature(env, data = data)
+        })
+        data <- lapply(uuids_x, function(nm) { env[[nm]] })
+        return(do.call(fun, args))
+    }
+    
+    if( .output_is_filearray ) {
+        input_types <- vapply(x, typeof, "")
+        output_type <- Reduce(operation_output_type, input_types)
         if(missing(y) || is.null(y)) {
             y <- filearray_create(filebase = temp_path(check = TRUE), dimension = dim(x[[1]]), type = output_type)
         } else {
@@ -180,22 +209,18 @@ filearray_map_internal <- function(x, fun, y = NULL, .input_size = NA_integer_,
             }
         }
         
-        all_lens <- c(vapply(x, length, 0L), length(y))
+        all_lens <- c(vapply(arrays, length, 0L), length(y))
         
-        if(!validate_fmap_buffer_size(.input_size, all_lens)) {
-            .input_size <- common_fmap_buffer_size(dim(y), .list = lapply(x, dim))
+        if(!validate_fmap_buffer_count(.buffer_count, all_lens)) {
+            .buffer_count <- common_fmap_buffer_count(dim(y), .list = lapply(x, dim))
         }
-        buffer_size_is_valid <- validate_fmap_buffer_size(.input_size, all_lens)
-        if(!buffer_size_is_valid) {
+        buffer_count_is_valid <- validate_fmap_buffer_count(.buffer_count, all_lens)
+        if(!buffer_count_is_valid) {
             stop("Input & output arrays have inconsistent lengths. Cannot map functions")
         }
-        buffer_nelems <- attr(buffer_size_is_valid, "buffer_nelems")
+        buffer_nelems <- all_lens / .buffer_count
         
-        # prepare
-        args <- list(quote(input), ...)
-        mapping_func <- function(input){
-            do.call(fun, args)
-        }
+        
         y$initialize_partition()
         
         FARR_buffer_map(
@@ -207,22 +232,16 @@ filearray_map_internal <- function(x, fun, y = NULL, .input_size = NA_integer_,
         )
         return(y)
     } else {
-        all_lens <- vapply(x, length, 0L)
+        all_lens <- vapply(arrays, length, 0L)
         
-        if(!validate_fmap_buffer_size(.input_size, all_lens)) {
-            .input_size <- common_fmap_buffer_size(.list = lapply(x, dim))
+        if(!validate_fmap_buffer_count(.buffer_count, all_lens)) {
+            .buffer_count <- common_fmap_buffer_count(.list = lapply(x, dim))
         }
-        buffer_size_is_valid <- validate_fmap_buffer_size(.input_size, all_lens)
-        if(!buffer_size_is_valid) {
+        buffer_count_is_valid <- validate_fmap_buffer_count(.buffer_count, all_lens)
+        if(!buffer_count_is_valid) {
             stop("Input & output arrays have inconsistent lengths. Cannot map functions")
         }
-        buffer_nelems <- attr(buffer_size_is_valid, "buffer_nelems")
-        
-        # prepare
-        args <- list(quote(input), ...)
-        mapping_func <- function(input){
-            do.call(fun, args)
-        }
+        buffer_nelems <- all_lens / .buffer_count
         
         res <- FARR_buffer_map2(
             input_filebases = fbases,
@@ -241,20 +260,18 @@ filearray_map_internal <- function(x, fun, y = NULL, .input_size = NA_integer_,
 
 #' @rdname fmap
 #' @export
-fmap <- function(x, fun, .y = NULL, .input_size = NA_integer_, .output_size = NA_integer_, ...){
-    
-    # TODO mature arrays, ignore output size
-    
-    filearray_map_internal(x = x, fun = fun, y = .y, .input_size = .input_size, ...)
+fmap <- function(x, fun, .y = NULL, .buffer_count = NA_integer_, .output_size = NA_integer_, ...){
+    if(!missing(.output_size)) {
+        warning("`fmap`: .output_size is deprecated. Please specify `.y` instead")
+    }
+    filearray_map_internal(x = x, fun = fun, y = .y, .buffer_count = .buffer_count, ...)
 }
 
 #' @rdname fmap
 #' @export
-fmap2 <- function(x, fun, .input_size = NA, .simplify = TRUE, ...){
+fmap2 <- function(x, fun, .buffer_count = NA, .simplify = TRUE, ...){
     
-    # TODO mature arrays
-    
-    filearray_map_internal(x = x, fun = fun, y = .y, .input_size = .input_size, output_is_filearray = FALSE, .simplify = .simplify, ...)
+    filearray_map_internal(x = x, fun = fun, .buffer_count = .buffer_count, .output_is_filearray = FALSE, .simplify = .simplify, ...)
 }
 
 # only use values on hard disk

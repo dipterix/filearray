@@ -93,6 +93,7 @@ setGeneric("mapreduce", function(x, map, reduce, ...){
 })
 
 buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
+    # TODO: edit for proxy arrays
     if(!x$valid()){
         stop("Invalid file array")
     }

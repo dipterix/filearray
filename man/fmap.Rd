@@ -10,12 +10,12 @@ fmap(
   x,
   fun,
   .y = NULL,
-  .input_size = NA_integer_,
+  .buffer_count = NA_integer_,
   .output_size = NA_integer_,
   ...
 )
 
-fmap2(x, fun, .input_size = NA, .simplify = TRUE, ...)
+fmap2(x, fun, .buffer_count = NA, .simplify = TRUE, ...)
 
 fmap_element_wise(x, fun, .y, ..., .input_size = NA)
 }
@@ -27,14 +27,14 @@ share the same dimensions.}
 
 \item{.y}{a file array object, used to save results}
 
-\item{.input_size}{number of elements to read from each array of \code{x}}
-
 \item{.output_size}{\code{fun} output vector length}
 
 \item{...}{other arguments passing to \code{fun}}
 
 \item{.simplify}{whether to apply \code{\link[base]{simplify2array}} to 
 the result}
+
+\item{.input_size}{number of elements to read from each array of \code{x}}
 }
 \value{
 File array instance \code{.y}
