@@ -30,7 +30,8 @@ fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
     # check input types 
     out_type <- typeof(e1)
     
-    starting_idx <- 0
+    globals <- fastmap::fastmap()
+    globals$set("starting_idx", 0L)
     value_len <- length(value)
     
     op_func <- function(value_list, ...) {
@@ -43,8 +44,9 @@ fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
         if( value_len == 1L ) {
             data[ idx ] <- value
         } else {
+            starting_idx <- globals$get("starting_idx")
             data[ idx ] <- value[starting_idx + seq_len(n_assigned)]
-            starting_idx <<- starting_idx + n_assigned
+            globals$set("starting_idx", starting_idx + n_assigned)
         }
         
         return(data)
