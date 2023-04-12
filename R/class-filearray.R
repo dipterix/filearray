@@ -661,6 +661,9 @@ as_filearray <- function(x, ...) {
 as_filearray.default <- function(x, filebase = NULL, type = NULL, dimension = dim(x), ...) {
     if(!length(filebase)) {
         filebase <- temp_path(check = TRUE)
+        while(file.exists(filebase)) {
+            filebase <- temp_path(check = FALSE)
+        }
     }
     x <- as.array(x)
     
