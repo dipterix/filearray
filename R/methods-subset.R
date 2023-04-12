@@ -121,39 +121,43 @@ fa_subset2 <- function(x, i, ...) {
     }
     
     if( single_index ) {
-        re <- fastmap::fastqueue()
-        idx <- fastmap::fastmap()
-        idx$set("start_idx", 0L)
-        idx$set("idx_left", length(i))
-        
-        try(silent = TRUE, {
-            fa_eval_ops(x, addon = function(env, data, uuid) {
-                start_idx <- idx$get("start_idx")
-                
-                vec <- env[[ uuid ]]
-                
-                end_idx <- start_idx + length(vec)
-                sel <- i[ i > start_idx & i <= end_idx] - start_idx
-                if(length(sel)) {
-                    idx_left <- idx$get("idx_left")
-                    if(idx_left <= length(sel)) {
-                        sel <- sel[seq_len(idx_left)]
-                        re$add(vec[sel])
-                        stop("No need to continue")
-                    } else {
-                        re$add(vec[sel])
-                    }
-                    idx$set("idx_left", idx_left - length(sel))
-                }
-                idx$set("start_idx", start_idx)
-            })
-        })
-        re <- unlist(re$as_list())
-        
+        stop("Single vector indexing (e.g. x[c(1,2,3,4,...)]) hasn't been implemented yet.")
+        # re <- fastmap::fastqueue()
+        # idx <- fastmap::fastmap()
+        # idx$set("start_idx", 0L)
+        # idx$set("idx_left", length(i))
+        # 
+        # 
+        # fa_eval_ops(x, addon = function(env, data, uuid) {
+        #     idx_left <- idx$get("idx_left")
+        #     
+        #     if( idx_left < 0 ) {
+        #         return(NULL)
+        #     }
+        #     start_idx <- idx$get("start_idx")
+        #     
+        #     vec <- env[[ uuid ]]
+        #     
+        #     end_idx <- start_idx + length(vec)
+        #     sel <- i[ i > start_idx & i <= end_idx] - start_idx
+        #     if(length(sel)) {
+        #         if(idx_left <= length(sel)) {
+        #             sel <- sel[seq_len(idx_left)]
+        #             re$add(vec[sel])
+        #             idx_left <- 0L
+        #         } else {
+        #             re$add(vec[sel])
+        #         }
+        #         idx$set("idx_left", idx_left - length(sel))
+        #     }
+        #     idx$set("start_idx", start_idx)
+        # })
+        # re <- unlist(re$as_list())
+        # 
     } else {
         re <- unlist(
             fmap2(
-                x = list(fa_eval_ops(x), fa_eval_ops(i)),
+                x = list(x, i),
                 fun = function(v) {
                     v[[1]][v[[2]]]
                 }, 
