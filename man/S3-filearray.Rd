@@ -2,7 +2,6 @@
 % Please edit documentation in R/methods.R
 \name{S3-filearray}
 \alias{S3-filearray}
-\alias{[<-.FileArray}
 \alias{[[.FileArray}
 \alias{as.array.FileArray}
 \alias{dim.FileArray}
@@ -16,8 +15,6 @@
 \alias{subset.FileArray}
 \title{'S3' methods for 'FileArray'}
 \usage{
-\method{[}{FileArray}(x, ...) <- value
-
 \method{[[}{FileArray}(x, i)
 
 \method{as.array}{FileArray}(x, reshape = NULL, drop = FALSE, ...)
@@ -43,13 +40,13 @@
 \arguments{
 \item{x}{a file array}
 
-\item{value}{value to substitute or set}
-
 \item{i, ...}{index set, or passed to other methods}
 
 \item{reshape}{a new dimension to set before returning subset results; default is \code{NULL} (use default dimensions)}
 
 \item{drop}{whether to drop dimensions; see topic \code{\link[base]{Extract}}}
+
+\item{value}{value to substitute or set}
 
 \item{na.rm}{whether to remove \code{NA} values during the calculation}
 
@@ -68,8 +65,6 @@ These are 'S3' methods for 'FileArray'
 }
 \section{Functions}{
 \itemize{
-\item \code{`[`(FileArray) <- value}: assign array values
-
 \item \code{[[}: get element by index
 
 \item \code{as.array(FileArray)}: converts file array to native array in R
