@@ -183,6 +183,108 @@ as_filearrayproxy.default <- function(x, ...) {
     ))
 }
 
+fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
+    stopifnot(is_filearray(e1) || is_filearray(e2))
+    if(is.null(out_type)) {
+        out_type <- operation_output_type(typeof(e1), typeof(e2))
+    }
+    if(is.null(label)) {
+        if(is.character(op)) {
+            label <- sprintf("e1 %s e2", op)
+        } else {
+            label <- deparse1(op)
+        }
+    }
+    
+    # check if e1 is scalar
+    if(length(e1) == 1) {
+        e2 <- as_filearrayproxy(e2)
+        uuid2 <- e2$uuid()
+        op_func <- function(v, ...) {
+            # v is an env with names: uuids
+            return(do.call(op, list(e1, v[[ uuid2 ]])))
+        }
+        e2$add_operator( op_func, out_type = out_type, context = "scalar", label = label )
+        return(e2)
+    }
+    # check if e2 is scalar
+    if(length(e2) == 1) {
+        e1 <- as_filearrayproxy(e1)
+        uuid1 <- e1$uuid()
+        op_func <- function(v, ...) {
+            # v is an env with names: uuids
+            return(do.call(op, list(v[[ uuid1 ]], e2)))
+            return(v[[ uuid1 ]] + e2)
+        }
+        e1$add_operator( op_func, out_type = out_type, context = "scalar", label = label )
+        return(e1)
+    }
+    
+    # check if e1 or e2 is numerical
+    if(!is_filearray(e1)) {
+        if(!is_same_dim(e1, e2)) {
+            stop("non-conformable arrays")
+        }
+        e1 <- as_filearray(e1, dimension = dim(e2))
+    }
+    
+    if(!is_filearray(e2)) {
+        if(!is_same_dim(e2, e1)) {
+            stop("non-conformable arrays")
+        }
+        e2 <- as_filearray(e2, dimension = dim(e1))
+    }
+    
+    # e1 and e2 must be filearray or filearray proxy
+    if(!is_same_dim(e1, e2)) {
+        stop("non-conformable arrays")
+    }
+    
+    e1 <- as_filearrayproxy(e1)
+    e2 <- as_filearrayproxy(e2)
+    
+    
+    uuid1 <- e1$uuid()
+    uuid2 <- e2$uuid()
+    e1$link_proxy( e2 )
+    
+    op_func <- function(v, ...) {
+        return(do.call(op, list(v[[ uuid1 ]], v[[ uuid2 ]])))
+    }
+    
+    e1$add_operator( op_func, out_type = out_type, context = "array", label = label )
+    
+    return( e1 )
+    
+}
+
+fa_operator <- function(x, op, ..., out_type = NULL, label = NULL) {
+    stopifnot(is_filearray(x))
+    if(is.null(out_type)) {
+        out_type <- typeof(x)
+    }
+    if(is.null(label)) {
+        if(is.null(label)) {
+            if(is.character(op)) {
+                label <- sprintf("%s(x)", op)
+            } else {
+                label <- deparse1(op)
+            }
+        }
+    }
+    
+    x <- as_filearrayproxy(x)
+    uuid <- x$uuid()
+    v <- NULL
+    args <- list(quote(v[[ uuid ]]), ...)
+    
+    op_func <- function(v, ...) {
+        # v is an env with names: uuids
+        return(do.call(op, args))
+    }
+    x$add_operator( op_func, out_type = out_type, context = "scalar", label = label )
+    return(x)
+}
 
 # Be careful when using addon, must be deterministic, or signature will be invalid
 fa_eval_ops <- function(
@@ -268,6 +370,8 @@ fa_eval_ops <- function(
             headers <- x$.header
             arr$.header <- headers[!names(headers) %in% RESERVED_HEADERS]
             arr$.header$dimnames <- x$.header$dimnames
+            # x header might have matured, force unset
+            arr$.header$matured <- FALSE
         }
     )
     
