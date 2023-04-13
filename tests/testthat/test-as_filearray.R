@@ -42,16 +42,17 @@ test_that("as_filearrayproxy", {
     
     x <- rnorm(24)
     dim(x) <- c(2, 3, 4)
+    dimnames(x) <- list(A = 1:2, B = 1:3, C = letters[1:4])
     
     # as_filearrayproxy.default
     y <- as_filearrayproxy(x)
     testthat::expect_equal(typeof(y), getOption("filearray.operator.precision"))
-    testthat::expect_equal(y[], x, tolerance = 1e-5, ignore_attr = TRUE)
+    testthat::expect_equal(y[], x, tolerance = 1e-5)
     testthat::expect_equal(y$.mode, "readwrite")
     
     # as_filearrayproxy.character
     y <- as_filearrayproxy(y$.filebase)
-    testthat::expect_equal(y[dimnames = FALSE], x, tolerance = 1e-5, ignore_attr = TRUE)
+    testthat::expect_equal(y[], x, tolerance = 1e-5)
     testthat::expect_equal(y$.mode, "readwrite")
     
     # as_filearrayproxy.FileArrayProxy
