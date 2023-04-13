@@ -2,6 +2,7 @@
 #' @importFrom methods signature
 #' @importFrom methods setGeneric
 #' @importFrom methods setRefClass
+#' @importFrom methods setMethod
 NULL
 HEADER_SIZE <- 1024
 FILE_VER <- c( 1L, 1L, 0L )

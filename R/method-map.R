@@ -13,6 +13,7 @@
 #' @param .y a file array object, used to save results
 #' @param .input_size number of elements to read from each array of \code{x}
 #' @param .output_size \code{fun} output vector length
+#' @param .buffer_count number of total buffers (chunks) to run
 #' @param .simplify whether to apply \code{\link[base]{simplify2array}} to 
 #' the result
 #' @param ... other arguments passing to \code{fun}

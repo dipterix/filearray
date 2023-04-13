@@ -1,9 +1,3 @@
-## usethis namespace: start
-#' @importFrom Rcpp sourceCpp
-#' @useDynLib filearray, .registration = TRUE
-## usethis namespace: end
-NULL
-
 in_rcmdcheck <- function (...) {
     evidences <- list()
     args <- commandArgs()

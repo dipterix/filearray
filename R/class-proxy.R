@@ -9,6 +9,7 @@ get_uuids <- function(arrays) {
     return(vapply(arrays, function(a) { a$uuid() }, "", USE.NAMES = FALSE))
 }
 
+#' @rdname filearray
 #' @export
 FileArrayProxy <- setRefClass(
     Class = "FileArrayProxy",
@@ -154,6 +155,7 @@ FileArrayProxy <- setRefClass(
     )
 )
 
+#' @rdname filearray
 #' @export
 as_filearrayproxy <- function(x, ...) {
     UseMethod("as_filearrayproxy")

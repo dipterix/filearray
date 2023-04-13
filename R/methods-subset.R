@@ -175,6 +175,7 @@ fa_subset2 <- function(x, i, ...) {
     
 }
 
+#' @describeIn S3-filearray subset array
 #' @export
 `[.FileArray` <- function(x, i, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE, split_dim = 0) {
     x <- fa_eval_ops(x)

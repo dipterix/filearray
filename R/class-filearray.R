@@ -98,7 +98,6 @@ get_elem_size <- function(type){
     )
 }
 
-
 FileArray <- setRefClass(
     "FileArray",
     fields = list(
@@ -651,7 +650,7 @@ FileArray <- setRefClass(
 )
 
 
-
+#' @rdname filearray
 #' @export
 as_filearray <- function(x, ...) {
     UseMethod("as_filearray")

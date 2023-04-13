@@ -187,7 +187,7 @@ fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
 }
 
 
-
+#' @describeIn S3-filearray subset assign array
 #' @export
 `[<-.FileArray` <- function(x, i, ..., lazy = FALSE, value) {
     if(!x$valid()){

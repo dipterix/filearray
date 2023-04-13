@@ -7,7 +7,6 @@
 setGeneric("typeof")
 
 #' @rdname typeof
-#' @export
 setMethod('typeof', signature(x = "FileArray"), function(x){
     if(!x$valid()){
         stop("Invalid file array")
@@ -16,7 +15,6 @@ setMethod('typeof', signature(x = "FileArray"), function(x){
 })
 
 #' @rdname typeof
-#' @export
 setMethod('typeof', signature(x = "FileArrayProxy"), function(x){
     if(!x$valid()){
         stop("Invalid file array")

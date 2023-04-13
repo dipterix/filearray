@@ -4,6 +4,8 @@
 #' @author Zhengjia Wang
 #' @param filebase a directory path to store arrays in the local file 
 #' system. When creating an array, the path must not exist.
+#' @param x R object such as array, file array proxy, or character that can be 
+#' transformed into file array
 #' @param dimension dimension of the array, at least length of 2
 #' @param type storage type of the array; default is \code{'double'}. Other
 #' options include \code{'integer'}, \code{'logical'}, and \code{'raw'}.

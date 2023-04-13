@@ -27,6 +27,8 @@ share the same dimensions.}
 
 \item{.y}{a file array object, used to save results}
 
+\item{.buffer_count}{number of total buffers (chunks) to run}
+
 \item{.output_size}{\code{fun} output vector length}
 
 \item{...}{other arguments passing to \code{fun}}
