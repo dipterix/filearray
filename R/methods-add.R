@@ -238,7 +238,7 @@ setMethod("%%", signature(e1 = "array", e2 = "FileArray"), `op_func_%%`)
 
 # register_double_op("%/%")
 `op_func_%/%` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '%/%', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '%/%', label = parent_call(deparse = TRUE), out_type = "integer")
 }
 
 #' @rdname S4-filearray
@@ -272,7 +272,7 @@ setMethod("%/%", signature(e1 = "array", e2 = "FileArray"), `op_func_%/%`)
 # Compare
 # register_double_op("==")
 `op_func_==` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '==', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '==', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -304,7 +304,7 @@ setMethod("==", signature(e1 = "array", e2 = "FileArray"), `op_func_==`)
 
 # register_double_op(">")
 `op_func_>` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '>', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '>', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -336,7 +336,7 @@ setMethod(">", signature(e1 = "array", e2 = "FileArray"), `op_func_>`)
 
 # register_double_op("<")
 `op_func_<` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '<', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '<', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -368,7 +368,7 @@ setMethod("<", signature(e1 = "array", e2 = "FileArray"), `op_func_<`)
 
 # register_double_op("!=")
 `op_func_!=` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '!=', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '!=', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -400,7 +400,7 @@ setMethod("!=", signature(e1 = "array", e2 = "FileArray"), `op_func_!=`)
 
 # register_double_op(">=")
 `op_func_>=` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '>=', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '>=', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -432,7 +432,7 @@ setMethod(">=", signature(e1 = "array", e2 = "FileArray"), `op_func_>=`)
 
 # register_double_op("<=")
 `op_func_<=` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '<=', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '<=', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -466,7 +466,7 @@ setMethod("<=", signature(e1 = "array", e2 = "FileArray"), `op_func_<=`)
 # Logic
 # register_double_op("&")
 `op_func_&` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '&', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '&', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
@@ -498,7 +498,7 @@ setMethod("&", signature(e1 = "array", e2 = "FileArray"), `op_func_&`)
 
 # register_double_op("|")
 `op_func_|` <- function(e1, e2) {
-    fa_pairwise_operator(e1, e2, op = '|', label = parent_call(deparse = TRUE))
+    fa_pairwise_operator(e1, e2, op = '|', label = parent_call(deparse = TRUE), out_type = "logical")
 }
 
 #' @rdname S4-filearray
