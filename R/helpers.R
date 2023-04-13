@@ -175,3 +175,17 @@ operation_output_type <- function(
     stop("unrecognized combination of types: ", type1, ", ", type2)
 }
 
+
+
+# ---- function calls ---------------------------------------------------
+parent_call <- function(def, deparse = FALSE, env = parent.frame()) {
+    call <- with(env, {match.call()})
+    if(!missing(def)) {
+        def <- substitute(def)
+        call[[1]] <- def
+    }
+    if(deparse) {
+        call <- deparse1(call)
+    }
+    call
+}
