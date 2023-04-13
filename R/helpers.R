@@ -179,13 +179,15 @@ operation_output_type <- function(
 
 # ---- function calls ---------------------------------------------------
 parent_call <- function(def, deparse = FALSE, env = parent.frame()) {
-    call <- with(env, {match.call()})
-    if(!missing(def)) {
-        def <- substitute(def)
-        call[[1]] <- def
-    }
-    if(deparse) {
-        call <- deparse1(call)
-    }
-    call
+    tryCatch({
+        call <- with(env, {match.call(expand.dots = FALSE)})
+        if(!missing(def)) {
+            def <- substitute(def)
+            call[[1]] <- def
+        }
+        if(deparse) {
+            call <- deparse1(call)
+        }
+        call
+    }, error = function(e) { NULL })
 }

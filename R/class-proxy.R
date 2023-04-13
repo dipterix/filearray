@@ -84,6 +84,7 @@ FileArrayProxy <- setRefClass(
             
             .self$.ops[[op_idx]] <- list(
                 uuid = output_uuid, 
+                label = label,
                 
                 # Output type
                 output_type = out_type,

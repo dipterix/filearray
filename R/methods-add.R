@@ -1,42 +1,37 @@
 
-fa_add <- function(e1, e2) {
-    call <- match.call()
-    call[[1]] <- quote(`+`)
-    label <- sprintf("Calculating: %s (fa_add)", deparse1(call))
+register_double_op <- function(op, counter_types = c("FileArray", "numeric", "complex", "logical", "array"), ...) {
+    op_func <- function(e1, e2) {
+        fa_pairwise_operator(e1, e2, op = op, label = parent_call(deparse = TRUE), ...)
+    }
     
-    fa_pairwise_operator(e1, e2, op = "+", label = label)
+    for(ftype in counter_types) {
+        if( ftype == "FileArray" ) {
+            setMethod(op, signature(e1 = "FileArray", e2 = "FileArray"), op_func)
+        } else {
+            setMethod(op, signature(e1 = "FileArray", e2 = ftype), op_func)
+            setMethod(op, signature(e1 = ftype, e2 = "FileArray"), op_func)
+        }
+    }
 }
 
+# Arith
+register_double_op("+")
+register_double_op("-")
+register_double_op("*")
+register_double_op("/")
+register_double_op("^")
+register_double_op("%%")
+register_double_op("%/%")
 
-# setMethod('+', signature(e1 = "FileArrayProxy", e2 = "FileArrayProxy"), filearray_add)
-# setMethod('+', signature(e1 = "FileArrayProxy", e2 = "FileArray"), filearray_add)
-# setMethod('+', signature(e1 = "FileArray", e2 = "FileArrayProxy"), filearray_add)
-#' @export
-setMethod('+', signature(e1 = "FileArray", e2 = "FileArray"), fa_add)
+# Compare
+register_double_op("==")
+register_double_op(">")
+register_double_op("<")
+register_double_op("!=")
+register_double_op(">=")
+register_double_op("<=")
 
-# setMethod('+', signature(e1 = "FileArrayProxy", e2 = "numeric"), filearray_add)
-# setMethod('+', signature(e1 = "numeric", e2 = "FileArrayProxy"), filearray_add2)
-# setMethod('+', signature(e1 = "FileArrayProxy", e2 = "complex"), filearray_add)
-# setMethod('+', signature(e1 = "complex", e2 = "FileArrayProxy"), filearray_add2)
-# setMethod('+', signature(e1 = "FileArrayProxy", e2 = "logical"), filearray_add)
-# setMethod('+', signature(e1 = "logical", e2 = "FileArrayProxy"), filearray_add2)
+# Logic
+register_double_op("&")
+register_double_op("|")
 
-#' @export
-setMethod('+', signature(e1 = "FileArray", e2 = "numeric"), fa_add)
-#' @export
-setMethod('+', signature(e1 = "numeric", e2 = "FileArray"), fa_add)
-
-#' @export
-setMethod('+', signature(e1 = "FileArray", e2 = "complex"), fa_add)
-#' @export
-setMethod('+', signature(e1 = "complex", e2 = "FileArray"), fa_add)
-
-#' @export
-setMethod('+', signature(e1 = "FileArray", e2 = "logical"), fa_add)
-#' @export
-setMethod('+', signature(e1 = "logical", e2 = "FileArray"), fa_add)
-
-#' @export
-setMethod('+', signature(e1 = "FileArray", e2 = "array"), fa_add)
-#' @export
-setMethod('+', signature(e1 = "array", e2 = "FileArray"), fa_add)
