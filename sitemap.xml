@@ -1,54 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://dipterix.org/filearray/404.html</loc>
+    <loc>https://dipterix.org/filearray/404.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/articles/index.html</loc>
+    <loc>https://dipterix.org/filearray/articles/index.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/articles/performance.html</loc>
+    <loc>https://dipterix.org/filearray/articles/performance.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/authors.html</loc>
+    <loc>https://dipterix.org/filearray/authors.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/index.html</loc>
+    <loc>https://dipterix.org/filearray/index.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/news/index.html</loc>
+    <loc>https://dipterix.org/filearray/news/index.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/FileArray-class.html</loc>
+    <loc>https://dipterix.org/filearray/reference/FileArray-class.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/S3-filearray.html</loc>
+    <loc>https://dipterix.org/filearray/reference/S3-filearray.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/apply.html</loc>
+    <loc>https://dipterix.org/filearray/reference/S4-filearray.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/filearray.html</loc>
+    <loc>https://dipterix.org/filearray/reference/apply.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/filearray_bind.html</loc>
+    <loc>https://dipterix.org/filearray/reference/filearray.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/filearray_threads.html</loc>
+    <loc>https://dipterix.org/filearray/reference/filearray_bind.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/fmap.html</loc>
+    <loc>https://dipterix.org/filearray/reference/filearray_threads.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/fwhich.html</loc>
+    <loc>https://dipterix.org/filearray/reference/fmap.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/index.html</loc>
+    <loc>https://dipterix.org/filearray/reference/fwhich.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/mapreduce.html</loc>
+    <loc>https://dipterix.org/filearray/reference/index.html</loc>
   </url>
   <url>
-    <loc>http://dipterix.org/filearray/reference/typeof.html</loc>
+    <loc>https://dipterix.org/filearray/reference/mapreduce.html</loc>
+  </url>
+  <url>
+    <loc>https://dipterix.org/filearray/reference/typeof.html</loc>
   </url>
 </urlset>
