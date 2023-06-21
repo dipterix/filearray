@@ -15,16 +15,7 @@
 #include <algorithm>
 
 
-// [[Rcpp::export]]
-int getThreads(bool max = false);
+int getThreads(const bool& max = false);
 
-// [[Rcpp::export]]
-int setThreads(int n, int reset_after_fork = -1);
-
-// [[Rcpp::export]]
-bool hasOpenMP();
-
-// [[Rcpp::init]]
-int detectForked(DllInfo *dll);
 
 #endif  // FARR_OPENMP_H

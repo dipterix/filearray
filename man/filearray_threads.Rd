@@ -4,22 +4,18 @@
 \alias{filearray_threads}
 \title{Set or get file array threads}
 \usage{
-filearray_threads(n, reset_after_fork = -1L)
+filearray_threads(n, ...)
 }
 \arguments{
 \item{n}{number of threads to set. If \code{n} is negative,
 then default to the number of cores that computer has.}
 
-\item{reset_after_fork}{when forking a cluster (in \code{'osx'} or \code{'linux'}),
-the number of threads will be set to one to avoid memory issues. 
-Setting this to \code{1} will reset threads once forked 
-clusters are shut down. Setting to \code{0} will disable reset, 
-and \code{-1} to use last set values.}
+\item{...}{internally used}
 }
 \value{
 An integer of current number of threads
 }
 \description{
 Will enable/disable multi-threaded reading or writing
-at \code{C++} level using 'OpenMP'.
+at \code{C++} level.
 }

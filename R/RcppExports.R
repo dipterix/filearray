@@ -89,24 +89,20 @@ FARR_buffer_mapreduce <- function(filebase, map, reduce, buffer_nelems) {
     .Call(`_filearray_FARR_buffer_mapreduce`, filebase, map, reduce, buffer_nelems)
 }
 
-getThreads <- function(max = FALSE) {
-    .Call(`_filearray_getThreads`, max)
-}
-
-setThreads <- function(n, reset_after_fork = -1L) {
-    .Call(`_filearray_setThreads`, n, reset_after_fork)
-}
-
-hasOpenMP <- function() {
-    .Call(`_filearray_hasOpenMP`)
-}
-
 FARR_subset_assign_sequential <- function(filebase, unit_partlen, cum_partsizes, array_type, value, from) {
     .Call(`_filearray_FARR_subset_assign_sequential`, filebase, unit_partlen, cum_partsizes, array_type, value, from)
 }
 
 FARR_subset_assign2 <- function(filebase, value, listOrEnv, thread_buffer = 2097152L, split_dim = 0L) {
     .Call(`_filearray_FARR_subset_assign2`, filebase, value, listOrEnv, thread_buffer, split_dim)
+}
+
+getDefaultNumThreads <- function() {
+    .Call(`_filearray_getDefaultNumThreads`)
+}
+
+getThreads <- function(max) {
+    .Call(`_filearray_getThreads`, max)
 }
 
 kinda_sorted <- function(idx, min_, buffer_count) {

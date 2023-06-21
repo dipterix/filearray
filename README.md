@@ -118,29 +118,7 @@ For complex numbers, `transform` is a little bit different:
 
 ## Notes
 
-#### I. 'OpenMP' support and Number of Threads
-
-If `OpenMP` is not detected, then only single thread will be used. This is more likely to happen on recent Apple's system because the native support for 'OpenMP' was dropped. To enable 'OpenMP', please read [this link](https://mac.r-project.org/openmp/). Find your system build and replace `OMP` accordingly, then run the following commands line-by-line.
-
-```
-OMP="openmp-11.0.1-darwin20-Release.tar.gz"
-xcode-select --install
-curl -O https://mac.r-project.org/openmp/$OMP
-    sudo tar fvx $OMP -C /
-```
-
-This is a one-time configuration. After the configuration, please run 
-
-```r
-install.packages('filearray', type = 'source')
-```
-
-
-If `OpenMP` is detected, then the number of threads the maximum number of `CPU` cores on your machine, or `8`, depending on whichever is smaller. The maximum number of threads is limited because the performance bottle-neck often comes from hard drive speed, not the total processing cores. 
-
-Simultaneous file read/write operation is recommended on modern `NVMe` solid-state drives or server `RAIDs`. On traditional `HDD`, it is recommended to use single thread.
-
-#### II. Notes on precision
+#### I. Notes on precision
 
 1. `complex` numbers: In native `R`, complex numbers are combination of two `double` numbers - real and imaginary (total 16 bytes). In `filearray`, complex numbers are coerced to two `float` numbers and store each number in 8 bytes. This conversion will gain performance speed, but lose precision at around 8 decimal place. For example, `1.0000001` will be store as `1`, or `123456789` will be stored as `123456792` (first 7 digits are accurate).
 
@@ -151,7 +129,7 @@ hence use with caution when data needs high precision or the max is super large.
 
 3. `collapse` function: when data range is large (say `x[[1]]=1`, but `x[[2]]=10^20`), `collapse` method might lose precision. This is `double` only uses 8 bytes of memory space. When calculating summations, R internally uses `long double` to prevent precision loss, but current `filearray` implementation uses `double`, causing floating error around 16 decimal place. 
 
-#### III. Cold-start vs warm-start
+#### II. Cold-start vs warm-start
 
 As of version `0.1.1`, most file read/write operations are switched from `fopen` to memory map for two simplify the logic (buffer size, kernel cache...), and to boost the writing/some types of reading speed. While sacrificing the speed of reading large block of data from 2.4GB/s to 1.7GB/s, the writing speed was boosted from 300MB/s to 700MB/s, and the speed of random accessing small slices of data was increased from 900MB/s to 2.5GB/s. As a result, some functions can reach to really high speed (close to in-memory calls) while using much less memory. 
 

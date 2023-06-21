@@ -3,7 +3,7 @@
 // [[Rcpp::depends(BH)]]
 
 #include "core.h"
-#include "openmp.h"
+#include "threadSettings.h"
 #include "conversion.h"
 #include "serialize.h"
 using namespace Rcpp;

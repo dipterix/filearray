@@ -260,7 +260,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // FARR_buffer_map
-SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, const int& buffer_nelems, int result_nelems);
+SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, std::vector<int>& buffer_nelems, int result_nelems);
 RcppExport SEXP _filearray_FARR_buffer_map(SEXP input_filebasesSEXP, SEXP output_filebaseSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP, SEXP result_nelemsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -268,21 +268,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type output_filebase(output_filebaseSEXP);
     Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
-    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type buffer_nelems(buffer_nelemsSEXP);
     Rcpp::traits::input_parameter< int >::type result_nelems(result_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_map(input_filebases, output_filebase, map, buffer_nelems, result_nelems));
     return rcpp_result_gen;
 END_RCPP
 }
 // FARR_buffer_map2
-SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, const int& buffer_nelems);
+SEXP FARR_buffer_map2(std::vector<std::string>& input_filebases, const Function& map, std::vector<int>& buffer_nelems);
 RcppExport SEXP _filearray_FARR_buffer_map2(SEXP input_filebasesSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<std::string>& >::type input_filebases(input_filebasesSEXP);
     Rcpp::traits::input_parameter< const Function& >::type map(mapSEXP);
-    Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type buffer_nelems(buffer_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_map2(input_filebases, map, buffer_nelems));
     return rcpp_result_gen;
 END_RCPP
@@ -298,39 +298,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Nullable<Function> >::type reduce(reduceSEXP);
     Rcpp::traits::input_parameter< const int& >::type buffer_nelems(buffer_nelemsSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_buffer_mapreduce(filebase, map, reduce, buffer_nelems));
-    return rcpp_result_gen;
-END_RCPP
-}
-// getThreads
-int getThreads(bool max);
-RcppExport SEXP _filearray_getThreads(SEXP maxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< bool >::type max(maxSEXP);
-    rcpp_result_gen = Rcpp::wrap(getThreads(max));
-    return rcpp_result_gen;
-END_RCPP
-}
-// setThreads
-int setThreads(int n, int reset_after_fork);
-RcppExport SEXP _filearray_setThreads(SEXP nSEXP, SEXP reset_after_forkSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type reset_after_fork(reset_after_forkSEXP);
-    rcpp_result_gen = Rcpp::wrap(setThreads(n, reset_after_fork));
-    return rcpp_result_gen;
-END_RCPP
-}
-// hasOpenMP
-bool hasOpenMP();
-RcppExport SEXP _filearray_hasOpenMP() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(hasOpenMP());
     return rcpp_result_gen;
 END_RCPP
 }
@@ -362,6 +329,27 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const size_t >::type thread_buffer(thread_bufferSEXP);
     Rcpp::traits::input_parameter< int >::type split_dim(split_dimSEXP);
     rcpp_result_gen = Rcpp::wrap(FARR_subset_assign2(filebase, value, listOrEnv, thread_buffer, split_dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getDefaultNumThreads
+SEXP getDefaultNumThreads();
+RcppExport SEXP _filearray_getDefaultNumThreads() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(getDefaultNumThreads());
+    return rcpp_result_gen;
+END_RCPP
+}
+// getThreads
+int getThreads(const bool& max);
+RcppExport SEXP _filearray_getThreads(SEXP maxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const bool& >::type max(maxSEXP);
+    rcpp_result_gen = Rcpp::wrap(getThreads(max));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -426,20 +414,17 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
     {"_filearray_FARR_buffer_map2", (DL_FUNC) &_filearray_FARR_buffer_map2, 3},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},
-    {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
-    {"_filearray_setThreads", (DL_FUNC) &_filearray_setThreads, 2},
-    {"_filearray_hasOpenMP", (DL_FUNC) &_filearray_hasOpenMP, 0},
     {"_filearray_FARR_subset_assign_sequential", (DL_FUNC) &_filearray_FARR_subset_assign_sequential, 6},
     {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
+    {"_filearray_getDefaultNumThreads", (DL_FUNC) &_filearray_getDefaultNumThreads, 0},
+    {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
     {"_filearray_kinda_sorted", (DL_FUNC) &_filearray_kinda_sorted, 3},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
     {"_filearray_reshape_or_drop", (DL_FUNC) &_filearray_reshape_or_drop, 3},
     {NULL, NULL, 0}
 };
 
-int detectForked(DllInfo *dll);
 RcppExport void R_init_filearray(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
-    detectForked(dll);
 }

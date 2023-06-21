@@ -1,6 +1,4 @@
 
-print(Sys.getenv())
-
 # Testing collapse is time consuming, skip if ran
 skip_collapse <- Sys.getenv("FILEARRAY_SKIP_COLLAPSE", unset = "") == "TRUE"
 testthat::skip_if(skip_collapse)

@@ -1,21 +1,45 @@
 #' @title Set or get file array threads
 #' @description Will enable/disable multi-threaded reading or writing
-#' at \code{C++} level using 'OpenMP'. 
+#' at \code{C++} level. 
 #' @param n number of threads to set. If \code{n} is negative,
 #' then default to the number of cores that computer has. 
-#' @param reset_after_fork when forking a cluster (in \code{'osx'} or \code{'linux'}),
-#' the number of threads will be set to one to avoid memory issues. 
-#' Setting this to \code{1} will reset threads once forked 
-#' clusters are shut down. Setting to \code{0} will disable reset, 
-#' and \code{-1} to use last set values.
+#' @param ... internally used
 #' @return An integer of current number of threads
 #' @export
-filearray_threads <- function(n, reset_after_fork = -1L){
+filearray_threads <- function(n, ...){
     
     if(!missing(n)){
-        n <- as.integer(n)
-        reset_after_fork <- sign(reset_after_fork)
-        setThreads(n, reset_after_fork)
+        setThreads(n, ...)
     }
-    return(getThreads())
+    
+    return(getThreads(FALSE))
+}
+
+setThreads <- function (n = "auto", stack_size = "auto", ...) {
+    if (identical(n, "auto")) {
+        n <- -1L
+    } else {
+        n <- as.integer(n)
+        if (length(n) != 1 || is.na(n) || !is.numeric(n)) {
+            stop("n must be an integer")
+        }
+    }
+    if (identical(stack_size, "auto")) {
+        stack_size <- 0L
+    } else if (!is.numeric(stack_size)) {
+        stop("stack_size must be an integer")
+    } else {
+        stack_size <- as.integer(stack_size)
+    }
+    if (n == -1L) {
+        Sys.unsetenv("FILEARRAY_NUM_THREADS")
+    } else {
+        Sys.setenv(FILEARRAY_NUM_THREADS = n)
+    }
+    if (stack_size == 0L) {
+        Sys.unsetenv("FILEARRAY_STACK_SIZE")
+    } else {
+        Sys.setenv(FILEARRAY_STACK_SIZE = stack_size)
+    }
+    invisible()
 }

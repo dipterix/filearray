@@ -3,7 +3,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 // [[Rcpp::depends(BH)]]
 
-#include "openmp.h"
+#include "TinyParallel.h"
+#include "threadSettings.h"
 #include "serialize.h"
 #include "core.h"
 #include "utils.h"
@@ -26,31 +27,55 @@ SEXP FARR_subset_assign_sequential_bare(
     int file_buffer_elemsize = file_element_size(array_type);
     std::string fbase = correct_filebase(filebase);
     R_len_t nparts = Rf_length(cum_partsizes);
+    int64_t* cum_part = INTEGER64(cum_partsizes);
     
-    // calculate the first partition
+    // We want to calculate which partitions are used, saved to part_start and part_end
+    // However, each partition may contain multiple slices, hence we first decide
+    // slices that's being used, stored in slice_idx1 and slice_idx2
+    // in R's index format (startwith 1 and ends with to # of partitions)
+    // calculate the first partition, should start from 1
     int64_t slice_idx1 = 0;
+    // partition number cannot go beyond nparts + 1 (can equal)
     int64_t slice_idx2 = 0;
     int64_t tmp = 0;
+    
+    // printed message means get element from `from` (C index) and length of 
+    // `len` across `nparts` partitions
+    // Rcout << "From: " << from << " - len: " << len << " nparts: " << nparts << "\n";
     for(; tmp <= from; tmp+= unit_partlen, slice_idx1++){}
     
-    for(slice_idx2 = slice_idx1; tmp < from + len && slice_idx2 < nparts; tmp+= unit_partlen, slice_idx2++){}
-    // for(slice_idx2 = slice_idx1; tmp < from + len; tmp+= unit_partlen, slice_idx2++){}
+    cum_part = INTEGER64(cum_partsizes) + (nparts - 1);
+    const int64_t max_slices = unit_partlen * (*cum_part);
+    for(
+        slice_idx2 = slice_idx1; 
+        tmp < from + len && slice_idx2 < max_slices; 
+        tmp+= unit_partlen, slice_idx2++
+    ){}
     
-    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << "\n";
+    if( slice_idx2 > *cum_part ) {
+        slice_idx2 = *cum_part;
+    }
     
+    // which slices to start and which to end
+    // Rcout << "Starting from partition: " << slice_idx1 << " - ends before: " << slice_idx2 << 
+    //     " (max: " << *cum_part << ")\n";
+    
+    // Which file partition to start: min = 0
+    // unlike slice_idx1/2, part_start and part_end are index in C-style
+    // That is: they starting from 0, and max is number of partitions-1
     int part_start = 0;
     int part_end = 0;
     int64_t skip_start = 0;
-    // --- // int64_t skip_end = 0;
-    
-    int64_t* cum_part = INTEGER64(cum_partsizes);
-    for(; slice_idx1 > *cum_part; cum_part++, part_start++){}
+
+    for(cum_part = INTEGER64(cum_partsizes); *cum_part < slice_idx1; cum_part++, part_start++){}
     if( part_start == 0 ){
         skip_start = from;
     } else {
         skip_start = from - (*(cum_part - 1)) * unit_partlen;
     }
-    for(part_end = part_start; slice_idx2 > *cum_part; cum_part++, part_end++){}
+    for(part_end = part_start; *cum_part < slice_idx2; cum_part++, part_end++){
+        // Rcout << *cum_part << std::endl; 
+    }
     
     /*
     // skip_end = (*cum_part) * unit_partlen - (from + len);
@@ -250,186 +275,199 @@ void subset_assign_partition(
 }
 
 template <typename T>
+struct FARRAssigner : public TinyParallel::Worker {
+    const std::string& filebase;
+    const List& sch;
+    T* value_ptr;
+    
+    SEXP idx1;
+    SEXP idx1range;
+    List idx2s;
+    int64_t block_size;
+    IntegerVector partitions;
+    IntegerVector idx2lens;
+    // int elem_size;
+    R_xlen_t idx1len;
+    int64_t idx1_start;
+    int64_t idx1_end;
+    int64_t* idx1ptr0;
+    
+    int has_error;
+    std::string error_msg;
+    boost::interprocess::mode_t mode;
+    
+    
+    FARRAssigner(
+        const std::string& filebase,
+        const List& sch, T* value_ptr
+    ): filebase(filebase), sch(sch) {
+        this->value_ptr = value_ptr;
+        this->idx1 = sch["idx1"];
+        this->idx1range = sch["idx1range"];
+        this->idx2s = sch["idx2s"];
+        this->block_size = (int64_t) (sch["block_size"]);
+        this->partitions = sch["partitions"];
+        this->idx2lens = sch["idx2lens"];
+        // int elem_size = sizeof(T);
+        
+        this->idx1len = Rf_xlength(idx1);
+        
+        // Check whether indices are valid
+        int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
+        this->idx1_start = *idx1rangeptr;
+        this->idx1_end = *(idx1rangeptr + 1);
+        
+        if( idx1_start == NA_INTEGER64 || idx1_end < idx1_start ||
+            idx1_end < 0 || idx1_start < 0 ){
+            this->idx1ptr0 = NULL;
+            // return( R_NilValue );
+        } else {
+            this->idx1ptr0 = (int64_t*) REAL(idx1);
+        }
+        
+        // 
+        // int ncores = getThreads();
+        // if(ncores > idx2s.length()){
+        //     ncores = idx2s.length();
+        // }
+        
+        this->has_error = -1;
+        this->error_msg = "";
+        this->mode = boost::interprocess::read_write;
+    }
+    
+    void operator()(std::size_t begin, std::size_t end) {
+        if( idx1ptr0 == NULL ) { return; }
+        if( has_error >= 0 ){ return; }
+        
+        int elem_size = sizeof(T);
+        
+        for(R_xlen_t iter = begin; iter < end; iter++){
+            
+            if( has_error >= 0 ){ continue; }
+            
+            R_xlen_t part = partitions[iter];
+            int64_t skips = 0;
+            if(iter > 0){
+                skips = idx2lens[iter - 1];
+            }
+            
+            // Rcout << part << ", skip=" << skips << "\n";
+            
+            // obtain starting end ending indices of idx2
+            SEXP idx2 = idx2s[iter];
+            R_xlen_t idx2len = Rf_xlength(idx2);
+            int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
+            for(int64_t* ptr2 = INTEGER64(idx2); idx2len > 0; idx2len--, ptr2++ ){
+                if( *ptr2 == NA_INTEGER64 ){
+                    continue;
+                }
+                if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
+                    idx2_start = *ptr2;
+                }
+                if( idx2_end < *ptr2 ){
+                    idx2_end = *ptr2;
+                }
+            }
+            
+            if( idx2_start == NA_INTEGER64 || 
+                idx2_end < 0 || idx2_start < 0 ){
+                // This is NA partition, no need to subset
+                continue;
+            }
+            
+            // Rcout << "idx start-end: " << idx2_start << " - " << idx2_end << "\n";
+            
+            std::string file = filebase + std::to_string(part) + ".farr";
+            // Rcpp::print(Rcpp::wrap(file));
+            
+            
+            
+            try{
+                /*
+                 * On most OS, there is a limit on how many descriptors that open
+                 * simultaneously:
+                 * (OSX) launchctl limit maxfiles
+                 * 
+                 * Besides, the closed file descriptor will be reused quickly on 
+                 * many Unix systems
+                 * 
+                 * https://docs.fedoraproject.org/en-US/Fedora_Security_Team/1/html/Defensive_Coding/sect-Defensive_Coding-Tasks-Descriptors.html
+                 * 
+                 * Unlike process IDs, which are recycle only gradually, the kernel 
+                 * always allocates the lowest unused file descriptor when a new 
+                 * descriptor is created. This means that in a multi-threaded 
+                 * program which constantly opens and closes file descriptors, 
+                 * descriptors are reused very quickly. Unless descriptor closing 
+                 * and other operations on the same file descriptor are synchronized 
+                 * (typically, using a mutex), there will be race coniditons and 
+                 * I/O operations will be applied to the wrong file descriptor. 
+                 * 
+                 * https://stackoverflow.com/questions/52087692/can-multiple-file-objects-share-the-same-file-descriptor
+                 */
+                boost::interprocess::file_mapping fm(file.c_str(), mode);
+                // std::map<int64_t, boost::interprocess::file_mapping*>::const_iterator it = conn_map.find(part);
+                // 
+                // if(it == conn_map.end()){
+                //     has_error = part;
+                //     error_msg = "Cannot open partition " + std::to_string(part + 1);
+                //     continue;
+                // }
+                
+                int64_t region_len = elem_size * (idx1_end - idx1_start + 1 + block_size * (idx2_end - idx2_start));
+                int64_t region_offset = FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start);
+                // boost::interprocess::mapped_region region(
+                //         *(it->second), mode, region_offset, region_len);
+                boost::interprocess::mapped_region region(
+                        fm, mode, region_offset, region_len);
+                region.advise(boost::interprocess::mapped_region::advice_sequential);
+                
+                char* begin = static_cast<char*>(region.get_address());
+                
+                int64_t* idx2_ptr = INTEGER64(idx2);
+                R_xlen_t idx2_len = Rf_xlength(idx2);
+                T* value_ptr2 = value_ptr + (idx1len * skips);
+                int64_t* idx1ptr = idx1ptr0;
+                
+                // Rcout << "block_size: " << block_size << ", idx1len: " << idx1len << ", idx1_start: " << idx1_start << 
+                //     ", idx2_start: " << idx2_start << ", idx2_len: " << idx2_len << "\n";
+                
+                subset_assign_partition(
+                    begin, value_ptr2,
+                    block_size, idx1ptr, idx1len, 
+                    idx1_start, idx2_start, 
+                    idx2_ptr, idx2_len );
+                
+                
+                // region.flush();
+            } catch(std::exception &ex){
+                has_error = part;
+                error_msg =  ex.what();
+                error_msg += " while trying to open file.";
+            } catch(...){
+                has_error = part;
+                error_msg = "Unknown error.";
+            }
+        }
+    }
+    
+    void save() {
+        if( idx1ptr0 == NULL ) { return; }
+        parallelFor(0, idx2s.length(), *this);
+        if( has_error >= 0 ){
+            stop("Cannot write to partition " + 
+                std::to_string(has_error + 1) + 
+                ". Reason: " + error_msg);
+        }
+    }
+};
+
+template <typename T>
 SEXP FARR_subset_assign_template(
         const std::string& filebase, 
         const List& sch, T* value_ptr){
-    
-    SEXP idx1 = sch["idx1"];
-    SEXP idx1range = sch["idx1range"];
-    List idx2s = sch["idx2s"];
-    int64_t block_size = (int64_t) (sch["block_size"]);
-    IntegerVector partitions = sch["partitions"];
-    IntegerVector idx2lens = sch["idx2lens"];
-    int elem_size = sizeof(T);
-    
-    int has_error = -1;
-    std::string error_msg = "";
-    
-    R_xlen_t idx1len = Rf_xlength(idx1);
-    
-    // Check whether indices are valid
-    int64_t* idx1rangeptr = (int64_t*) REAL(idx1range);
-    int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    
-    if( idx1_start == NA_INTEGER64 || idx1_end < idx1_start ||
-        idx1_end < 0 || idx1_start < 0 ){
-        return( R_NilValue );
-    }
-    
-    
-    int ncores = getThreads();
-    if(ncores > idx2s.length()){
-        ncores = idx2s.length();
-    }
-    
-    int64_t* idx1ptr0 = (int64_t*) REAL(idx1);
-    const boost::interprocess::mode_t mode = boost::interprocess::read_write;
-    
-    // std::map<int64_t, boost::interprocess::file_mapping*> conn_map;
-    // std::map<int64_t, bool> conn_exist;
-    // 
-    // std::map<int64_t, bool>::iterator it2;
-    // 
-    // // it = conn_map.find(part);
-    // for(IntegerVector::iterator partptr = partitions.begin();
-    //     partptr != partitions.end(); partptr++){
-    //     it2 = conn_exist.find(*partptr);
-    //     if(it2 == conn_exist.end()){
-    //         try {
-    //             std::string file = filebase + std::to_string(*partptr) + ".farr";
-    //             boost::interprocess::file_mapping *fm = new boost::interprocess::file_mapping(file.c_str(), mode);
-    //             conn_map.insert( std::pair<int64_t, boost::interprocess::file_mapping*>(*partptr, fm) );
-    //             conn_exist.insert( std::pair<int64_t, bool>(*partptr, true) );
-    //         } catch (...){
-    //             conn_exist.insert( std::pair<int64_t, bool>(*partptr, false) );
-    //         }
-    //     }
-    // }
-    
-#pragma omp parallel num_threads(ncores)
-{
-    #pragma omp for schedule(static, 1) nowait
-    for(R_xlen_t iter = 0; iter < idx2s.length(); iter++){
-        
-        if( has_error >= 0 ){ continue; }
-        
-        R_xlen_t part = partitions[iter];
-        int64_t skips = 0;
-        if(iter > 0){
-            skips = idx2lens[iter - 1];
-        }
-        
-        // Rcout << part << ", skip=" << skips << "\n";
-        
-        // obtain starting end ending indices of idx2
-        SEXP idx2 = idx2s[iter];
-        R_xlen_t idx2len = Rf_xlength(idx2);
-        int64_t idx2_start = NA_INTEGER64, idx2_end = -1;
-        for(int64_t* ptr2 = INTEGER64(idx2); idx2len > 0; idx2len--, ptr2++ ){
-            if( *ptr2 == NA_INTEGER64 ){
-                continue;
-            }
-            if( *ptr2 < idx2_start || idx2_start == NA_INTEGER64 ){
-                idx2_start = *ptr2;
-            }
-            if( idx2_end < *ptr2 ){
-                idx2_end = *ptr2;
-            }
-        }
-        
-        if( idx2_start == NA_INTEGER64 || 
-            idx2_end < 0 || idx2_start < 0 ){
-            // This is NA partition, no need to subset
-            continue;
-        }
-        
-        // Rcout << "idx start-end: " << idx2_start << " - " << idx2_end << "\n";
-        
-        std::string file = filebase + std::to_string(part) + ".farr";
-        // Rcpp::print(Rcpp::wrap(file));
-        
-        
-        
-        try{
-            /*
-             * On most OS, there is a limit on how many descriptors that open
-             * simultaneously:
-             * (OSX) launchctl limit maxfiles
-             * 
-             * Besides, the closed file descriptor will be reused quickly on 
-             * many Unix systems
-             * 
-             * https://docs.fedoraproject.org/en-US/Fedora_Security_Team/1/html/Defensive_Coding/sect-Defensive_Coding-Tasks-Descriptors.html
-             * 
-             * Unlike process IDs, which are recycle only gradually, the kernel 
-             * always allocates the lowest unused file descriptor when a new 
-             * descriptor is created. This means that in a multi-threaded 
-             * program which constantly opens and closes file descriptors, 
-             * descriptors are reused very quickly. Unless descriptor closing 
-             * and other operations on the same file descriptor are synchronized 
-             * (typically, using a mutex), there will be race coniditons and 
-             * I/O operations will be applied to the wrong file descriptor. 
-             * 
-             * https://stackoverflow.com/questions/52087692/can-multiple-file-objects-share-the-same-file-descriptor
-             */
-            boost::interprocess::file_mapping fm(file.c_str(), mode);
-            // std::map<int64_t, boost::interprocess::file_mapping*>::const_iterator it = conn_map.find(part);
-            // 
-            // if(it == conn_map.end()){
-            //     has_error = part;
-            //     error_msg = "Cannot open partition " + std::to_string(part + 1);
-            //     continue;
-            // }
-            
-            int64_t region_len = elem_size * (idx1_end - idx1_start + 1 + block_size * (idx2_end - idx2_start));
-            int64_t region_offset = FARR_HEADER_LENGTH + elem_size * (block_size * idx2_start + idx1_start);
-            // boost::interprocess::mapped_region region(
-            //         *(it->second), mode, region_offset, region_len);
-            boost::interprocess::mapped_region region(
-                    fm, mode, region_offset, region_len);
-            region.advise(boost::interprocess::mapped_region::advice_sequential);
-            
-            char* begin = static_cast<char*>(region.get_address());
-        
-            int64_t* idx2_ptr = INTEGER64(idx2);
-            R_xlen_t idx2_len = Rf_xlength(idx2);
-            T* value_ptr2 = value_ptr + (idx1len * skips);
-            int64_t* idx1ptr = idx1ptr0;
-            
-            // Rcout << "block_size: " << block_size << ", idx1len: " << idx1len << ", idx1_start: " << idx1_start << 
-            //     ", idx2_start: " << idx2_start << ", idx2_len: " << idx2_len << "\n";
-            
-            subset_assign_partition(
-                begin, value_ptr2,
-                block_size, idx1ptr, idx1len, 
-                idx1_start, idx2_start, 
-                idx2_ptr, idx2_len );
-            
-            
-            // region.flush();
-        } catch(std::exception &ex){
-            has_error = part;
-            error_msg =  ex.what();
-            error_msg += " while trying to open file.";
-        } catch(...){
-            has_error = part;
-            error_msg = "Unknown error.";
-        }
-    }
-}
-
-    // std::map<int64_t, boost::interprocess::file_mapping*>::iterator it1 = conn_map.begin();
-    // for(; it1 != conn_map.end(); it1++){
-    //     delete it1->second;
-    // }
-
-    // UNPROTECT(ncores);
-    if( has_error >= 0 ){
-        stop("Cannot write to partition " + 
-            std::to_string(has_error + 1) + 
-            ". Reason: " + error_msg);
-    }
-    
+    FARRAssigner<T> assigner(filebase, sch, value_ptr);
+    assigner.save();
     return( R_NilValue );
 }
 

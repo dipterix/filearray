@@ -1,12 +1,89 @@
 library(testthat)
-test_that("map arrays", {
+
+
+test_that("map with proxy", {
     
     set.seed(10)
-    path <- tempfile()
-    unlink(path, recursive = TRUE)
     
     # A large array example
-    x <- filearray_create(path, dimension = c(28, 100, 301, 4), initialize = FALSE)
+    x1 <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 3, 4), initialize = FALSE, partition_size = 3L)
+    x1[] <- rnorm(33600)
+    x2 <- x1 + 1
+    x3 <- x1 + x2
+    x4 <- as_filearray(matrix(1:12, nrow = 4))
+    
+    x <- list(x1, x2, x3, x4)
+    # check common input size
+    
+    bc <- 12
+    re <- fmap2(x, function(input) {
+        testthat::expect_length(input, 4)
+        testthat::expect_length(input[[1]], length(x1) / bc)
+        testthat::expect_length(input[[2]], length(x2) / bc)
+        testthat::expect_length(input[[3]], length(x3) / bc)
+        testthat::expect_length(input[[4]], length(x4) / bc)
+        testthat::expect_equal(input[[1]] + 1, input[[2]])
+        testthat::expect_equal(input[[3]], input[[2]] + input[[1]])
+        
+        sum(input[[4]]) + sum(input[[3]] - input[[2]] - input[[1]])
+    }, .buffer_count = bc)
+    expect_equal(re, colSums(matrix(x4[], ncol = bc)))
+    
+    
+    bc <- 4
+    re <- fmap2(x, function(input) {
+        testthat::expect_length(input, 4)
+        testthat::expect_length(input[[1]], length(x1) / bc)
+        testthat::expect_length(input[[2]], length(x2) / bc)
+        testthat::expect_length(input[[3]], length(x3) / bc)
+        testthat::expect_length(input[[4]], length(x4) / bc)
+        testthat::expect_equal(input[[1]] + 1, input[[2]])
+        testthat::expect_equal(input[[3]], input[[2]] + input[[1]])
+        
+        sum(input[[4]]) + sum(input[[3]] - input[[2]] - input[[1]])
+    }, .buffer_count = bc)
+    expect_equal(re, colSums(matrix(x4[], ncol = bc)))
+    
+    bc <- 1
+    re <- fmap2(x, function(input) {
+        testthat::expect_length(input, 4)
+        testthat::expect_length(input[[1]], length(x1) / bc)
+        testthat::expect_length(input[[2]], length(x2) / bc)
+        testthat::expect_length(input[[3]], length(x3) / bc)
+        testthat::expect_length(input[[4]], length(x4) / bc)
+        testthat::expect_equal(input[[1]] + 1, input[[2]])
+        testthat::expect_equal(input[[3]], input[[2]] + input[[1]])
+        
+        sum(input[[4]]) + sum(input[[3]] - input[[2]] - input[[1]])
+    }, .buffer_count = bc)
+    expect_equal(re, colSums(matrix(x4[], ncol = bc)))    
+    
+    
+    # check fmap
+    bc <- 12
+    
+    y <- filearray_create(temp_path(), dimension = c(12,1))
+    fmap(x, function(input) {
+        testthat::expect_length(input, 4)
+        testthat::expect_length(input[[1]], length(x1) / bc)
+        testthat::expect_length(input[[2]], length(x2) / bc)
+        testthat::expect_length(input[[3]], length(x3) / bc)
+        testthat::expect_length(input[[4]], length(x4) / bc)
+        testthat::expect_equal(input[[1]] + 1, input[[2]])
+        testthat::expect_equal(input[[3]], input[[2]] + input[[1]])
+        
+        input[[4]] + sum(input[[3]] - input[[2]] - input[[1]])
+    }, .buffer_count = bc, .y = y)
+    expect_equal(as.vector(y[]), as.vector(x4[]))
+    
+    clear_cache()
+})
+
+
+test_that("map filearrays", {
+    
+    # A large array example
+    x <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 301, 4), initialize = FALSE, partition_size = 3L)
     dnames <- list(
         Trial = sample(c("A", "B"), 28, replace = TRUE),
         Marker = 1:100,
@@ -20,7 +97,7 @@ test_that("map arrays", {
     y <- array(rnorm(length(x)), dim(x))
     x[] <- y
     
-    output <- filearray_create(tempfile(), dimension = dim(x), initialize = FALSE)
+    output <- filearray_create(temp_path(check = TRUE), dimension = dim(x), initialize = FALSE, partition_size = 4L)
     
     f <- function(input){
         # get locational data
@@ -44,21 +121,23 @@ test_that("map arrays", {
         return(calibrated)
     }
     
-    fmap(x, f, .y = output, .input_size = 842800, .output_size = 842800)
+    fmap(x, f, .y = output, .buffer_count = 4)
     
     b <- apply(y, 4, f)
     dim(b) <- dim(y)
     
     expect_equal(output[], b)
     
-    
-    d <- fmap2(x, f, .input_size = 842800, .simplify = TRUE)
+    d <- fmap2(x, f, .buffer_count = 4, .simplify = TRUE)
     expect_equal(d, b)
     
     x$delete()
     output$delete()
-    
+    clear_cache()
 })
+
+
+
 
 
 
