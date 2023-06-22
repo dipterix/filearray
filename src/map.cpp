@@ -196,6 +196,7 @@ SEXP FARR_buffer_map(
                 }
             }
             convert_as2(tmp, tmp_val, out_array_type);
+            
             UNPROTECT(1); // tmp
             
             FARR_subset_assign_sequential_bare(

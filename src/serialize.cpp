@@ -128,9 +128,9 @@ void lendian_assign(void* dst, const void* src, const size_t& elem_size, const s
         const unsigned char *buffer_src = (const unsigned char*)src;
         unsigned char *buffer_dst = (unsigned char*)dst;
         size_t i = 0;
-        for(size_t idx = 0; idx < nelems; idx++, buffer_dst++){
-            for(i = 0; i < elem_size; i++){
-                *(buffer_dst + i) = *(buffer_src + (elem_size - i - 1));
+        for(size_t idx = 0; idx < nelems; idx++){
+            for(i = 0; i < elem_size; i++, buffer_dst++){
+                *buffer_dst = *(buffer_src + (idx * elem_size + elem_size - i - 1));
             }
         }
     } else {

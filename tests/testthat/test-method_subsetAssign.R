@@ -15,6 +15,7 @@ test_that("subset-assign filearray-proxy", {
     expect_equal(x[idx1, idx2], x0[idx1, idx2])
     expect_equal(y[1,1:12, dimnames = NULL], rep(0L, 12))
     expect_equal(y[1:10,1, dimnames = NULL], rep(0L, 10))
+    expect_equal(y[2:10,2:10], x0[2:10,2:10] + 1L)
     expect_equal(z[, idx2], 2 * y[, idx2])
     
     expect_equal(y[2:10, 2:12], x[2:10, 2:12] + 1)

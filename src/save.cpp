@@ -22,6 +22,8 @@ SEXP FARR_subset_assign_sequential_bare(
 ) {
     R_xlen_t len = Rf_xlength(value_);
     
+    // print(wrap(unit_partlen));
+    // print(cum_partsizes);
     // print(value_);
     
     int file_buffer_elemsize = file_element_size(array_type);
@@ -152,7 +154,12 @@ SEXP FARR_subset_assign_sequential_bare(
                 break;
             }
             case INTSXP: {
+                // const unsigned char *buffer_src = (const unsigned char*)(INTEGER(value_) + nwrite);
+                // const unsigned char *buffer_dst = (const unsigned char*)(begin);
                 lendian_assign(begin, INTEGER(value_) + nwrite, file_buffer_elemsize, write_len);
+                // for( size_t tt = 0 ; tt < file_buffer_elemsize * write_len ; tt++ ) {
+                //     Rcout << (int)*(buffer_src + tt) << " - " << (int)*(buffer_dst + tt) << "\n";
+                // }
                 // lendian_fwrite(INTEGER(value_) + nwrite, file_buffer_elemsize, write_len, conn);
                 break;
             }

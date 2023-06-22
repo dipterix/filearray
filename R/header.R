@@ -74,6 +74,7 @@ read_header <- function(fid){
     } else {
         if( ENDIANNESS == "little" ){
             endian <- 'big'
+            # TODO: support big-endian file? maybe not
             stop("The file endianess is not little?")
         } else {
             endian <- "little"
