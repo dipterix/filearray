@@ -18,6 +18,8 @@ int getThreads(const bool& max){
         return( maxThreads );
     }
     int n = TinyParallel::resolveValue("FILEARRAY_NUM_THREADS", -1, maxThreads);
-    n = maxThreads;
+    if( n <= 0 || n > maxThreads ) {
+        n = maxThreads;
+    }
     return( n );
 }
