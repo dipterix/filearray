@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,8 +51,25 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="filearray-development-version">filearray (development version)<a class="anchor" aria-label="anchor" href="#filearray-development-version"></a></h2>
-</div>
+<h2 class="pkg-version" data-toc-text="0.1.6" id="filearray-016">filearray 0.1.6<a class="anchor" aria-label="anchor" href="#filearray-016"></a></h2>
+<ul><li>Removed <code>c++11</code> from system requirement and <code>Makevars</code>
+</li>
+<li>Used <code>TinyThreads</code> instead of <code>OpenMP</code> to get parallel working on <code>OSX</code>
+</li>
+<li>Added <code>as_filearray</code> method, and support optional <code>float</code>
+</li>
+<li>Added array proxy class, allowing arrays to lazy-evaluate simple operators</li>
+<li>Allows user-defined temporary file array path</li>
+<li>Fixed <code>fmap</code> issues, using better guesses for default <code>.input_size</code>
+</li>
+<li>Fixed a memory bug caused when partition margin has elements greater than 1 and when <code>FARR_subset_sequential</code> is used</li>
+<li>Used <code>fastmap</code> to avoid environment look-up</li>
+<li>
+<code>fa_eval_ops</code> allows dimension names</li>
+<li>Larger default buffer size to allow <code>2^20</code> in single partition</li>
+<li>Disabled single indexing</li>
+<li>Fixed <code>endian</code> issue on <code>big-endian</code> platforms</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.5" id="filearray-015">filearray 0.1.5<a class="anchor" aria-label="anchor" href="#filearray-015"></a></h2><p class="text-muted">CRAN release: 2022-10-16</p>
 <ul><li>Fixed a bug when trying to read array data sequentially. The bug is caused by buffer size being greater than the array length, making in a pointer that controls the partition number exceed the end of vector, resulting in undefined behavior. The functions affected are: <code>fmap</code>, <code>fmap2</code>. The bug has been fixed and passed <code>valgrind</code> memory check.</li>
