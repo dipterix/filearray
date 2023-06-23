@@ -4,7 +4,7 @@
 
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml)
+[![R-check](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml)
 [![CRAN status](https://www.r-pkg.org/badges/version/filearray)](https://CRAN.R-project.org/package=filearray)
 [![Develop](https://dipterix.r-universe.dev/badges/filearray)](https://dipterix.r-universe.dev/ui#builds)
 <!-- badges: end -->

@@ -1,4 +1,17 @@
-# filearray (development version)
+# filearray 0.1.6
+
+* Removed `c++11` from system requirement and `Makevars`
+* Used `TinyThreads` instead of `OpenMP` to get parallel working on `OSX`
+* Added `as_filearray` method, and support optional `float`
+* Added array proxy class, allowing arrays to lazy-evaluate simple operators
+* Allows user-defined temporary file array path
+* Fixed `fmap` issues, using better guesses for default `.input_size`
+* Fixed a memory bug caused when partition margin has elements greater than 1 and when `FARR_subset_sequential` is used
+* Used `fastmap` to avoid environment look-up
+* `fa_eval_ops` allows dimension names
+* Larger default buffer size to allow `2^20` in single partition
+* Disabled single indexing
+* Fixed `endian` issue on `big-endian` platforms
 
 # filearray 0.1.5
 
