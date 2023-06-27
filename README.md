@@ -135,4 +135,10 @@ As of version `0.1.1`, most file read/write operations are switched from `fopen`
 
 The additional performance improvements brought by the memory mapping approach might be impacted by "cold" start. When reading/writing files, most modern systems will cache the files so that it can load up these files faster next time. I personally call it a cold start. Memory mapping have a little bit extra overhead during the cold start, resulting in decreased performance (but it's still fast). Accessing the same data after the cold start is called warm start. When operating with warm starts, `filearray` is as fast as native R arrays (sometimes even faster due to the indexing method and fewer garbage collections). This means `filearray` reaches its best performance when the arrays are re-used.
 
+#### III. Using traditional HDD?
+
+`filearray` relies on SSD, especially NVMe SSD that allows you to fast-access random hard disk address. If you use HDD, `filearray` can provide very limited improvement. One personal suggestion is that if you are using Windows machine, you can use software programs such as `PrimoCache`, which allows the computer to use RAM as L2 cache to access your files. For OSX I believe the built-in system has RAM cache for disk files. 
+
+If you use `filearray` to direct access to HDD, please set number of threads to `1` via `filearray::filearray_threads(1)` at start up.
+
 
