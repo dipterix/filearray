@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -372,20 +372,20 @@ still faster than native R, and is more memory-efficient.</p>
 <span>  farr_double <span class="op">=</span> <span class="op">{</span> <span class="va">x_dbl</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,</span>
 <span>  farr_float <span class="op">=</span> <span class="op">{</span> <span class="va">x_flt</span><span class="op">$</span><span class="fu">collapse</span><span class="op">(</span>keep <span class="op">=</span> <span class="va">keep</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span> <span class="op">}</span>,</span>
 <span>  native <span class="op">=</span> <span class="op">{</span> <span class="fu"><a href="../reference/apply.html">apply</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, <span class="va">sum</span><span class="op">)</span> <span class="op">}</span>,</span>
-<span>  dipsaus <span class="op">=</span> <span class="op">{</span> <span class="fu">dipsaus</span><span class="fu">::</span><span class="fu">collapse</span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, average <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">}</span>,</span>
+<span>  ravetools <span class="op">=</span> <span class="op">{</span> <span class="fu">ravetools</span><span class="fu">::</span><span class="fu">collapse</span><span class="op">(</span><span class="va">y</span>, <span class="va">keep</span>, average <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">}</span>,</span>
 <span>  unit <span class="op">=</span> <span class="st">"s"</span>, times <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#&gt; Unit: seconds</span></span>
 <span><span class="co">#&gt;         expr   min    lq  mean median    uq   max neval</span></span>
-<span><span class="co">#&gt;  farr_double 0.782 0.790 1.009  0.799 0.832 1.840     5</span></span>
-<span><span class="co">#&gt;   farr_float 0.765 0.779 0.929  0.930 1.043 1.127     5</span></span>
-<span><span class="co">#&gt;       native 0.964 1.174 1.222  1.213 1.370 1.390     5</span></span>
-<span><span class="co">#&gt;      dipsaus 0.185 0.190 0.202  0.199 0.203 0.233     5</span></span></code></pre></div>
-<p>The <code>dipsaus</code> package uses multiple threads to collapse
+<span><span class="co">#&gt;  farr_double 0.651 0.666 0.867  0.716 0.718 1.583     5</span></span>
+<span><span class="co">#&gt;   farr_float 0.628 0.637 0.737  0.642 0.652 1.124     5</span></span>
+<span><span class="co">#&gt;       native 1.011 1.029 1.128  1.078 1.207 1.316     5</span></span>
+<span><span class="co">#&gt;    ravetools 0.109 0.110 0.126  0.131 0.138 0.139     5</span></span></code></pre></div>
+<p>The <code>ravetools</code> package uses multiple threads to collapse
 arrays in-memory. It is <code>7~8x</code> as fast as base R. File array
-is <code>1~2x</code> as fast as base R. Both <code>dipsaus</code> and
-<code>filearray</code> have little memory over-heads.</p>
+is <code>1.5~2x</code> as fast as base R. Both <code>ravetools</code>
+and <code>filearray</code> have little memory over-heads.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
