@@ -377,7 +377,7 @@ SEXP subset_dimnames(SEXP dimnames, SEXP sliceIdx){
 }
 
 
-
+// re = x[min_ + seq_len(len_)]
 SEXP sub_vec_range(SEXP x, const R_xlen_t& min_, const R_xlen_t& len_){
     if(min_ < 0){
         stop("`sub_vec_range` invalid min index");
@@ -390,31 +390,31 @@ SEXP sub_vec_range(SEXP x, const R_xlen_t& min_, const R_xlen_t& len_){
     switch(xtype) {
     case INTSXP: {
         SEXP ret = PROTECT(Rf_allocVector(xtype, len_));
-        memcpy(INTEGER(ret), INTEGER(x), len_ * sizeof(int));
+        memcpy(INTEGER(ret), INTEGER(x) + min_, len_ * sizeof(int));
         UNPROTECT(1);
         return(ret);
     }
     case REALSXP: {
         SEXP ret = PROTECT(Rf_allocVector(xtype, len_));
-        memcpy(REAL(ret), REAL(x), len_ * sizeof(double));
+        memcpy(REAL(ret), REAL(x) + min_, len_ * sizeof(double));
         UNPROTECT(1);
         return(ret);
     }
     case CPLXSXP: {
         SEXP ret = PROTECT(Rf_allocVector(xtype, len_));
-        memcpy(COMPLEX(ret), COMPLEX(x), len_ * sizeof(Rcomplex));
+        memcpy(COMPLEX(ret), COMPLEX(x) + min_, len_ * sizeof(Rcomplex));
         UNPROTECT(1);
         return(ret);
     }
     case RAWSXP: {
         SEXP ret = PROTECT(Rf_allocVector(xtype, len_));
-        memcpy(RAW(ret), RAW(x), len_ * sizeof(Rbyte));
+        memcpy(RAW(ret), RAW(x) + min_, len_ * sizeof(Rbyte));
         UNPROTECT(1);
         return(ret);
     }
     case LGLSXP: {
         SEXP ret = PROTECT(Rf_allocVector(xtype, len_));
-        memcpy(LOGICAL(ret), LOGICAL(x), len_ * sizeof(int));
+        memcpy(LOGICAL(ret), LOGICAL(x) + min_, len_ * sizeof(int));
         UNPROTECT(1);
         return(ret);
     }
@@ -513,7 +513,5 @@ SEXP sub_vec(SEXP x, SEXP idx_int64){
     // SEXP ret = 
     return(R_NilValue);
 }
-
-
 
 
