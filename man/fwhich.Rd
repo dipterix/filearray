@@ -17,7 +17,7 @@ fwhich(x, val, arr.ind = FALSE, ret.values = FALSE, ...)
 
 \item{val}{values to find, or a function taking one argument (a slice of 
 data vector) and returns either logical vector with the same length as the 
-slice or undex of the slice; see 'Examples'}
+slice or index of the slice; see 'Examples'}
 
 \item{arr.ind}{logical; should array indices be 
 returned when \code{x} is an array?}

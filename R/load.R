@@ -58,7 +58,7 @@
 #' @examples 
 #' 
 #' 
-#' # Prepare 
+#' # Prepare
 #' library(filearray)
 #' filebase <- tempfile()
 #' if(file.exists(filebase)){ unlink(filebase, TRUE) }
@@ -88,15 +88,15 @@
 #' # check-load, and create a new array if fail
 #' x <- filearray_load_or_create(
 #'     filebase = filebase, dimension = c(200, 30, 8),
-#'     verbose = TRUE, signature = "henry"
+#'     verbose = FALSE, signature = "henry"
 #' )
 #' x$get_header("signature")
 #' 
 #' # check-load with initialization
 #' x <- filearray_load_or_create(
-#'     filebase = filebase, 
+#'     filebase = filebase,
 #'     dimension = c(3, 4, 5),
-#'     verbose = TRUE, mode = "readonly",
+#'     verbose = FALSE, mode = "readonly",
 #'     on_missing = function(array) {
 #'         array[] <- seq_len(60)
 #'     }

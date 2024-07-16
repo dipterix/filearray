@@ -1,3 +1,13 @@
+# filearray 0.1.7
+
+* Removed non-API R C interface
+* Allows `subsetAssign` to assign when value length is 1 (thanks `@talegari` issue `#9`)
+* Allows more flexible `fwhich` function with functional `val` input and options to include corresponding values as part of return (thanks `@talegari` issue `#10`)
+* Fixed `mapreduce` bug when partition length is way larger than the buffer size, causing buffer to stop updating
+* Fixed other `C++` issues, such as unused buffer allocation in subset-assign, and `min_` offset in `sub_vec_range`. These issues are not considered bugs since they don't affect the results, but the performance is slightly increased after fix.
+* Replaced `dipsaus` with more updated `ravetools` in the vignette performance profiling
+* Updated examples to get rid of warning messages and out-dated arguments.
+
 # filearray 0.1.6
 
 * Removed `c++11` from system requirement and `Makevars`

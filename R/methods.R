@@ -182,7 +182,7 @@ subset.FileArray <- function(x, ..., drop = FALSE, .env = parent.frame()){
 #' @param x any R vector, matrix, array or file-array
 #' @param val values to find, or a function taking one argument (a slice of 
 #' data vector) and returns either logical vector with the same length as the 
-#' slice or undex of the slice; see 'Examples'
+#' slice or index of the slice; see 'Examples'
 #' @param arr.ind logical; should array indices be 
 #' returned when \code{x} is an array?
 #' @param ret.values whether to return the values of corresponding indices as 

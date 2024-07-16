@@ -62,10 +62,11 @@
 #' output$delete()
 #' 
 #' # Calculate the maximum of x1/x2 for every 100 elements
+#' # total 60 batches/loops (`.buffer_count`)
 #' output <- filearray_create(tempfile(), dimension = c(20,3))
 #' fmap(list(x1, x2), function(input){
 #'     max(input[[1]] / input[[2]])
-#' }, output, .input_size = 100, .output_size = 1)
+#' }, .y = output, .buffer_count = 60)
 #' 
 #' # check
 #' range(output[] - apply(x1[] / x2[], c(2,3), max))
@@ -81,48 +82,46 @@
 #'         Time = 1:301,
 #'         Location = 1:4
 #'     )
-#'     
+#' 
 #'     for(i in 1:4){
 #'         x[,,,i] <- runif(8638700)
 #'     }
 #'     # Step 1:
 #'     # for each location, trial, and marker, calibrate (baseline)
 #'     # according to first 50 time-points
-#'     
+#' 
 #'     output <- filearray_create(tempfile(), dimension = dim(x))
-#'     
+#' 
 #'     # baseline-percentage change
 #'     fmap(
-#'         list(x), 
+#'         list(x),
 #'         function(input){
 #'             # get locational data
 #'             location_data <- input[[1]]
 #'             dim(location_data) <- c(287, 100, 301)
-#'             
-#'             # collapse over first 50 time points for 
+#' 
+#'             # collapse over first 50 time points for
 #'             # each trial, and marker
 #'             baseline <- apply(location_data[,,1:50], c(1,2), mean)
-#'             
+#' 
 #'             # calibrate
-#'             calibrated <- sweep(location_data, c(1,2), baseline, 
+#'             calibrated <- sweep(location_data, c(1,2), baseline,
 #'                                 FUN = function(data, bl){
 #'                                     (data / bl - 1) * 100
 #'                                 })
 #'             return(calibrated)
-#'         }, 
-#'         
+#'         },
+#' 
 #'         .y = output,
-#'         
+#' 
 #'         # input dimension is 287 x 100 x 301 for each location
-#'         .input_size = 8638700,
-#'         
-#'         # output dimension is 287 x 100 x 301
-#'         .output_size = 8638700
+#'         # hence 4 loops in total
+#'         .buffer_count = 4
 #'     )
-#'     
+#' 
 #'     # cleanup
 #'     x$delete()
-#'     
+#' 
 #' }
 #' 
 #' # cleanup
