@@ -27,7 +27,7 @@ The simulation was performed on `MacBook Air 2020 (M1 Chip, ARM, 8GB RAM)`, with
 
 We mainly test the performance of `double` and `float` data type. The dimensions for both arrays are `100x100x100x100`. Both arrays are around `800MB` in native R. This is because R does not have float precision. However, while `double` array occupies `800MB` space on the hard disk, `float` array only uses half size (`400MB`).
 
-```{r setup}
+```{r setup, eval = FALSE}
 library(filearray)
 
 options(digits = 3)
@@ -69,7 +69,7 @@ Writing along margins refer to something like `x[,,,i] <- v` (along the last mar
 
 1.  partition margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:100){
@@ -91,7 +91,7 @@ microbenchmark::microbenchmark(
 
 2. Write along fast margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:100){
@@ -113,7 +113,7 @@ microbenchmark::microbenchmark(
 
 3. Writing along slow margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:100){
@@ -140,7 +140,7 @@ Instead of writing one slice at a time along each margin, we write `100x100x100x
 
 1.  Write blocks of data along the partition margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:10){
@@ -164,7 +164,7 @@ microbenchmark::microbenchmark(
 
 2. Write blocks of data along the fast margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:10){
@@ -188,7 +188,7 @@ microbenchmark::microbenchmark(
 
 3. Write blocks of data along slow margin
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = {
     for(i in 1:10){
@@ -214,7 +214,7 @@ microbenchmark::microbenchmark(
 
 ### 1. Read the whole array
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   double = { x_dbl[] },
   float = { x_flt[] },
@@ -229,7 +229,7 @@ microbenchmark::microbenchmark(
 
 ### 2. Read along margins
 
-```{r}
+```{r, eval = FALSE}
 microbenchmark::microbenchmark(
   farr_double_partition_margin = { x_dbl[,,,1] },
   farr_double_fast_margin = { x_dbl[,,1,] },
@@ -260,7 +260,7 @@ The file array indexing is close to handling in-memory arrays in R!
 
 ### 3. Random access
 
-```{r}
+```{r, eval = FALSE}
 # access 50 x 50 x 50 x 50 sub-array, with random indices
 idx1 <- sample(1:100, 50)
 idx2 <- sample(1:100, 50)
@@ -287,7 +287,7 @@ Random access could be faster than base R (also much less memory!)
 
 Collapse calculates the margin sum/mean. Collapse function in `filearray` uses single thread. This is because the bottle-neck often comes from hard-disk accessing speed. However, it is still faster than native R, and is more memory-efficient.
 
-```{r}
+```{r, eval = FALSE}
 keep <- c(2, 4)
 output <- filearray_create(tempfile(), dim(x_dbl)[keep])
 output$initialize_partition()
@@ -295,18 +295,18 @@ microbenchmark::microbenchmark(
   farr_double = { x_dbl$collapse(keep = keep, method = "sum") },
   farr_float = { x_flt$collapse(keep = keep, method = "sum") },
   native = { apply(y, keep, sum) },
-  dipsaus = { dipsaus::collapse(y, keep, average = FALSE) },
+  ravetools = { ravetools::collapse(y, keep, average = FALSE) },
   unit = "s", times = 5
 )
 
 #> Unit: seconds
 #>         expr   min    lq  mean median    uq   max neval
-#>  farr_double 0.782 0.790 1.009  0.799 0.832 1.840     5
-#>   farr_float 0.765 0.779 0.929  0.930 1.043 1.127     5
-#>       native 0.964 1.174 1.222  1.213 1.370 1.390     5
-#>      dipsaus 0.185 0.190 0.202  0.199 0.203 0.233     5
+#>  farr_double 0.651 0.666 0.867  0.716 0.718 1.583     5
+#>   farr_float 0.628 0.637 0.737  0.642 0.652 1.124     5
+#>       native 1.011 1.029 1.128  1.078 1.207 1.316     5
+#>    ravetools 0.109 0.110 0.126  0.131 0.138 0.139     5
 ```
 
-The `dipsaus` package uses multiple threads to collapse arrays in-memory. It is `7~8x` as fast as base R. File array is `1~2x` as fast as base R. Both `dipsaus` and `filearray` have little memory over-heads.
+The `ravetools` package uses multiple threads to collapse arrays in-memory. It is `7~8x` as fast as base R. File array is `1.5~2x` as fast as base R. Both `ravetools` and `filearray` have little memory over-heads.
 
 

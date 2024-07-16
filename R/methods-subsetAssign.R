@@ -24,8 +24,8 @@ fa_subsetAssign1 <- function(x, ..., value){
                 stop("SubsetAssign FileArray only allows x[] <- v or x[i,j,...] <- v (single index not allowed)")
             }
         }
-        if(length(value) != prod(dim)){
-            stop("SubsetAssign FileArray `value` length mismatch.")
+        if(!length(value) %in% c(1, prod(dim))){
+            stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         target_dim <- dim
         x$initialize_partition(x$.partition_info[, 1])
@@ -62,8 +62,8 @@ fa_subsetAssign1 <- function(x, ..., value){
         }
         
         target_dim <- sapply(locs, length)
-        if(prod(target_dim) != length(value)){
-            stop("SubsetAssign FileArray `value` length mismatch.")
+        if(!length(value) %in% c(1, prod(target_dim))){
+            stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         
         # make sure partitions exist

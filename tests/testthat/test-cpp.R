@@ -106,9 +106,13 @@ test_that("C++: IO - subset/assign", {
         lapply(dim, function(d) {
             sample(c(1:d), size = d, replace = FALSE)
         })
-    expect_error({
+    expect_no_error({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1
     })
+    expect_equal(
+        unique(as.vector(x[locs[[1]], locs[[2]], locs[[3]]])),
+        1
+    )
     
     expect_true({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1:prod(sapply(locs, length))
@@ -202,9 +206,14 @@ test_that("C++: IO - subset/assign - complex", {
         lapply(dim, function(d) {
             sample(c(1:d), size = d, replace = FALSE)
         })
-    expect_error({
+    expect_no_error({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1
     })
+    
+    expect_equal(
+        unique(as.vector(x[locs[[1]], locs[[2]], locs[[3]]])),
+        1 + 0i
+    )
     
     expect_true({
         x[locs[[1]], locs[[2]], locs[[3]]] <- tmp[1:prod(sapply(locs, length))]
@@ -303,9 +312,14 @@ test_that("C++: IO - subset/assign - float", {
         lapply(dim, function(d) {
             sample(c(1:d), size = d, replace = FALSE)
         })
-    expect_error({
+    expect_no_error({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1
     })
+    expect_equal(
+        unique(as.vector(x[locs[[1]], locs[[2]], locs[[3]]])),
+        1
+    )
+    
     
     expect_true({
         x[locs[[1]], locs[[2]], locs[[3]]] <- 1:prod(sapply(locs, length))

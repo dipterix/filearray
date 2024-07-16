@@ -226,7 +226,8 @@ void subset_assign_partition(
         char* conn0, T* value, const R_xlen_t block_size, 
         int64_t* idx1ptr0, R_xlen_t idx1len, 
         int64_t idx1_start, int64_t idx2_start, 
-        int64_t* idx2ptr0, R_xlen_t idx2len ) {
+        int64_t* idx2ptr0, R_xlen_t idx2len,
+        const int &value_inc = 1) {
     // TODO: swap_endian
     int elem_size = sizeof(T);
     
@@ -261,7 +262,7 @@ void subset_assign_partition(
         // block_size: 861584, idx1len: 9001, idx1_start: 216024, idx2_start: 0, idx2_len: 1
         // ### idx2ii:0, start_loc: 0, buf pos: 0, idx1_start: 216024
         
-        for(idx1ii = 0; idx1ii < idx1len; idx1ii++, idx1ptr++, valptr2++){
+        for(idx1ii = 0; idx1ii < idx1len; idx1ii++, idx1ptr++, valptr2+=value_inc){
             // calculate pointer location in the file
             // no check here, but tmp_loc should be >=0
             
@@ -287,6 +288,10 @@ struct FARRAssigner : public TinyParallel::Worker {
     const List& sch;
     T* value_ptr;
     
+    // value_ptr increment size, can either be 0 (length(value) == 1)
+    // or 1 (length(value) is the same as subset size)
+    int value_ptr_inc;
+    
     SEXP idx1;
     SEXP idx1range;
     List idx2s;
@@ -306,9 +311,16 @@ struct FARRAssigner : public TinyParallel::Worker {
     
     FARRAssigner(
         const std::string& filebase,
-        const List& sch, T* value_ptr
+        const List& sch, 
+        const int64_t& value_len,
+        T* value_ptr
     ): filebase(filebase), sch(sch) {
         this->value_ptr = value_ptr;
+        if( value_len - 1 == 0 ) {
+            this->value_ptr_inc = 0;
+        } else {
+            this->value_ptr_inc = 1;
+        }
         this->idx1 = sch["idx1"];
         this->idx1range = sch["idx1range"];
         this->idx2s = sch["idx2s"];
@@ -433,7 +445,7 @@ struct FARRAssigner : public TinyParallel::Worker {
                 
                 int64_t* idx2_ptr = INTEGER64(idx2);
                 R_xlen_t idx2_len = Rf_xlength(idx2);
-                T* value_ptr2 = value_ptr + (idx1len * skips);
+                T* value_ptr2 = value_ptr + (idx1len * skips) * this->value_ptr_inc;
                 int64_t* idx1ptr = idx1ptr0;
                 
                 // Rcout << "block_size: " << block_size << ", idx1len: " << idx1len << ", idx1_start: " << idx1_start << 
@@ -443,7 +455,8 @@ struct FARRAssigner : public TinyParallel::Worker {
                     begin, value_ptr2,
                     block_size, idx1ptr, idx1len, 
                     idx1_start, idx2_start, 
-                    idx2_ptr, idx2_len );
+                    idx2_ptr, idx2_len,
+                    this->value_ptr_inc );
                 
                 
                 // region.flush();
@@ -472,8 +485,11 @@ struct FARRAssigner : public TinyParallel::Worker {
 template <typename T>
 SEXP FARR_subset_assign_template(
         const std::string& filebase, 
-        const List& sch, T* value_ptr){
-    FARRAssigner<T> assigner(filebase, sch, value_ptr);
+        const List& sch, 
+        const R_xlen_t &value_len,
+        T* value_ptr
+){
+    FARRAssigner<T> assigner(filebase, sch, value_len, value_ptr);
     assigner.save();
     return( R_NilValue );
 }
@@ -520,43 +536,44 @@ SEXP FARR_subset_assign2(
     
     // coerce vector to desired SEXP type
     SEXP value_ = PROTECT(convert_as(value, sexp_type));
-    SEXPTYPE valtype = TYPEOF(value_);
+    // SEXPTYPE valtype = TYPEOF(value_);
     
-    // allocate buffers
-    int ncores = getThreads();
-    std::vector<SEXP> buff_pool(ncores);
-    for(int i = 0; i < ncores; i++){
-        buff_pool[i] = PROTECT(Rf_allocVector(
-            valtype, idx1_end - idx1_start + 1));
-    }
+    // // allocate buffers
+    // int ncores = getThreads();
+    // std::vector<SEXP> buff_pool(ncores);
+    // for(int i = 0; i < ncores; i++){
+    //     buff_pool[i] = PROTECT(Rf_allocVector(
+    //         valtype, idx1_end - idx1_start + 1));
+    // }
     
         
     switch(sexp_type) {
     case INTSXP: {
-        FARR_subset_assign_template(fbase, sch, INTEGER(value_));
+        FARR_subset_assign_template(fbase, sch, XLENGTH(value_), INTEGER(value_));
         break;
     }
     case CPLXSXP:
     case REALSXP: {
-        FARR_subset_assign_template(fbase, sch, REAL(value_));
+        FARR_subset_assign_template(fbase, sch, XLENGTH(value_), REAL(value_));
         break;
     }
     case FLTSXP: {
-        FARR_subset_assign_template(fbase, sch, FLOAT(value_));
+        FARR_subset_assign_template(fbase, sch, XLENGTH(value_), FLOAT(value_));
         break;
     }
     case LGLSXP:
     case RAWSXP: {
-        FARR_subset_assign_template(fbase, sch, RAW(value_));
+        FARR_subset_assign_template(fbase, sch, XLENGTH(value_), RAW(value_));
         break;
     }
     default: {
-        UNPROTECT( 1 + ncores );
+        UNPROTECT( 1 );
         stop("SEXP type not supported.");
+        return(R_NilValue); // wall
     }
     }
     
-    UNPROTECT( 1 + ncores );
+    UNPROTECT( 1 );
     return(R_NilValue);
     
 }
