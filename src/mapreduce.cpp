@@ -24,6 +24,12 @@ SEXP each_partition_template(
     
     int64_t rest_len = 0;
     
+    SEXP readlen_sxp = PROTECT(Rf_allocVector(REALSXP, 1));
+    double* readlen_ptr = REAL(readlen_sxp);
+    
+    SEXP count_sxp = PROTECT(Rf_allocVector(REALSXP, 1));
+    double* count_ptr = REAL(count_sxp);
+    
     while(current_pos < exp_len){
         read_len = exp_len - current_pos;
         if( read_len > buffer_nelems ){
@@ -35,7 +41,12 @@ SEXP each_partition_template(
         // read_len = lendian_fread(filebuf_ptr, elem_size, buffer_nelems, conn);
         transform(mmap_ptr, argbuf_ptr, read_len, swap_endian);
         
+        // transform(const *T, ...) does not alter mmap_ptr, need to increase
+        mmap_ptr += read_len;
+        
         if( read_len > 0 ){
+            *readlen_ptr = (double) read_len;
+            *count_ptr = (double) *count;
             if( read_len < buffer_nelems ){
                 // if( tmp_arg == R_NilValue ){
                 //     tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
@@ -43,10 +54,15 @@ SEXP each_partition_template(
                 //     UNPROTECT(1);
                 //     tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
                 // }
-                SEXP tmp_arg = Shield<SEXP>(sub_vec_range(argbuf, 0, read_len));
-                ret.push_back( Shield<SEXP>( fun(Shield<SEXP>(tmp_arg), Shield<SEXP>(wrap(read_len)), Shield<SEXP>(wrap(*count))) ) );
+                SEXP tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
+                SEXP item = PROTECT( fun(tmp_arg, readlen_sxp, count_sxp) );
+                ret.push_back( item );
+                UNPROTECT( 2 ); // item, tmp_arg
             } else {
-                ret.push_back( Shield<SEXP>( fun(Shield<SEXP>(argbuf), Shield<SEXP>(wrap(read_len)), Shield<SEXP>(wrap(*count))) ) );
+                SEXP item = PROTECT( fun(argbuf, readlen_sxp, count_sxp) );
+                ret.push_back( item );
+                UNPROTECT( 1 ); // item
+                // ret.push_back( Shield<SEXP>( fun(Shield<SEXP>(argbuf), Shield<SEXP>(wrap(read_len)), Shield<SEXP>(wrap(*count))) ) );
             }
         }
         
@@ -60,6 +76,8 @@ SEXP each_partition_template(
     // if( tmp_arg != R_NilValue ){
     //     UNPROTECT(1);
     // }
+    
+    UNPROTECT(2); // count_sxp, readlen_sxp
     
     return( ret );
 }

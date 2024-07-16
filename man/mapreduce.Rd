@@ -9,9 +9,9 @@
 \usage{
 mapreduce(x, map, reduce, ...)
 
-\S4method{mapreduce}{FileArray,ANY,`function`}(x, map, reduce, buffer_size = NA, ...)
+\S4method{mapreduce}{FileArray,ANY,function}(x, map, reduce, buffer_size = NA, ...)
 
-\S4method{mapreduce}{FileArray,ANY,`NULL`}(x, map, reduce, buffer_size = NA, ...)
+\S4method{mapreduce}{FileArray,ANY,NULL}(x, map, reduce, buffer_size = NA, ...)
 
 \S4method{mapreduce}{FileArray,ANY,missing}(x, map, reduce, buffer_size = NA, ...)
 }
