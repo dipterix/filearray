@@ -19,7 +19,7 @@ this function."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,7 +159,7 @@ must be the consistent.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition count: 3 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmp26F0cV/file1743440eae17 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpDVDkjn/file176f461fece3 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># check</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">output</span><span class="op">[</span><span class="op">]</span> <span class="op">-</span> <span class="op">(</span><span class="va">x1</span><span class="op">[</span><span class="op">]</span> <span class="op">+</span> <span class="va">x2</span><span class="op">[</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -168,24 +168,22 @@ must be the consistent.</p>
 <span class="r-in"><span><span class="va">output</span><span class="op">$</span><span class="fu">delete</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate the maximum of x1/x2 for every 100 elements</span></span></span>
+<span class="r-in"><span><span class="co"># total 60 batches/loops (`.buffer_count`)</span></span></span>
 <span class="r-in"><span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, dimension <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">fmap</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">input</span><span class="op">)</span><span class="op">{</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">input</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="va">input</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span>, <span class="va">output</span>, .input_size <span class="op">=</span> <span class="fl">100</span>, .output_size <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`fmap`: .output_size is deprecated. Please specify `.y` instead</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in (function (input) {    max(input[[1]]/input[[2]])})(data, .input_size = 100):</span> unused argument (.input_size = 100)</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>C++ `FARR_buffer_map`: cannot finish map</span>
+<span class="r-in"><span><span class="op">}</span>, .y <span class="op">=</span> <span class="va">output</span>, .buffer_count <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reference class object of class "FileArray"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mode: readwrite </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension: 20x3 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition count: 3 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Partition size: 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Storage type: double (internal size: 8)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/Rtmp26F0cV/file1743306387f1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: /tmp/RtmpDVDkjn/file176f46e2eec2 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># check</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">output</span><span class="op">[</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="apply.html">apply</a></span><span class="op">(</span><span class="va">x1</span><span class="op">[</span><span class="op">]</span> <span class="op">/</span> <span class="va">x2</span><span class="op">[</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>, <span class="va">max</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0 0</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">output</span><span class="op">$</span><span class="fu">delete</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -198,48 +196,46 @@ must be the consistent.</p>
 <span class="r-in"><span>        Time <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">301</span>,</span></span>
 <span class="r-in"><span>        Location <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span>    </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">{</span></span></span>
 <span class="r-in"><span>        <span class="va">x</span><span class="op">[</span>,,,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">8638700</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span></span></span>
 <span class="r-in"><span>    <span class="co"># Step 1:</span></span></span>
 <span class="r-in"><span>    <span class="co"># for each location, trial, and marker, calibrate (baseline)</span></span></span>
 <span class="r-in"><span>    <span class="co"># according to first 50 time-points</span></span></span>
-<span class="r-in"><span>    </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>    <span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="filearray.html">filearray_create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, dimension <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>    <span class="co"># baseline-percentage change</span></span></span>
 <span class="r-in"><span>    <span class="fu">fmap</span><span class="op">(</span></span></span>
-<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>        <span class="kw">function</span><span class="op">(</span><span class="va">input</span><span class="op">)</span><span class="op">{</span></span></span>
 <span class="r-in"><span>            <span class="co"># get locational data</span></span></span>
 <span class="r-in"><span>            <span class="va">location_data</span> <span class="op">&lt;-</span> <span class="va">input</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
 <span class="r-in"><span>            <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">location_data</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">287</span>, <span class="fl">100</span>, <span class="fl">301</span><span class="op">)</span></span></span>
-<span class="r-in"><span>            </span></span>
-<span class="r-in"><span>            <span class="co"># collapse over first 50 time points for </span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>            <span class="co"># collapse over first 50 time points for</span></span></span>
 <span class="r-in"><span>            <span class="co"># each trial, and marker</span></span></span>
 <span class="r-in"><span>            <span class="va">baseline</span> <span class="op">&lt;-</span> <span class="fu"><a href="apply.html">apply</a></span><span class="op">(</span><span class="va">location_data</span><span class="op">[</span>,,<span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, <span class="va">mean</span><span class="op">)</span></span></span>
-<span class="r-in"><span>            </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>            <span class="co"># calibrate</span></span></span>
-<span class="r-in"><span>            <span class="va">calibrated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html" class="external-link">sweep</a></span><span class="op">(</span><span class="va">location_data</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, <span class="va">baseline</span>, </span></span>
+<span class="r-in"><span>            <span class="va">calibrated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html" class="external-link">sweep</a></span><span class="op">(</span><span class="va">location_data</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, <span class="va">baseline</span>,</span></span>
 <span class="r-in"><span>                                FUN <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">bl</span><span class="op">)</span><span class="op">{</span></span></span>
 <span class="r-in"><span>                                    <span class="op">(</span><span class="va">data</span> <span class="op">/</span> <span class="va">bl</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></span>
 <span class="r-in"><span>                                <span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span>            <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">calibrated</span><span class="op">)</span></span></span>
-<span class="r-in"><span>        <span class="op">}</span>, </span></span>
-<span class="r-in"><span>        </span></span>
+<span class="r-in"><span>        <span class="op">}</span>,</span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>        .y <span class="op">=</span> <span class="va">output</span>,</span></span>
-<span class="r-in"><span>        </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>        <span class="co"># input dimension is 287 x 100 x 301 for each location</span></span></span>
-<span class="r-in"><span>        .input_size <span class="op">=</span> <span class="fl">8638700</span>,</span></span>
-<span class="r-in"><span>        </span></span>
-<span class="r-in"><span>        <span class="co"># output dimension is 287 x 100 x 301</span></span></span>
-<span class="r-in"><span>        .output_size <span class="op">=</span> <span class="fl">8638700</span></span></span>
+<span class="r-in"><span>        <span class="co"># hence 4 loops in total</span></span></span>
+<span class="r-in"><span>        .buffer_count <span class="op">=</span> <span class="fl">4</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span>    </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>    <span class="co"># cleanup</span></span></span>
 <span class="r-in"><span>    <span class="va">x</span><span class="op">$</span><span class="fu">delete</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># cleanup</span></span></span>
