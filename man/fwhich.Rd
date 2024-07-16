@@ -6,22 +6,26 @@
 \alias{fwhich.FileArray}
 \title{A generic function of \code{which} that is \code{'FileArray'} compatible}
 \usage{
-fwhich(x, val, arr.ind = FALSE, ...)
+fwhich(x, val, arr.ind = FALSE, ret.values = FALSE, ...)
 
-\method{fwhich}{default}(x, val, arr.ind = FALSE, ...)
+\method{fwhich}{default}(x, val, arr.ind = FALSE, ret.values = FALSE, ...)
 
-\method{fwhich}{FileArray}(x, val, arr.ind = FALSE, ...)
+\method{fwhich}{FileArray}(x, val, arr.ind = FALSE, ret.values = FALSE, ...)
 }
 \arguments{
 \item{x}{any R vector, matrix, array or file-array}
 
-\item{val}{values to find}
+\item{val}{values to find, or a function taking one argument (a slice of 
+data vector) and returns either logical vector with the same length as the 
+slice or undex of the slice; see 'Examples'}
 
 \item{arr.ind}{logical; should array indices be 
 returned when \code{x} is an array?}
 
-\item{...}{further passed to \code{\link{which}} or
-\code{\link{arrayInd}}}
+\item{ret.values}{whether to return the values of corresponding indices as 
+an attributes; default is false}
+
+\item{...}{passed to \code{val} if \code{val} is a function}
 }
 \value{
 The indices of \code{x} elements that are listed in \code{val}.
@@ -32,14 +36,43 @@ A generic function of \code{which} that is \code{'FileArray'} compatible
 \examples{
 
 
-# Default case
-x <- array(1:27, rep(3,3))
-fwhich(x, c(4,5))
+# ---- Default case ------------------------------------
+x <- array(1:27 + 2, rep(3,3))
 
-# file-array case
+# find index of `x` equal to either 4 or 5
+fwhich(x, c(4,5))
+res <- fwhich(x, c(4,5), ret.values = TRUE)
+res
+attr(res, "values")
+
+# ---- file-array case --------------------------------
 arr <- filearray_create(tempfile(), dim(x))
 arr[] <- x
 fwhich(arr, c(4,5))
+fwhich(arr, c(4,5), arr.ind = TRUE, ret.values = TRUE)
+
+arr[2:3, 1, 1]
+
+# Clean up this example
+arr$delete()
+
+# ---- `val` is a function ----------------------------
+x <- as_filearray(c(sample(15), 15), dimension = c(4,4))
+
+ret <- fwhich(x, val = which.max, 
+              ret.values = TRUE, arr.ind = FALSE)
+
+# ret is the index
+ret == which.max(x[])
+
+# attr(ret, "values") is the max value
+max(x[]) == attr(ret, "values")
+
+# customize `val`
+fwhich(x, ret.values = TRUE, arr.ind = FALSE,
+       val = function( slice ) {
+           slice > 10 # or which(slice > 10)
+       })
 
 
 }

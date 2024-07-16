@@ -137,7 +137,44 @@ test_that("map filearrays", {
 })
 
 
-
+test_that("fwhich", {
+    x <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 301, 4), initialize = FALSE, partition_size = 3L, type = "complex")
+    dnames <- list(
+        Trial = sample(c("A", "B"), 28, replace = TRUE),
+        Marker = 1:100,
+        Time = seq(-1,2,0.01),
+        Location = 1:4
+    )
+    dimnames(x) <- dnames
+    
+    y <- array(rnorm(length(x)), dim(x))
+    x[] <- y
+    x[1,c(1,3),301,4] <- c(80 + 10i, 80 + 10i)
+    y <- x[]
+    
+    idx <- fwhich(x, val = 80 + 10i, arr.ind = FALSE, ret.values = FALSE)
+    expect_equal(idx, which(y == (80 + 10i)))
+    
+    idx <- fwhich(x, val = 80 + 10i, arr.ind = FALSE, ret.values = TRUE)
+    expect_equal(attr(idx, "values"), rep(80 + 10i, length(idx)))
+    
+    idx1 <- fwhich(x, val = 80 + 10i, arr.ind = TRUE, ret.values = TRUE)
+    idx2 <- fwhich(y, val = 80 + 10i, arr.ind = TRUE, ret.values = TRUE)
+    expect_equal(idx1, idx2)
+    
+    # val is a function
+    impl <- function(z) { Re(z) > 4 }
+    idx1 <- fwhich(x, impl, arr.ind = FALSE, ret.values = TRUE)
+    idx2 <- fwhich(x[], impl, arr.ind = FALSE, ret.values = TRUE)
+    expect_equal(idx1, idx2)
+    
+    impl <- function(z) { Im(z) < -100 }
+    idx1 <- fwhich(x, impl, arr.ind = TRUE, ret.values = TRUE)
+    idx2 <- fwhich(x[], impl, arr.ind = TRUE, ret.values = TRUE)
+    expect_equal(idx1, idx2)
+    
+    x$delete()
+})
 
 
 

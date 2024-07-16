@@ -180,54 +180,129 @@ subset.FileArray <- function(x, ..., drop = FALSE, .env = parent.frame()){
 
 #' @title A generic function of \code{which} that is \code{'FileArray'} compatible
 #' @param x any R vector, matrix, array or file-array
-#' @param val values to find
+#' @param val values to find, or a function taking one argument (a slice of 
+#' data vector) and returns either logical vector with the same length as the 
+#' slice or undex of the slice; see 'Examples'
 #' @param arr.ind logical; should array indices be 
 #' returned when \code{x} is an array?
-#' @param ... further passed to \code{\link{which}} or
-#' \code{\link{arrayInd}}
+#' @param ret.values whether to return the values of corresponding indices as 
+#' an attributes; default is false
+#' @param ... passed to \code{val} if \code{val} is a function
 #' @return The indices of \code{x} elements that are listed in \code{val}.
 #' @examples 
 #' 
 #' 
-#' # Default case
-#' x <- array(1:27, rep(3,3))
-#' fwhich(x, c(4,5))
+#' # ---- Default case ------------------------------------
+#' x <- array(1:27 + 2, rep(3,3))
 #' 
-#' # file-array case
+#' # find index of `x` equal to either 4 or 5
+#' fwhich(x, c(4,5))
+#' res <- fwhich(x, c(4,5), ret.values = TRUE)
+#' res
+#' attr(res, "values")
+#' 
+#' # ---- file-array case --------------------------------
 #' arr <- filearray_create(tempfile(), dim(x))
 #' arr[] <- x
 #' fwhich(arr, c(4,5))
+#' fwhich(arr, c(4,5), arr.ind = TRUE, ret.values = TRUE)
+#' 
+#' arr[2:3, 1, 1]
+#' 
+#' # Clean up this example
+#' arr$delete()
+#' 
+#' # ---- `val` is a function ----------------------------
+#' x <- as_filearray(c(sample(15), 15), dimension = c(4,4))
+#' 
+#' ret <- fwhich(x, val = which.max, 
+#'               ret.values = TRUE, arr.ind = FALSE)
+#' 
+#' # ret is the index
+#' ret == which.max(x[])
+#' 
+#' # attr(ret, "values") is the max value
+#' max(x[]) == attr(ret, "values")
+#' 
+#' # customize `val`
+#' fwhich(x, ret.values = TRUE, arr.ind = FALSE,
+#'        val = function( slice ) {
+#'            slice > 10 # or which(slice > 10)
+#'        })
 #' 
 #' 
 #' @export
-fwhich <- function(x, val, arr.ind = FALSE, ...){
+fwhich <- function(x, val, arr.ind = FALSE, ret.values = FALSE, ...){
     UseMethod('fwhich')
 }
 
 #' @rdname fwhich
 #' @export
-fwhich.default <- function(x, val, arr.ind = FALSE, ...){
-    which(x %in% val, arr.ind = arr.ind, ...)
+fwhich.default <- function(x, val, arr.ind = FALSE, ret.values = FALSE, ...){
+    if(is.function(val)) {
+        idx <- val(x, ...)
+        if(is.logical(idx)) {
+            idx <- which(idx, useNames = FALSE)
+        }
+    } else {
+        idx <- which(x %in% val, arr.ind = FALSE, useNames = FALSE)
+    }
+    if( arr.ind && length(dim(x)) > 0 ) {
+        re <- arrayInd(idx, .dim = dim(x), .dimnames = dimnames(x))
+    } else {
+        re <- idx
+    }
+    if( ret.values ) {
+        attr(re, "values") <- x[idx]
+    }
+    return(re)
 }
 
 #' @rdname fwhich
 #' @export
-fwhich.FileArray <- function(x, val, arr.ind = FALSE, ...){
-    ret <- mapreduce(x, map = function(data, size, idx){
-        if(size != length(data)){
-            data <- data[seq_len(size)]
+fwhich.FileArray <- function(x, val, arr.ind = FALSE, ret.values = FALSE, ...){
+    if(is.function(val)) {
+        args <- list(1, ...)
+        impl <- function(y) {
+            args[[1]] <- y
+            do.call(val, args)
         }
-        re <- which(data %in% val)
-        if(length(re)){
-            re <- re + (idx - 1)
+    } else {
+        impl <- function(y) {
+            which(y %in% val, arr.ind = FALSE)
         }
-        re
-    }, reduce = function(ret){
-        do.call('c', ret)
-    })
-    if( arr.ind ){
-        ret <- arrayInd(ind = ret, .dim = dim(x), 
-                        .dimnames = dimnames(x), ...)
     }
-    ret
+    mapreduce(
+        x, 
+        map = function(data, size, start_index){
+            idx <- impl(data[seq_len(size)])
+            if(is.logical(idx)) { idx <- which(idx, arr.ind = FALSE, useNames = FALSE) }
+            if(!length(idx)) { return(NULL) }
+            data.frame(
+                index = start_index + idx - 1,
+                value = data[idx]
+            )
+        },
+        reduce = function(mapped_list) {
+            mapped_data <- do.call("rbind", mapped_list)
+            if(!length(mapped_data)) {
+                idx <- numeric(0L)
+                val <- raw(0L)
+                storage.mode(val) <- storage.mode(x$.na)
+            } else {
+                mapped_data <- mapped_data[impl( mapped_data$val ), , drop = FALSE]
+                idx <- mapped_data$index
+                val <- mapped_data$value
+            }
+            
+            if( arr.ind ) {
+                idx <- arrayInd(idx, .dim = dim(x), .dimnames = dimnames(x))
+            }
+            if( ret.values ) {
+                attr(idx, "values") <- val
+            }
+            idx
+        }
+    )
 }
+
