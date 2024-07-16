@@ -306,7 +306,11 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
             // el might be promise SEXP, if so, evaluate
             if ( TYPEOF(el) == PROMSXP ){
                 // This is a promise, need to evaluate
-                el = PROTECT(Rf_eval( PREXPR(el), PRENV( el )));
+                // Old problematic one
+                // el = PROTECT(Rf_eval( PREXPR(el), PRENV( el )));
+                // From R 4.5.0, PREXPR and PRENV are deprecated
+                // Directly evaluate the promise instead
+                el = PROTECT(Rf_eval( el, listOrEnv ));
                 n_protected++;
                 
                 if( el == R_NilValue ){
