@@ -242,7 +242,15 @@ SEXP FARR_subset_sequential(
             }
             }
             
-        } catch (...) {}
+        } catch (const Rcpp::LongjumpException& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (const boost::interprocess::interprocess_exception& e) {
+            // unable to find the file, skip
+        } catch (const std::exception& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (...) {
+            throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_subset_sequential`.");
+        }
         
     }
     

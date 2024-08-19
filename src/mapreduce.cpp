@@ -47,22 +47,27 @@ SEXP each_partition_template(
         if( read_len > 0 ){
             *readlen_ptr = (double) read_len;
             *count_ptr = (double) *count;
-            if( read_len < buffer_nelems ){
-                // if( tmp_arg == R_NilValue ){
-                //     tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
-                // } else if( read_len - Rf_xlength(tmp_arg) != 0 ){
-                //     UNPROTECT(1);
-                //     tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
-                // }
-                SEXP tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
-                SEXP item = PROTECT( fun(tmp_arg, readlen_sxp, count_sxp) );
-                ret.push_back( item );
-                UNPROTECT( 2 ); // item, tmp_arg
-            } else {
-                SEXP item = PROTECT( fun(argbuf, readlen_sxp, count_sxp) );
-                ret.push_back( item );
-                UNPROTECT( 1 ); // item
-                // ret.push_back( Shield<SEXP>( fun(Shield<SEXP>(argbuf), Shield<SEXP>(wrap(read_len)), Shield<SEXP>(wrap(*count))) ) );
+            
+            // https://github.com/RcppCore/Rcpp/issues/1268
+            try {
+                if( read_len < buffer_nelems ) {
+                    SEXP tmp_arg = PROTECT(sub_vec_range(argbuf, 0, read_len));
+                    SEXP item = fun(tmp_arg, readlen_sxp, count_sxp);
+                    PROTECT( item );
+                    ret.push_back( item );
+                    UNPROTECT( 2 ); // item, tmp_arg
+                } else {
+                    SEXP item = fun(argbuf, readlen_sxp, count_sxp);
+                    PROTECT( item );
+                    ret.push_back( item );
+                    UNPROTECT( 1 ); // item
+                }
+            } catch (const Rcpp::LongjumpException& e) {
+                std::rethrow_exception(std::current_exception());
+            } catch (const std::exception& e) {
+                std::rethrow_exception(std::current_exception());
+            } catch (...) {
+                throw std::runtime_error("filearray C++: Caught an unknown exception in `each_partition_template`.");
             }
         }
         
@@ -198,19 +203,39 @@ SEXP FARR_buffer_mapreduce(
                 break;
             }
             }
-        } catch (...) {}
+        } catch (const Rcpp::LongjumpException& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (const boost::interprocess::interprocess_exception& e) {
+            // unable to find the file, skip
+        } catch (const std::exception& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (...) {
+            throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_buffer_mapreduce`.");
+        }
+        // } catch (...) {}
         
     }
     
     if(reduce == R_NilValue){
-        UNPROTECT( 1 );
+        UNPROTECT( 1 ); // argbuffer
         return ret;
+    } else {
+        try{
+            
+            Function reduce2 = (Function) reduce;
+            SEXP re = PROTECT(reduce2(ret));
+            UNPROTECT( 2 ); // argbuffer, re
+            return(re);
+            
+        } catch (const Rcpp::LongjumpException& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (const std::exception& e) {
+            std::rethrow_exception(std::current_exception());
+        } catch (...) {
+            throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_buffer_mapreduce`.");
+        }
     }
     
-    Function reduce2 = (Function) reduce;
-    SEXP re = PROTECT(reduce2(ret));
-    UNPROTECT( 2 );
-    return(re);
 }
 
 
