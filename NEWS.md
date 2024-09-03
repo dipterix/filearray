@@ -1,3 +1,7 @@
+# filearray 0.1.8
+
+* Fixed a bug where `C++` errors are not correctly thrown due to a recent `Rcpp` update. This bug may cause erroneous code to execute ignoring try-catch statement and imbalanced protecting stacks (`fwhich`, `mapreduce`)
+
 # filearray 0.1.7
 
 * Removed non-API R C interface

@@ -6,7 +6,7 @@
 <!-- badges: start -->
 [![R-check](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml)
 [![CRAN status](https://www.r-pkg.org/badges/version/filearray)](https://CRAN.R-project.org/package=filearray)
-[![Develop](https://dipterix.r-universe.dev/badges/filearray)](https://dipterix.r-universe.dev/ui#builds)
+[![Develop](https://dipterix.r-universe.dev/badges/filearray)](https://dipterix.r-universe.dev/)
 <!-- badges: end -->
 
 Stores large arrays in files to avoid occupying large memories. Implemented with super fast gigabyte-level multi-threaded reading/writing via `OpenMP`. Supports multiple non-character data types (double, float, integer, complex, logical and raw).
@@ -137,8 +137,8 @@ The additional performance improvements brought by the memory mapping approach m
 
 #### III. Using traditional HDD?
 
-`filearray` relies on SSD, especially NVMe SSD that allows you to fast-access random hard disk address. If you use HDD, `filearray` can provide very limited improvement. One personal suggestion is that if you are using Windows machine, you can use software programs such as `PrimoCache`, which allows the computer to use RAM as L2 cache to access your files. For OSX I believe the built-in system has RAM cache for disk files. 
+`filearray` relies on `SSD`, especially `NVMe SSD` that allows you to fast-access random hard disk address. If you use `HDD`, `filearray` can provide very limited improvement. 
 
-If you use `filearray` to direct access to HDD, please set number of threads to `1` via `filearray::filearray_threads(1)` at start up.
+If you use `filearray` to direct access to HDD, please set number of threads to `1` via `filearray::filearray_threads(1)` at start up, or set system environment `FILEARRAY_NUM_THREADS` to `"1"`.
 
 
