@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.7.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -187,8 +187,8 @@
 <div class="section level4">
 <h4 id="iii-using-traditional-hdd">III. Using traditional HDD?<a class="anchor" aria-label="anchor" href="#iii-using-traditional-hdd"></a>
 </h4>
-<p><code>filearray</code> relies on SSD, especially NVMe SSD that allows you to fast-access random hard disk address. If you use HDD, <code>filearray</code> can provide very limited improvement. One personal suggestion is that if you are using Windows machine, you can use software programs such as <code>PrimoCache</code>, which allows the computer to use RAM as L2 cache to access your files. For OSX I believe the built-in system has RAM cache for disk files.</p>
-<p>If you use <code>filearray</code> to direct access to HDD, please set number of threads to <code>1</code> via <code>filearray::filearray_threads(1)</code> at start up.</p>
+<p><code>filearray</code> relies on <code>SSD</code>, especially <code>NVMe SSD</code> that allows you to fast-access random hard disk address. If you use <code>HDD</code>, <code>filearray</code> can provide very limited improvement.</p>
+<p>If you use <code>filearray</code> to direct access to HDD, please set number of threads to <code>1</code> via <code>filearray::filearray_threads(1)</code> at start up, or set system environment <code>FILEARRAY_NUM_THREADS</code> to <code>"1"</code>.</p>
 </div>
 </div>
 </div>
@@ -229,7 +229,7 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/dipterix/filearray/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-check"></a></li>
 <li><a href="https://CRAN.R-project.org/package=filearray" class="external-link"><img src="https://www.r-pkg.org/badges/version/filearray" alt="CRAN status"></a></li>
-<li><a href="https://dipterix.r-universe.dev/ui#builds" class="external-link"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a></li>
+<li><a href="https://dipterix.r-universe.dev/" class="external-link"><img src="https://dipterix.r-universe.dev/badges/filearray" alt="Develop"></a></li>
 </ul>
 </div>
 
