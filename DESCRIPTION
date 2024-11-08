@@ -24,9 +24,9 @@ Imports:
     Rcpp,
     uuid (>= 1.1.0)
 Suggests: 
-    rmarkdown,
-    knitr,
     bit64,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 RoxygenNote: 7.3.2
 LinkingTo: 
