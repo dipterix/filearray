@@ -50,7 +50,10 @@ test_that("C++: Utils", {
     })
     re1 <- x[locs[[1]], locs[[2]], locs[[3]]]
     locs <- lapply(locs, as_int64)
-    expect_equal(loc2idx(locs, dim), as_int64(re1))
+    
+    v1 <- loc2idx(locs, dim)
+    v2 <- as_int64(re1 - 1L)
+    expect_identical(v1, v2)
     
 })
 
