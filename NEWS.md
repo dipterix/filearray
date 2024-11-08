@@ -1,3 +1,7 @@
+# filearray 0.1.9
+
+* Fixed `CRAN` check issue brought by `testthat` update, which requires `bit64` when checking `int64` arrays. Added `bit64` to `Suggests` field to mitigate this check error
+
 # filearray 0.1.8
 
 * Fixed a bug where `C++` errors are not correctly thrown due to a recent `Rcpp` update. This bug may cause erroneous code to execute ignoring try-catch statement and imbalanced protecting stacks (`fwhich`, `mapreduce`)
