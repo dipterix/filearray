@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,10 @@
       <small>Source: <a href="https://github.com/dipterix/filearray/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.9" id="filearray-019">filearray 0.1.9<a class="anchor" aria-label="anchor" href="#filearray-019"></a></h2>
+<ul><li>Fixed <code>CRAN</code> check issue brought by <code>testthat</code> update, which requires <code>bit64</code> when checking <code>int64</code> arrays. Added <code>bit64</code> to <code>Suggests</code> field to mitigate this check error</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.8" id="filearray-018">filearray 0.1.8<a class="anchor" aria-label="anchor" href="#filearray-018"></a></h2><p class="text-muted">CRAN release: 2024-09-03</p>
 <ul><li>Fixed a bug where <code>C++</code> errors are not correctly thrown due to a recent <code>Rcpp</code> update. This bug may cause erroneous code to execute ignoring try-catch statement and imbalanced protecting stacks (<code>fwhich</code>, <code>mapreduce</code>)</li>
