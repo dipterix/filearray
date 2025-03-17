@@ -25,6 +25,8 @@
 #' @param verbose whether to print out some debug messages
 #' @param on_missing function to handle file array (such as initialization)
 #' when a new array is created; must take only one argument, the array object
+#' @param auto_set_headers whether to automatically set headers if array is 
+#' missing or to be created; default is true
 #' @return A \code{\link{FileArray-class}} instance.
 #' 
 #' @details The file arrays partition out-of-memory array objects and store them 
@@ -197,7 +199,8 @@ filearray_checkload <- function(
 filearray_load_or_create <- function(
     filebase, dimension, on_missing = NULL, type = NA, 
     ..., mode = c("readonly", "readwrite"), symlink_ok = TRUE,
-    initialize = FALSE, partition_size = NA, verbose = FALSE
+    initialize = FALSE, partition_size = NA, verbose = FALSE, 
+    auto_set_headers = TRUE
 ) {
     mode <- match.arg(mode)
     filebase <- normalizePath(filebase, mustWork = FALSE, winslash = "/")
@@ -275,14 +278,16 @@ filearray_load_or_create <- function(
                 partition_size = partition_size,
                 initialize =  initialize
             )
+            # seal the header
+            if( auto_set_headers ) {
+                for(nm in add_header_names) {
+                    arr$set_header(key = nm, value = additional_headers[[nm]], save = FALSE)
+                }
+            }
             # run on_missing if the function exists
             if(is.function(on_missing)) {
                 arr$.mode <- "readwrite"
                 on_missing(arr)
-            }
-            # seal the header
-            for(nm in add_header_names) {
-                arr$set_header(key = nm, value = additional_headers[[nm]], save = FALSE)
             }
             arr$.save_header()
             arr

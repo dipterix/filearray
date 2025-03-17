@@ -45,7 +45,8 @@ filearray_load_or_create(
   symlink_ok = TRUE,
   initialize = FALSE,
   partition_size = NA,
-  verbose = FALSE
+  verbose = FALSE,
+  auto_set_headers = TRUE
 )
 }
 \arguments{
@@ -82,6 +83,9 @@ the test; this is usually used on bound arrays with symbolic-links; see
 when a new array is created; must take only one argument, the array object}
 
 \item{verbose}{whether to print out some debug messages}
+
+\item{auto_set_headers}{whether to automatically set headers if array is 
+missing or to be created; default is true}
 }
 \value{
 A \code{\link{FileArray-class}} instance.
