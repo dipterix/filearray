@@ -36,11 +36,13 @@ filearray_threads()
 
 # Create file array and initialize partitions
 set.seed(1)
-file <- tempfile(); unlink(file, recursive = TRUE)
+file <- tempfile()
+unlink(file, recursive = TRUE)
 x_dbl <- filearray_create(file, rep(100, 4))
 x_dbl$initialize_partition()
 
-file <- tempfile(); unlink(file, recursive = TRUE)
+file <- tempfile()
+unlink(file, recursive = TRUE)
 x_flt <- filearray_create(file, rep(100, 4), type = 'float')
 x_flt$initialize_partition()
 

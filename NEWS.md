@@ -1,3 +1,7 @@
+# filearray 0.2.0
+
+* Additional `audo_set_headers` to function `filearray_load_or_create` to avoid automatically setting headers, with default being `TRUE` for compatibility concerns
+
 # filearray 0.1.9
 
 * Fixed `CRAN` check issue brought by `testthat` update, which requires `bit64` when checking `int64` arrays. Added `bit64` to `Suggests` field to mitigate this check error

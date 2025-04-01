@@ -161,12 +161,12 @@ test_that("method: addition", {
     testthat::expect_error( arr_int + tmp_arr )
     testthat::expect_error( tmp_arr + arr_int )
     testthat::expect_equal(
-        (arr_int + 1:length(arr_int))[dimnames = NULL],
-        arr_int[dimnames = NULL] + 1:length(arr_int)
+        (arr_int + seq_len(length(arr_int)))[dimnames = NULL],
+        arr_int[dimnames = NULL] + seq_len(length(arr_int))
     )
     testthat::expect_equal(
-        (1:length(arr_int) + arr_int)[dimnames = NULL],
-        1:length(arr_int) + arr_int[dimnames = NULL]
+        (seq_len(length(arr_int)) + arr_int)[dimnames = NULL],
+        seq_len(length(arr_int)) + arr_int[dimnames = NULL]
     )
     
 })
