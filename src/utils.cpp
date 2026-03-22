@@ -207,10 +207,10 @@ SEXP dropDimension(SEXP x){
     // return(Rf_DropDims(x));
     
     PROTECT(x);
-    SEXP dims = Rf_getAttrib(x, R_DimSymbol);
+    SEXP dims = PROTECT(Rf_getAttrib(x, R_DimSymbol));
     
     if (dims == R_NilValue) {
-        UNPROTECT(1);
+        UNPROTECT(2);
         return x;
     }
     
@@ -222,7 +222,7 @@ SEXP dropDimension(SEXP x){
         if (dim[i] != 1) n++;
     }
     if (n == ndims) {
-        UNPROTECT(1);
+        UNPROTECT(2);
         return x;
     }
         
@@ -310,7 +310,7 @@ SEXP dropDimension(SEXP x){
         }
         UNPROTECT(2);
     }
-    UNPROTECT(2);
+    UNPROTECT(3);
     return x;
 }
 
