@@ -20,7 +20,7 @@ List test_farr_findVarInFrame_(SEXP env, std::string sym_name) {
         Rcpp::stop("env must be an environment");
     }
     SEXP sym = Rf_install(sym_name.c_str());
-    SEXP result = farr_findVarInFrame(env, sym);
+    SEXP result = PROTECT(farr_findVarInFrame(env, sym));
     bool is_missing = (result == R_MissingArg);
     // farr_findVarInFrame maps R_UnboundValue → R_NilValue, so we need
     // an independent check to report is_unbound correctly.
@@ -30,6 +30,7 @@ List test_farr_findVarInFrame_(SEXP env, std::string sym_name) {
     bool is_unbound = (Rf_findVarInFrame(env, sym) == R_UnboundValue);
 #endif
     SEXP rval = (is_unbound || is_missing) ? R_NilValue : result;
+    UNPROTECT(1);
     return List::create(
         _["result"]     = rval,
         _["is_unbound"] = is_unbound,
@@ -178,7 +179,7 @@ SEXP check_missing_dots(const SEXP env){
     if( TYPEOF(env) != ENVSXP ){
         Rcpp::stop("`check_missing_dots` is asking for an environment");
     }
-    SEXP dots = farr_findVarInFrame(env, R_DotsSymbol);
+    SEXP dots = PROTECT(farr_findVarInFrame(env, R_DotsSymbol));
 
     std::vector<bool> is_missing(0);
 
@@ -195,6 +196,7 @@ SEXP check_missing_dots(const SEXP env){
         }
     }
     
+    UNPROTECT(1);
     return(Rcpp::wrap(is_missing));
 }
 

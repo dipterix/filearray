@@ -318,7 +318,7 @@ void collapse_complex(
         
         for(int64_t jj = 0; jj < readlen; jj++){
             v = *(bufcplx_ptr + jj);
-            if( remove_na && (v.i == NA_REAL || v.r == NA_REAL) ){
+            if( remove_na && (ISNAN(v.i) || ISNAN(v.r)) ){
                 continue;
             }
             rem = jj + buf_idx; 
@@ -336,8 +336,10 @@ void collapse_complex(
                 fct *= *(dimptr + tmp);
             }
             ret_ii = ret + rem;
-            if( v.i == NA_REAL || v.r == NA_REAL ){ // remove_na must be false
+            if( ISNAN(v.i) || ISNAN(v.r) ){ // remove_na must be false
                 *ret_ii = na_cplx;
+                continue;
+            } else if( !remove_na && (ISNAN(ret_ii->r) || ISNAN(ret_ii->i)) ){
                 continue;
             }
             // rem is index of ret

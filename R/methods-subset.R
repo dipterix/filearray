@@ -22,13 +22,12 @@ fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimna
     
     listOrEnv <- list()
     if(arglen == 1){
-        tmp <- tryCatch({
-            ...elt(1)
-        }, error = function(e){
-            NULL
-        })
-        if(length(tmp)){
-            stop("Subset FileArray only allows x[], x[i:j] or x[i,j,...] (single logical index like x[c(TRUE, ...)] is not allowed)")
+        missing_args <- check_missing_dots(environment())
+        if(length(missing_args) > 0 && !missing_args[[1]]){
+            tmp <- ...elt(1)
+            if(length(tmp)){
+                stop("Subset FileArray only allows x[], x[i:j] or x[i,j,...] (single logical index like x[c(TRUE, ...)] is not allowed)")
+            }
         }
         
         
