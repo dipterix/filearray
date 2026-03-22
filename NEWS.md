@@ -1,3 +1,10 @@
+# filearray 0.2.1
+
+* Fixed incorrect `NA` propagation in complex array `collapse`: `NaN == NaN` is always `FALSE` per IEEE 754, so `NA` detection now uses `ISNAN()` instead of `== NA_REAL`. Also added a missing "result already `NA`" short-circuit guard matching the non-complex path.
+* Fixed `x[]` failure on `R-devel` (`>= 4.6.0`): replaced `tryCatch({ ...elt(1) })` in `fa_subset1` with `check_missing_dots()`, which correctly detects a missing first argument without relying on the error-throwing behavior of `...elt()` that changed in `R-devel`.
+* Replaced deprecated `Rf_findVarInFrame` (removed in R 4.5.0) with a compatibility wrapper `farr_findVarInFrame` that uses `R_existsVarInFrame` + `R_getVarEx` on R >= 4.5.0 and falls back to `Rf_findVarInFrame` on older R.
+* Fixed multiple unprotected `SEXP` variables flagged by `rchk`: `result` in `test_farr_findVarInFrame_`, `dots` in `check_missing_dots`, and `dims` in `dropDimension`.
+
 # filearray 0.2.0
 
 * Additional `audo_set_headers` to function `filearray_load_or_create` to avoid automatically setting headers, with default being `TRUE` for compatibility concerns
