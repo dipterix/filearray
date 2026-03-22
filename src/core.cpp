@@ -265,7 +265,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
     switch(TYPEOF(listOrEnv)) {
     case ENVSXP: {
         sliceIdx = PROTECT(Rf_allocVector(VECSXP, ndims));
-        SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
+        SEXP dots = farr_findVarInFrame(listOrEnv, R_DotsSymbol);
         n_protected++;
         for(; (dots != R_NilValue) && (dots != R_MissingArg); dots = CDR(dots), idx_size++ ){
             if(idx_size >= ndims){

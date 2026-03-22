@@ -1,6 +1,42 @@
 #include "utils.h"
 using namespace Rcpp;
 
+// ---------------------------------------------------------------------------
+// Test helper for farr_findVarInFrame (not for end-user use).
+//
+// Returns a named list with:
+//   $result      - the looked-up value (R_NilValue if unbound or R_MissingArg)
+//   $is_unbound  - TRUE when symbol was not found in env's frame
+//                  (farr_findVarInFrame returns R_NilValue for unbound)
+//   $is_missing  - TRUE when the binding existed but was R_MissingArg
+//
+// Note: farr_findVarInFrame returns R_NilValue for both "unbound" and
+// "bound to NULL".  We distinguish them using R_existsVarInFrame on
+// R >= 4.5.0, or Rf_findVarInFrame on older R.
+// ---------------------------------------------------------------------------
+// [[Rcpp::export]]
+List test_farr_findVarInFrame_(SEXP env, std::string sym_name) {
+    if( TYPEOF(env) != ENVSXP ){
+        Rcpp::stop("env must be an environment");
+    }
+    SEXP sym = Rf_install(sym_name.c_str());
+    SEXP result = farr_findVarInFrame(env, sym);
+    bool is_missing = (result == R_MissingArg);
+    // farr_findVarInFrame maps R_UnboundValue → R_NilValue, so we need
+    // an independent check to report is_unbound correctly.
+#if R_VERSION >= R_Version(4, 5, 0)
+    bool is_unbound = !R_existsVarInFrame(env, sym);
+#else
+    bool is_unbound = (Rf_findVarInFrame(env, sym) == R_UnboundValue);
+#endif
+    SEXP rval = (is_unbound || is_missing) ? R_NilValue : result;
+    return List::create(
+        _["result"]     = rval,
+        _["is_unbound"] = is_unbound,
+        _["is_missing"] = is_missing
+    );
+}
+
 int guess_splitdim(SEXP dim, int elem_size, size_t buffer_bytes){
     R_len_t ndims = Rf_length(dim);
     
@@ -142,10 +178,10 @@ SEXP check_missing_dots(const SEXP env){
     if( TYPEOF(env) != ENVSXP ){
         Rcpp::stop("`check_missing_dots` is asking for an environment");
     }
-    SEXP dots = Rf_findVarInFrame(env, R_DotsSymbol);
-    
+    SEXP dots = farr_findVarInFrame(env, R_DotsSymbol);
+
     std::vector<bool> is_missing(0);
-    
+
     if( dots != R_NilValue ){
         SEXP el = R_NilValue;
         

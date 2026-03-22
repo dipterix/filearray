@@ -353,6 +353,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// test_farr_findVarInFrame_
+List test_farr_findVarInFrame_(SEXP env, std::string sym_name);
+RcppExport SEXP _filearray_test_farr_findVarInFrame_(SEXP envSEXP, SEXP sym_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type env(envSEXP);
+    Rcpp::traits::input_parameter< std::string >::type sym_name(sym_nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_farr_findVarInFrame_(env, sym_name));
+    return rcpp_result_gen;
+END_RCPP
+}
 // kinda_sorted
 int kinda_sorted(SEXP idx, int64_t min_, int64_t buffer_count);
 RcppExport SEXP _filearray_kinda_sorted(SEXP idxSEXP, SEXP min_SEXP, SEXP buffer_countSEXP) {
@@ -418,6 +430,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_FARR_subset_assign2", (DL_FUNC) &_filearray_FARR_subset_assign2, 5},
     {"_filearray_getDefaultNumThreads", (DL_FUNC) &_filearray_getDefaultNumThreads, 0},
     {"_filearray_getThreads", (DL_FUNC) &_filearray_getThreads, 1},
+    {"_filearray_test_farr_findVarInFrame_", (DL_FUNC) &_filearray_test_farr_findVarInFrame_, 2},
     {"_filearray_kinda_sorted", (DL_FUNC) &_filearray_kinda_sorted, 3},
     {"_filearray_check_missing_dots", (DL_FUNC) &_filearray_check_missing_dots, 1},
     {"_filearray_reshape_or_drop", (DL_FUNC) &_filearray_reshape_or_drop, 3},

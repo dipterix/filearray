@@ -105,6 +105,10 @@ getThreads <- function(max) {
     .Call(`_filearray_getThreads`, max)
 }
 
+test_farr_findVarInFrame_ <- function(env, sym_name) {
+    .Call(`_filearray_test_farr_findVarInFrame_`, env, sym_name)
+}
+
 kinda_sorted <- function(idx, min_, buffer_count) {
     .Call(`_filearray_kinda_sorted`, idx, min_, buffer_count)
 }
