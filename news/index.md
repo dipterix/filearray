@@ -2,6 +2,8 @@
 
 ## filearray 0.2.1
 
+CRAN release: 2026-03-23
+
 - Fixed incorrect `NA` propagation in complex array `collapse`:
   `NaN == NaN` is always `FALSE` per IEEE 754, so `NA` detection now
   uses `ISNAN()` instead of `== NA_REAL`. Also added a missing “result

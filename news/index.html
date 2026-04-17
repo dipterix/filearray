@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,7 +37,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.1" id="filearray-021">filearray 0.2.1<a class="anchor" aria-label="anchor" href="#filearray-021"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.1" id="filearray-021">filearray 0.2.1<a class="anchor" aria-label="anchor" href="#filearray-021"></a></h2><p class="text-muted">CRAN release: 2026-03-23</p>
 <ul><li>Fixed incorrect <code>NA</code> propagation in complex array <code>collapse</code>: <code>NaN == NaN</code> is always <code>FALSE</code> per IEEE 754, so <code>NA</code> detection now uses <code>ISNAN()</code> instead of <code>== NA_REAL</code>. Also added a missing “result already <code>NA</code>” short-circuit guard matching the non-complex path.</li>
 <li>Fixed <code>x[]</code> failure on <code>R-devel</code> (<code>&gt;= 4.6.0</code>): replaced <code>tryCatch({ ...elt(1) })</code> in <code>fa_subset1</code> with <code>check_missing_dots()</code>, which correctly detects a missing first argument without relying on the error-throwing behavior of <code><a href="https://rdrr.io/r/base/dots.html" class="external-link">...elt()</a></code> that changed in <code>R-devel</code>.</li>
 <li>Replaced deprecated <code>Rf_findVarInFrame</code> (removed in R 4.5.0) with a compatibility wrapper <code>farr_findVarInFrame</code> that uses <code>R_existsVarInFrame</code> + <code>R_getVarEx</code> on R &gt;= 4.5.0 and falls back to <code>Rf_findVarInFrame</code> on older R.</li>
