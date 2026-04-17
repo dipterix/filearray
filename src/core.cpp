@@ -407,6 +407,44 @@ List schedule(const SEXP listOrEnv,
     
     // split dim into 1:split_dim, split_dim+1: ndims
     R_xlen_t ndims = dim.length();
+    
+    // Check for empty selection on any dimension - if so, return empty result
+    for(R_xlen_t d = 0; d < ndims; d++){
+        if(Rf_xlength(VECTOR_ELT(sliceIdx, d)) == 0){
+            // Empty selection: return empty schedule
+            SEXP result_dim = PROTECT(Rf_allocVector(REALSXP, ndims));
+            n_protected++;
+            for(R_xlen_t dd = 0; dd < ndims; dd++){
+                *(REAL(result_dim) + dd) = Rf_xlength(VECTOR_ELT(sliceIdx, dd));
+            }
+            SEXP idx1 = PROTECT(Rf_allocVector(REALSXP, 0));
+            Rf_setAttrib(idx1, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
+            n_protected++;
+            SEXP idx1range = PROTECT(Rf_allocVector(REALSXP, 2));
+            Rf_setAttrib(idx1range, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
+            n_protected++;
+            int64_t* idx1_start = (int64_t*) REAL(idx1range);
+            int64_t* idx1_end = idx1_start + 1;
+            *idx1_start = NA_INTEGER64;
+            *idx1_end = -1;
+            SEXP result_length = PROTECT(Rf_allocVector(INT64SXP, 1));
+            Rf_setAttrib(result_length, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
+            n_protected++;
+            *(INTEGER64(result_length)) = 0;
+            List re = List::create(
+                _["idx1"] = idx1,
+                _["idx2s"] = List::create(),
+                _["block_size"] = 0.0,
+                _["partitions"] = IntegerVector::create(),
+                _["idx2lens"] = IntegerVector::create(),
+                _["result_dim"] = result_dim,
+                _["idx1range"] = idx1range,
+                _["result_length"] = result_length
+            );
+            UNPROTECT(n_protected);
+            return(re);
+        }
+    }
     if(split_dim+1 > ndims || split_dim < 1){
         stop("Invalid `split_dim`");
     }
