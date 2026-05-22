@@ -19,6 +19,7 @@ depending on the storage type and memory size)*
 ## Installation
 
 ``` r
+
 install.packages("filearray")
 ```
 
@@ -30,6 +31,7 @@ automatically updated every hour. Currently available on `Windows` and
 `osx (Intel chip)` only.
 
 ``` r
+
 options(repos = c(
     dipterix = 'https://dipterix.r-universe.dev',
     CRAN = 'https://cloud.r-project.org'))
@@ -42,6 +44,7 @@ proper compilers (`rtools` on `windows`, or `xcode-select --install` on
 `osx`, or `build-essentials` on `linux`).
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("dipterix/filearray")
 ```
@@ -51,6 +54,7 @@ remotes::install_github("dipterix/filearray")
 #### Create/load file array
 
 ``` r
+
 library(filearray)
 file <- tempfile()
 x <- filearray_create(file, c(100, 100, 100, 100))
@@ -65,6 +69,7 @@ See more:
 #### Assign & subset array
 
 ``` r
+
 x[,,,1] <- rnorm(1e6)
 x[1:10,1,1,1]
 ```
@@ -72,6 +77,7 @@ x[1:10,1,1,1]
 #### Generics
 
 ``` r
+
 typeof(x)
 max(x, na.rm = TRUE)
 apply(x, 3, min, na.rm = TRUE)
@@ -141,8 +147,8 @@ For complex numbers, `transform` is a little bit different:
     comparisons](https://dipterix.org/filearray/articles/performance.html)).
     However coercing double to float comes at costs: a). float number
     has less precision b). float number has smaller range
-    ($3.4 \times 10^{38}$) than double ($1.7 \times 10^{308}$) hence use
-    with caution when data needs high precision or the max is super
+    ($`3.4\times 10^{38}`$) than double ($`1.7\times 10^{308}`$) hence
+    use with caution when data needs high precision or the max is super
     large.
 
 3.  `collapse` function: when data range is large (say `x[[1]]=1`, but

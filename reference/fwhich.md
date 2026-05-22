@@ -47,6 +47,7 @@ The indices of `x` elements that are listed in `val`.
 
 ``` r
 
+
 # ---- Default case ------------------------------------
 x <- array(1:27 + 2, rep(3,3))
 

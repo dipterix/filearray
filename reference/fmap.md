@@ -88,6 +88,7 @@ consistent.
 
 ``` r
 
+
 set.seed(1)
 x1 <- filearray_create(tempfile(), dimension = c(100,20,3))
 x1[] <- rnorm(6000)
@@ -96,7 +97,7 @@ x2[] <- rnorm(6000)
 
 # Add two arrays
 output <- filearray_create(tempfile(), dimension = c(100,20,3))
-fmap(list(x1, x2), function(input){
+fmap(list(x1, x2), function(input) {
     input[[1]] + input[[2]]
 }, output)
 #> Reference class object of class "FileArray"
@@ -105,7 +106,7 @@ fmap(list(x1, x2), function(input){
 #> Partition count: 3 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpcrkzMV/file19e84e83cbc3 
+#> Location: /tmp/RtmpUmEMU9/file1a241ed590b6 
 
 # check
 range(output[] - (x1[] + x2[]))
@@ -116,7 +117,7 @@ output$delete()
 # Calculate the maximum of x1/x2 for every 100 elements
 # total 60 batches/loops (`.buffer_count`)
 output <- filearray_create(tempfile(), dimension = c(20,3))
-fmap(list(x1, x2), function(input){
+fmap(list(x1, x2), function(input) {
     max(input[[1]] / input[[2]])
 }, .y = output, .buffer_count = 60)
 #> Reference class object of class "FileArray"
@@ -125,7 +126,7 @@ fmap(list(x1, x2), function(input){
 #> Partition count: 3 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpcrkzMV/file19e85866cb4d 
+#> Location: /tmp/RtmpUmEMU9/file1a242a90724e 
 
 # check
 range(output[] - apply(x1[] / x2[], c(2,3), max))
@@ -134,7 +135,7 @@ range(output[] - apply(x1[] / x2[], c(2,3), max))
 output$delete()
 
 # A large array example
-if(interactive()){
+if(interactive()) {
     x <- filearray_create(tempfile(), dimension = c(287, 100, 301, 4))
     dimnames(x) <- list(
         Trial = 1:287,
@@ -143,7 +144,7 @@ if(interactive()){
         Location = 1:4
     )
 
-    for(i in 1:4){
+    for (i in 1:4) {
         x[,,,i] <- runif(8638700)
     }
     # Step 1:
@@ -155,7 +156,7 @@ if(interactive()){
     # baseline-percentage change
     fmap(
         list(x),
-        function(input){
+        function(input) {
             # get locational data
             location_data <- input[[1]]
             dim(location_data) <- c(287, 100, 301)
@@ -166,7 +167,7 @@ if(interactive()){
 
             # calibrate
             calibrated <- sweep(location_data, c(1,2), baseline,
-                                FUN = function(data, bl){
+                                FUN = function(data, bl) {
                                     (data / bl - 1) * 100
                                 })
             return(calibrated)

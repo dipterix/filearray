@@ -21,6 +21,7 @@ However, while `double` array occupies `800MB` space on the hard disk,
 `float` array only uses half size (`400MB`).
 
 ``` r
+
 library(filearray)
 
 options(digits = 3)
@@ -36,7 +37,7 @@ x_dbl$initialize_partition()
 
 file <- tempfile()
 unlink(file, recursive = TRUE)
-x_flt <- filearray_create(file, rep(100, 4), type = 'float')
+x_flt <- filearray_create(file, rep(100, 4), type = "float")
 x_flt$initialize_partition()
 
 # 800 MB double array
@@ -68,17 +69,20 @@ write along the first margin to file arrays.
 1.  partition margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:100){
-      x_dbl[,,,i] <- y[,,,i]
-    }
-  },
-  float = {
-    for(i in 1:100){
-      x_flt[,,,i] <- y[,,,i]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:100) {
+            x_dbl[, , , i] <- y[, , , i]
+        }
+    },
+    float = {
+        for (i in 1:100) {
+            x_flt[, , , i] <- y[, , , i]
+        }
+    },
+    unit = "s",
+    times = 3
 )
 
 #> Unit: seconds
@@ -90,17 +94,20 @@ microbenchmark::microbenchmark(
 2.  Write along fast margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:100){
-      x_dbl[,,i,] <- y[,,i,]
-    }
-  },
-  float = {
-    for(i in 1:100){
-      x_flt[,,i,] <- y[,,i,]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:100) {
+            x_dbl[, , i, ] <- y[, , i, ]
+        }
+    },
+    float = {
+        for (i in 1:100) {
+            x_flt[, , i, ] <- y[, , i, ]
+        }
+    },
+    unit = "s",
+    times = 3
 )
 
 #> Unit: seconds
@@ -112,18 +119,22 @@ microbenchmark::microbenchmark(
 3.  Writing along slow margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:100){
-      x_dbl[i,,,] <- y[i,,,]
-    }
-  },
-  float = {
-    for(i in 1:100){
-      x_flt[i,,,] <- y[i,,,]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:100) {
+            x_dbl[i, , , ] <- y[i, , , ]
+        }
+    },
+    float = {
+        for (i in 1:100) {
+            x_flt[i, , , ] <- y[i, , , ]
+        }
+    },
+    unit = "s",
+    times = 3
 )
+
 #> Unit: seconds
 #>    expr   min    lq  mean median    uq   max neval
 #>  double  3.18  3.22  3.28   3.27  3.32  3.38     3
@@ -141,19 +152,22 @@ Instead of writing one slice at a time along each margin, we write
 1.  Write blocks of data along the partition margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_dbl[,,,idx] <- y[,,,idx]
-    }
-  },
-  float = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_flt[,,,idx] <- y[,,,idx]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_dbl[, , , idx] <- y[, , , idx]
+        }
+    },
+    float = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_flt[, , , idx] <- y[, , , idx]
+        }
+    },
+    unit = "s",
+    times = 3
 )
 
 #> Unit: seconds
@@ -165,19 +179,22 @@ microbenchmark::microbenchmark(
 2.  Write blocks of data along the fast margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_dbl[,,idx,] <- y[,,idx,]
-    }
-  },
-  float = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_flt[,,idx,] <- y[,,idx,]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_dbl[, , idx, ] <- y[, , idx, ]
+        }
+    },
+    float = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_flt[, , idx, ] <- y[, , idx, ]
+        }
+    },
+    unit = "s",
+    times = 3
 )
 
 #> Unit: seconds
@@ -189,20 +206,24 @@ microbenchmark::microbenchmark(
 3.  Write blocks of data along slow margin
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_dbl[idx,,,] <- y[idx,,,]
-    }
-  },
-  float = {
-    for(i in 1:10){
-      idx <- (i-1)*10 + 1:10
-      x_flt[idx,,,] <- y[idx,,,]
-    }
-  }, unit = 's', times = 3
+    double = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_dbl[idx, , , ] <- y[idx, , , ]
+        }
+    },
+    float = {
+        for (i in 1:10) {
+            idx <- (i - 1) * 10 + 1:10
+            x_flt[idx, , , ] <- y[idx, , , ]
+        }
+    },
+    unit = "s",
+    times = 3
 )
+
 #> Unit: seconds
 #>    expr  min   lq mean median   uq  max neval
 #>  double 4.48 4.48 4.64   4.48 4.72 4.95     3
@@ -214,10 +235,16 @@ microbenchmark::microbenchmark(
 ### 1. Read the whole array
 
 ``` r
+
 microbenchmark::microbenchmark(
-  double = { x_dbl[] },
-  float = { x_flt[] },
-  unit = 's', times = 3
+    double = {
+        x_dbl[]
+    },
+    float = {
+        x_flt[]
+    },
+    unit = "s",
+    times = 3
 )
 
 #> Unit: seconds
@@ -229,17 +256,37 @@ microbenchmark::microbenchmark(
 ### 2. Read along margins
 
 ``` r
+
 microbenchmark::microbenchmark(
-  farr_double_partition_margin = { x_dbl[,,,1] },
-  farr_double_fast_margin = { x_dbl[,,1,] },
-  farr_double_slow_margin = { x_dbl[1,,,] },
-  farr_float_partition_margin = { x_flt[,,,1] },
-  farr_float_fast_margin = { x_flt[,,1,] },
-  farr_float_slow_margin = { x_flt[1,,,] },
-  native_partition_margin = { y[,,,1] },
-  native_fast_margin = { y[,,1,] },
-  native_slow_margin = { y[1,,,] },
-  times = 100L, unit = "ms"
+    farr_double_partition_margin = {
+        x_dbl[, , , 1]
+    },
+    farr_double_fast_margin = {
+        x_dbl[, , 1, ]
+    },
+    farr_double_slow_margin = {
+        x_dbl[1, , , ]
+    },
+    farr_float_partition_margin = {
+        x_flt[, , , 1]
+    },
+    farr_float_fast_margin = {
+        x_flt[, , 1, ]
+    },
+    farr_float_slow_margin = {
+        x_flt[1, , , ]
+    },
+    native_partition_margin = {
+        y[, , , 1]
+    },
+    native_fast_margin = {
+        y[, , 1, ]
+    },
+    native_slow_margin = {
+        y[1, , , ]
+    },
+    times = 100L,
+    unit = "ms"
 )
 
 #> Unit: milliseconds
@@ -260,6 +307,7 @@ The file array indexing is close to handling in-memory arrays in R!
 ### 3. Random access
 
 ``` r
+
 # access 50 x 50 x 50 x 50 sub-array, with random indices
 idx1 <- sample(1:100, 50)
 idx2 <- sample(1:100, 50)
@@ -267,10 +315,17 @@ idx3 <- sample(1:100, 50)
 idx4 <- sample(1:100, 50)
 
 microbenchmark::microbenchmark(
-  farr_double = { x_dbl[idx1, idx2, idx3, idx4] },
-  farr_float = { x_flt[idx1, idx2, idx3, idx4] },
-  native = { y[idx1, idx2, idx3, idx4] },
-  times = 100L, unit = "ms"
+    farr_double = {
+        x_dbl[idx1, idx2, idx3, idx4]
+    },
+    farr_float = {
+        x_flt[idx1, idx2, idx3, idx4]
+    },
+    native = {
+        y[idx1, idx2, idx3, idx4]
+    },
+    times = 100L,
+    unit = "ms"
 )
 
 #> Unit: milliseconds
@@ -290,15 +345,25 @@ comes from hard-disk accessing speed. However, it is still faster than
 native R, and is more memory-efficient.
 
 ``` r
+
 keep <- c(2, 4)
 output <- filearray_create(tempfile(), dim(x_dbl)[keep])
 output$initialize_partition()
 microbenchmark::microbenchmark(
-  farr_double = { x_dbl$collapse(keep = keep, method = "sum") },
-  farr_float = { x_flt$collapse(keep = keep, method = "sum") },
-  native = { apply(y, keep, sum) },
-  ravetools = { ravetools::collapse(y, keep, average = FALSE) },
-  unit = "s", times = 5
+    farr_double = {
+        x_dbl$collapse(keep = keep, method = "sum")
+    },
+    farr_float = {
+        x_flt$collapse(keep = keep, method = "sum")
+    },
+    native = {
+        apply(y, keep, sum)
+    },
+    ravetools = {
+        ravetools::collapse(y, keep, average = FALSE)
+    },
+    unit = "s",
+    times = 5
 )
 
 #> Unit: seconds
