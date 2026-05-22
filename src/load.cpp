@@ -633,11 +633,14 @@ SEXP FARR_subset(const std::string& filebase,
     SEXP idx1range = sch["idx1range"];
     int64_t* idx1rangeptr = INTEGER64(idx1range);
     int64_t idx1_start = *idx1rangeptr, idx1_end = *(idx1rangeptr + 1);
-    int64_t buffer_nelems = idx1_end - idx1_start + 1;
+    int64_t buffer_nelems = 0;
     if( idx1_end < 0 || idx1_start == NA_INTEGER64 || idx1_start < 0 ){
         use_mmap = true;
-    } else if ( buffer_nelems > 2 * idx1len ){ // TODO: test the ratio
-        use_mmap = true;
+    } else {
+        buffer_nelems = idx1_end - idx1_start + 1;
+        if ( buffer_nelems > 2 * idx1len ){ // TODO: test the ratio
+            use_mmap = true;
+        }
     }
     
     
