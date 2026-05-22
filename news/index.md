@@ -3,6 +3,9 @@
 ## filearray 0.2.2
 
 - Fixed out-of-bound indexing leading to segfault along certain margins
+- Fixed `ASAN` issue that may cause run-time error: signed integer
+  overflow: 9223372036854775807 + 1 cannot be represented in type
+  `int64_t` (`load.cpp:636:51`)
 
 ## filearray 0.2.1
 
