@@ -16,7 +16,7 @@
 #' @noRd
 NULL
 
-write_header <- function(fid, partition, dimension, type, size){
+write_header <- function(fid, partition, dimension, type, size) {
     seek(con = fid, where = 0, rw = "write")
     
     # 0 (8): determine endianness - 1.0 (double)
@@ -63,17 +63,17 @@ write_header <- function(fid, partition, dimension, type, size){
     seek(con = fid, where = 0, rw = "write")
 }
 
-read_header <- function(fid){
+read_header <- function(fid) {
     seek(con = fid, where = 0, rw = "read")
     
-    one <- readBin(fid, n = 1, size = 8L, what = 'double', endian = ENDIANNESS)
+    one <- readBin(fid, n = 1, size = 8L, what = "double", endian = ENDIANNESS)
     native <- one == 1
     
-    if( native ){
+    if ( native ) {
         endian <- ENDIANNESS
     } else {
-        if( ENDIANNESS == "little" ){
-            endian <- 'big'
+        if ( ENDIANNESS == "little" ) {
+            endian <- "big"
             # TODO: support big-endian file? maybe not
             stop("The file endianess is not little?")
         } else {
@@ -81,26 +81,26 @@ read_header <- function(fid){
         }
     }
     
-    version <- readBin(fid, what = 'int', n = 3, size = 4L, endian = endian)
+    version <- readBin(fid, what = "int", n = 3, size = 4L, endian = endian)
     
     # type, size
-    sexp_type <- readBin(fid, what = 'int', size = 4L, endian = endian)
-    vsize <- readBin(fid, what = 'int', size = 4L, endian = endian)
+    sexp_type <- readBin(fid, what = "int", size = 4L, endian = endian)
+    vsize <- readBin(fid, what = "int", size = 4L, endian = endian)
     
     # partition number
-    partition <- readBin(con = fid, what = 'double', size = 8L, endian = endian)
+    partition <- readBin(con = fid, what = "double", size = 8L, endian = endian)
     
     # dimension
-    size <- readBin(con = fid, what = 'double', size = 8L, endian = endian)
-    ndims <- readBin(con = fid, what = 'int', size = 4L, endian = endian)
-    dim <- readBin(con = fid, what = 'double', size = 8L, n = ndims, 
+    size <- readBin(con = fid, what = "double", size = 8L, endian = endian)
+    ndims <- readBin(con = fid, what = "int", size = 4L, endian = endian)
+    dim <- readBin(con = fid, what = "double", size = 8L, n = ndims, 
                    endian = endian)
     
     seek(con = fid, where = HEADER_SIZE - 12L, rw = "read")
-    header_bytes <- readBin(con = fid, what = 'int', size = 4L, 
+    header_bytes <- readBin(con = fid, what = "int", size = 4L, 
                             endian = endian)
     
-    content_length <- readBin(con = fid, what = 'double', size = 8L, 
+    content_length <- readBin(con = fid, what = "double", size = 8L, 
                               endian = endian)
     list(
         endianness = endian,
@@ -115,16 +115,16 @@ read_header <- function(fid){
     )
 }
 
-validate_header <- function(file, fid){
+validate_header <- function(file, fid) {
     fz <- -1
-    if(!missing(file)){
-        if(!file.exists(file)){
+    if (!missing(file)) {
+        if (!file.exists(file)) {
             stop("File is missing")
         }
         fz <- file.size(file)
-        if(fz < HEADER_SIZE){
+        if (fz < HEADER_SIZE) {
             # Might be on windows and partition files are symlinked
-            if(get_os() != "windows" || fz != 0){
+            if (get_os() != "windows" || fz != 0) {
                 stop("Invalid `filearray` partition. File size too small:\n  ", file)
             }
         }
@@ -135,17 +135,17 @@ validate_header <- function(file, fid){
     }
     
     header <- read_header(fid)
-    if( header$header_bytes != 48 + 8 * length(header$partition_dim) ){
+    if ( header$header_bytes != 48 + 8 * length(header$partition_dim) ) {
         stop("Filearray partition header is corrupted.")
     }
-    if( fz > 0 && header$content_length + HEADER_SIZE > fz ){
+    if ( fz > 0 && header$content_length + HEADER_SIZE > fz ) {
         stop("Filearray data is corrupted")
     }
     
     return(header)
 }
 
-set_meta_content <- function(meta_file, data){
+set_meta_content <- function(meta_file, data) {
     stopifnot(file.exists(meta_file))
     data <- as.list(data)
     data$header_version <- HEADER_VER

@@ -11,3 +11,6 @@ README.md
 ^CRAN-RELEASE$
 ^inst/hexbadge\.png$
 ^CRAN-SUBMISSION$
+^\.positai$
+^\.claude$
+^\.lintr$

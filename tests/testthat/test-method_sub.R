@@ -4,7 +4,7 @@ test_that("method: addition", {
         clear_cache()
     })
     
-    dm <- c(2,3,4, 10)
+    dm <- c(2, 3, 4, 10)
     len <- prod(dm)
     
     x_dbl <- array(rnorm(len), dim = dm)
@@ -30,10 +30,10 @@ test_that("method: addition", {
     expect_equal(proxy_lgl[dimnames = NULL], x_lgl)
     
     check_add <- function(e1, e2, d1, d2, type, tolerance = .Machine$double.eps) {
-        y <- e1-e2
+        y <- e1 - e2
         res <- y[dimnames = NULL]
         
-        if(!missing(type)) {
+        if (!missing(type)) {
             expect_identical(typeof(y), type)
         }
         
@@ -149,11 +149,11 @@ test_that("method: addition", {
     check_add(FALSE, arr_lgl, FALSE, x_lgl, "integer", 1e-5)
     
     # wrong dimensions
-    testthat::expect_error(arr_int - array(0L, c(10,20,1)))
+    testthat::expect_error(arr_int - array(0L, c(10, 20, 1)))
     testthat::expect_error(arr_int - 1:10)
     tmp <- arr_int[]
     dm <- dim(arr_int)
-    dm <- c(dm[1] * dm[2], dm[-c(1,2)])
+    dm <- c(dm[1] * dm[2], dm[-c(1, 2)])
     dim(tmp) <- dm
     tmp_arr <- as_filearray(tmp)
     testthat::expect_error( arr_int - tmp )
@@ -161,12 +161,12 @@ test_that("method: addition", {
     testthat::expect_error( arr_int - tmp_arr )
     testthat::expect_error( tmp_arr - arr_int )
     testthat::expect_equal(
-        (arr_int - seq_len(length(arr_int)))[dimnames = NULL],
-        arr_int[dimnames = NULL] - seq_len(length(arr_int))
+        (arr_int - seq_along(arr_int))[dimnames = NULL],
+        arr_int[dimnames = NULL] - seq_along(arr_int)
     )
     testthat::expect_equal(
-        (seq_len(length(arr_int)) - arr_int)[dimnames = NULL],
-        seq_len(length(arr_int)) - arr_int[dimnames = NULL]
+        (seq_along(arr_int) - arr_int)[dimnames = NULL],
+        seq_along(arr_int) - arr_int[dimnames = NULL]
     )
     
 })

@@ -1,12 +1,12 @@
 test_that("subset filearray-proxy", {
 
     # normal indexing
-    x <- as_filearray(1:120, dimension = c(10,12))
+    x <- as_filearray(1:120, dimension = c(10, 12))
     dimnames(x) <- list(A = 1:10, B = 1:12)
     y <- x + 1L
     z <- y + y
     
-    idx1 <- c(3,3,4,5,5,4,3,2,1,1,2,3,3,2,2)
+    idx1 <- c(3, 3, 4, 5, 5, 4, 3, 2, 1, 1, 2, 3, 3, 2, 2)
     idx2 <- idx1 * 2
     
     expect_equal(y[idx1, idx2], x[idx1, idx2] + 1)

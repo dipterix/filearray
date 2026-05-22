@@ -23,7 +23,7 @@ system.time({
 })
 #   user  system elapsed 
 #  0.228   0.342   0.351
-locs <- lapply(dim, function(d){
+locs <- lapply(dim, function(d) {
     sample(1:d, size = sample(1:d, size = 1))
 })
 microbenchmark::microbenchmark(

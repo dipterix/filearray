@@ -9,8 +9,8 @@
 #' @export
 setGeneric("apply")
 
-apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE){
-    if(!X$valid()){
+apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE) {
+    if (!X$valid()) {
         stop("Invalid file array")
     }
     dim <- X$dimension()
@@ -36,7 +36,7 @@ apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE){
     }
     s.call <- ds[-MARGIN]
     s.ans <- ds[MARGIN]
-    if(length(s.ans) != 1){
+    if (length(s.ans) != 1) {
         stop("`apply` on FileArray margin size can only be 1.")
     }
     dn.call <- dn[-MARGIN]
@@ -51,7 +51,7 @@ apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE){
             tmp <- array(newX[, 1L], d.call, dn.call)
         }
         ans <- forceAndCall(1, FUN, tmp, ...)
-        if(is.null(ans)){
+        if (is.null(ans)) {
             return(ans)
         } else if (length(d.ans) < 2L) {
             return(ans[1L][-1L])
@@ -62,7 +62,7 @@ apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE){
     
     tmp <- rep("", dl)
     tmp[[s.ans]] <- ".__i__."
-    f <- sprintf("function(.__i__., ...){ FUN(X[%s], ...) }", paste(tmp, collapse = ","))
+    f <- sprintf("function(.__i__., ...) { FUN(X[%s], ...) }", paste(tmp, collapse = ","))
     f <- eval(parse(text = f))
     
     sapply(seq_len(d[[s.ans]]), f, ..., simplify = simplify)
@@ -70,9 +70,9 @@ apply_filearray <- function(X, MARGIN, FUN, ..., simplify = TRUE){
 
 #' @rdname apply
 #' @export
-setMethod('apply', signature(X = "FileArray"), apply_filearray)
+setMethod("apply", signature(X = "FileArray"), apply_filearray)
 
 #' @rdname apply
 #' @export
-setMethod('apply', signature(X = "FileArrayProxy"), apply_filearray)
+setMethod("apply", signature(X = "FileArrayProxy"), apply_filearray)
 

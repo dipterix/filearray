@@ -15,10 +15,10 @@ set.seed(1)
 tmp <- rnorm(4e7)
 
 speed1 <- rowMeans(replicate(1, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         system.time({
-            for(i in 1:10){
+            for (i in 1:10) {
                 x[,,,(i-1)*10 +1:10] <- tmp
             }
         }, gcFirst = TRUE)
@@ -27,10 +27,10 @@ speed1 <- rowMeans(replicate(1, {
 })); speed1
 
 speed2 <- rowMeans(replicate(1, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         system.time({
-            for(i in 1:10){
+            for (i in 1:10) {
                 x[,,,(i-1)*10 +1:10]
             }
         }, gcFirst = TRUE)
@@ -39,12 +39,12 @@ speed2 <- rowMeans(replicate(1, {
 })); speed2
 
 set.seed(1)
-locs <- lapply(dim, function(d){
+locs <- lapply(dim, function(d) {
     sample(1:d, replace = FALSE, size = sample(50:d, 1))
 })
 
 speed3 <- rowMeans(replicate(10, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         system.time({
             x[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
@@ -55,7 +55,7 @@ speed3 <- rowMeans(replicate(10, {
 
 tmp <- rnorm(prod(sapply(locs, length)))
 speed4 <- rowMeans(replicate(10, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         system.time({
             x[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
@@ -67,7 +67,7 @@ speed4 <- rowMeans(replicate(10, {
 
 rm(tmp, sudo_pwd); gc()
 
-f <- function(txt_cex = 1.2){
+f <- function(txt_cex = 1.2) {
     
     cols <- c("orange", "dodgerblue3")
     speed <- cbind(

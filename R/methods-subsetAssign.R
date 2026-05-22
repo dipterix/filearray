@@ -1,8 +1,8 @@
-fa_subsetAssign1 <- function(x, ..., value){
-    if(!x$valid()){
+fa_subsetAssign1 <- function(x, ..., value) {
+    if (!x$valid()) {
         stop("Invalid file array")
     }
-    if(isTRUE(x$.mode == 'readonly')){
+    if (isTRUE(x$.mode == "readonly")) {
         stop("File array is read-only")
     }
     
@@ -17,44 +17,44 @@ fa_subsetAssign1 <- function(x, ..., value){
     
     
     locs <- list()
-    if(arglen <= 1){
-        if( arglen == 1 ){
+    if (arglen <= 1) {
+        if ( arglen == 1 ) {
             missing_args <- check_missing_dots(environment())
-            if(!missing_args){
+            if (!missing_args) {
                 stop("SubsetAssign FileArray only allows x[] <- v or x[i,j,...] <- v (single index not allowed)")
             }
         }
-        if(!length(value) %in% c(1, prod(dim))){
+        if (!length(value) %in% c(1, prod(dim))) {
             stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         target_dim <- dim
         x$initialize_partition(x$.partition_info[, 1])
-    } else if(arglen > 1){
-        if(arglen != length(dim)){
+    } else if (arglen > 1) {
+        if (arglen != length(dim)) {
             stop("SubsetAssign FileArray dimension mismatch.")
         }
         
         missing_args <- check_missing_dots(environment())
-        for(ii in seq_len(arglen)){
-            if(missing_args[[ii]]){
+        for (ii in seq_len(arglen)) {
+            if (missing_args[[ii]]) {
                 locs[[ii]] <- seq_len(dim[[ii]])
             } else {
                 tmp <- ...elt(ii)
-                if( !length(tmp) ){
+                if ( !length(tmp) ) {
                     return(x)
                 }
-                if(any(is.na(tmp))){
+                if (any(is.na(tmp))) {
                     stop("SubsetAssign cannot contain duplicated or invalid indices.")
                 }
-                if(is.logical(tmp)){
-                    if(length(tmp) > dim[[ii]]){
+                if (is.logical(tmp)) {
+                    if (length(tmp) > dim[[ii]]) {
                         stop("(subscript) logical subscript too long")
                     }
                     tmp <- rep(tmp, ceiling(dim[[ii]] / length(tmp)))
                     tmp <- which(tmp[seq_len(dim[[ii]])])
-                } else if(any(tmp > dim[[ii]]) ||
+                } else if (any(tmp > dim[[ii]]) ||
                           any(tmp <= 0) ||
-                          any(duplicated(tmp))){
+                          any(duplicated(tmp))) {
                     stop("SubsetAssign cannot contain duplicated or invalid indices.")
                 }
                 locs[[ii]] <- tmp
@@ -62,17 +62,17 @@ fa_subsetAssign1 <- function(x, ..., value){
         }
         
         target_dim <- sapply(locs, length)
-        if(!length(value) %in% c(1, prod(target_dim))){
+        if (!length(value) %in% c(1, prod(target_dim))) {
             stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         
         # make sure partitions exist
         tmp <- locs[[length(locs)]]
-        sapply(tmp, function(i){
-            sel <- x$.partition_info[,3] <= i
-            if(any(sel)){
-                sel <- max(x$.partition_info[sel,1])
-                if(x$.partition_info[sel, 3] < i){
+        sapply(tmp, function(i) {
+            sel <- x$.partition_info[, 3] <= i
+            if (any(sel)) {
+                sel <- max(x$.partition_info[sel, 1])
+                if (x$.partition_info[sel, 3] < i) {
                     sel <- sel + 1
                 }
             } else {
@@ -82,23 +82,23 @@ fa_subsetAssign1 <- function(x, ..., value){
         })
     }
     
-    if(prod(target_dim) == 0){
+    if (prod(target_dim) == 0) {
         return(invisible(x))
     }
     
     # decide split_dim
     buffer_sz <- buf_bytes / x$element_size()
     cprod <- cumprod(dim)
-    if(length(locs) == length(dim)){
-        tmp <- sapply(locs, function(x){
-            if(!length(x) || all(is.na(x))){ return(1L) }
+    if (length(locs) == length(dim)) {
+        tmp <- sapply(locs, function(x) {
+            if (!length(x) || all(is.na(x))) { return(1L) }
             rg <- range(x, na.rm = TRUE)
             return(rg[2] - rg[1] + 1L)
         })
         cprod <- cprod / dim * tmp
     }
     cprod <- cprod[-length(cprod)]
-    if(all(cprod > buffer_sz)){
+    if (all(cprod > buffer_sz)) {
         split_dim <- 1
     } else {
         split_dim <- max(which(cprod <= buffer_sz))
@@ -143,7 +143,7 @@ fa_subsetAssign1 <- function(x, ..., value){
 fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
     stopifnot(is_filearray(x) && is_filearray(i))
     
-    if(typeof(i) != "logical") {
+    if (typeof(i) != "logical") {
         stop("`fa_subsetAssign2`: subset index filearray must be logical")
     }
     
@@ -165,9 +165,9 @@ fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
         
         idx <- value_list[[ uuid2 ]]
         n_assigned <- sum(idx)
-        if(n_assigned == 0) { return(data) }
+        if (n_assigned == 0) { return(data) }
         
-        if( value_len == 1L ) {
+        if ( value_len == 1L ) {
             data[ idx ] <- value
         } else {
             starting_idx <- globals$get("starting_idx")
@@ -190,27 +190,27 @@ fa_subsetAssign2 <- function(x, i, value, label = "subset-assign (lazy)") {
 #' @describeIn S3-filearray subset assign array
 #' @export
 `[<-.FileArray` <- function(x, i, ..., lazy = FALSE, value) {
-    if(!x$valid()){
+    if (!x$valid()) {
         stop("Invalid file array")
     }
     
-    if(missing(i)) {
-        if(is_fileproxy(x) && length(x$.ops) > 0) {
+    if (missing(i)) {
+        if (is_fileproxy(x) && length(x$.ops) > 0) {
             x <- fa_eval_ops(x)
             x$.mode <- "readwrite"
         }
         return(fa_subsetAssign1(x, , ..., value = value))
     } else {
-        if(is_filearray(i) || is.array(i) || 
+        if (is_filearray(i) || is.array(i) || 
            ( ...length() == 0 && !is.logical(i) )) {
             re <- fa_subsetAssign2(x, i, value = value)
-            if(!lazy) {
+            if (!lazy) {
                 re <- fa_eval_ops(re)
                 re$.mode <- "readwrite"
             }
             return(re)
         } else {
-            if(is_fileproxy(x) && length(x$.ops) > 0) {
+            if (is_fileproxy(x) && length(x$.ops) > 0) {
                 x <- fa_eval_ops(x)
                 x$.mode <- "readwrite"
             }

@@ -57,13 +57,13 @@
 #' ## calculate summation
 #' # identical to sum(x[]), but is more feasible in large cases
 #' 
-#' mapreduce(x, map = function(data, size){
+#' mapreduce(x, map = function(data, size) {
 #'     # make sure `data` is all from array
-#'     if(length(data) != size){
+#'     if (length(data) != size) {
 #'         data <- data[1:size]
 #'     }
 #'     sum(data)
-#' }, reduce = function(mapped_list){
+#' }, reduce = function(mapped_list) {
 #'     do.call(sum, mapped_list)
 #' })
 #' 
@@ -82,22 +82,22 @@
 #'     }
 #' )
 #' 
-#' if(length(positions)){
+#' if(length(positions)) {
 #'     x[[positions[1]]]
 #' }
 #' 
 #' 
 #' @export
-setGeneric("mapreduce", function(x, map, reduce, ...){
+setGeneric("mapreduce", function(x, map, reduce, ...) {
     standardGeneric("mapreduce")
 })
 
-buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
+buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA) {
     # TODO: edit for proxy arrays
-    if(!x$valid()){
+    if (!x$valid()) {
         stop("Invalid file array")
     }
-    if( is_fileproxy(x) ) {
+    if ( is_fileproxy(x) ) {
         x <- fa_eval_ops(x)
     }
     
@@ -108,43 +108,43 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
     set_buffer_size(max_buffer_size())
     
     argnames <- names(formals(map))
-    if(length(argnames) < 3 && !'...' %in% argnames){
-        if( length(argnames) == 1 ){
-            map_ <- function(data, size, idx){
+    if (length(argnames) < 3 && !"..." %in% argnames) {
+        if ( length(argnames) == 1 ) {
+            map_ <- function(data, size, idx) {
                 map(data)
             }
         } else {
-            map_ <- function(data, size, idx){
+            map_ <- function(data, size, idx) {
                 map(data, size)
             }
         }
     } else {
-        map_ <- function(data, size, idx){
+        map_ <- function(data, size, idx) {
             map(data, size, idx)
         }
     }
     
-    if(is.function(reduce) && !length(formals(reduce))){
+    if (is.function(reduce) && !length(formals(reduce))) {
         stop("Reduce function must contain at least one argument")
     }
     
     dim <- x$dimension()
-    cum_partlen <- x$.partition_info[,3]
+    cum_partlen <- x$.partition_info[, 3]
     sexp_type <- x$sexp_type()
     
-    if(is.na(buffer_size)){
+    if (is.na(buffer_size)) {
         elem_size <- get_elem_size(typeof(x))
         mbsz <- max_buffer_size() * getThreads(FALSE) / elem_size
         
         sel <- cumprod(dim) <= mbsz
-        if(any(sel)){
+        if (any(sel)) {
             buffer_size <- prod(dim[sel])
         } else {
             buffer_size <- dim[[1]]
         }
     }
     
-    if(buffer_size < 1){
+    if (buffer_size < 1) {
         buffer_size <- 1
     }
     
@@ -162,7 +162,7 @@ buffer_mapreduce <- function(x, map, reduce = NULL, buffer_size = NA){
 #' @export
 setMethod(
     mapreduce, signature(x = "FileArray", reduce = "function"),
-    function(x, map, reduce, buffer_size = NA, ...){
+    function(x, map, reduce, buffer_size = NA, ...) {
         buffer_mapreduce(x, map, reduce, buffer_size)
     }
 )
@@ -171,7 +171,7 @@ setMethod(
 #' @export
 setMethod(
     mapreduce, signature(x = "FileArray", reduce = "NULL"),
-    function(x, map, reduce, buffer_size = NA, ...){
+    function(x, map, reduce, buffer_size = NA, ...) {
         buffer_mapreduce(x, map, NULL, buffer_size, ...)
     }
 )
@@ -180,7 +180,7 @@ setMethod(
 #' @export
 setMethod(
     mapreduce, signature(x = "FileArray", reduce = "missing"),
-    function(x, map, reduce, buffer_size = NA, ...){
+    function(x, map, reduce, buffer_size = NA, ...) {
         buffer_mapreduce(x, map, NULL, buffer_size, ...)
     }
 )

@@ -1,16 +1,16 @@
 
 ensure_partition <- function(
     file, partition, dimension, 
-    type = c("double","integer","logical","raw"), size = NULL){
+    type = c("double", "integer", "logical", "raw"), size = NULL) {
     
     type <- match.arg(type)
-    if(is.null(size)){
+    if (is.null(size)) {
         size <- get_elem_size(type)
     } else {
         size <- as.integer(size)
     }
     
-    if( !file.exists(file) ){
+    if ( !file.exists(file) ) {
         fid <- file(description = file, open = "w+b")
         write_header(fid, partition, dimension, type, size)
         close(fid)
@@ -20,14 +20,14 @@ ensure_partition <- function(
     
     expected_type <- sexp_to_type(header$sexp_type)
     
-    if( type != expected_type ){
+    if ( type != expected_type ) {
         stop(sprintf("Partition data type mismatch: %s != %s", expected_type, type))
     }
     
-    if( header$partition != partition ){
+    if ( header$partition != partition ) {
         quiet_warning(sprintf("Partition number mismatch: %s != %s", header$partition, partition))
     }
-    if( prod(dimension) != header$partition_size ){
+    if ( prod(dimension) != header$partition_size ) {
         quiet_warning(sprintf("Partition size mismatch: %s != %s", header$partition_size, prod(dimension)))
     }
     
@@ -35,20 +35,20 @@ ensure_partition <- function(
     
 }
 
-sexp_to_type <- function(sexp){
+sexp_to_type <- function(sexp) {
     switch(
         as.character(sexp),
-        '14' = 'double',
-        '13' = 'integer',
-        '10' = 'logical',
-        '24' = 'raw',
-        '15' = 'complex',
-        '26' = 'float',
+        "14" = "double",
+        "13" = "integer",
+        "10" = "logical",
+        "24" = "raw",
+        "15" = "complex",
+        "26" = "float",
         stop("Unknown SEXP code: ", sexp)
     )
 }
 
-type_to_sexp <- function(type){
+type_to_sexp <- function(type) {
     switch(
         type,
         double = 14L,
@@ -61,7 +61,7 @@ type_to_sexp <- function(type){
     )
 }
 
-load_partition <- function(file, dim){
+load_partition <- function(file, dim) {
     stopifnot(file.exists(file))
     fid <- file(description = file, open = "rb")
     on.exit({
@@ -70,7 +70,7 @@ load_partition <- function(file, dim){
     header <- validate_header(fid = fid)
     type <- sexp_to_type(header$sexp_type)
     
-    if( missing(dim) ){
+    if ( missing(dim) ) {
         dim <- header$partition_dim
     } else {
         stopifnot(prod(header$partition_dim) == prod(dim))

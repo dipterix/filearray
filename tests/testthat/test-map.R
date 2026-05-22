@@ -2,11 +2,15 @@ library(testthat)
 
 
 test_that("map with proxy", {
-    
     set.seed(10)
     
     # A large array example
-    x1 <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 3, 4), initialize = FALSE, partition_size = 3L)
+    x1 <- filearray_create(
+        temp_path(check = TRUE),
+        dimension = c(28, 100, 3, 4),
+        initialize = FALSE,
+        partition_size = 3L
+    )
     x1[] <- rnorm(33600)
     x2 <- x1 + 1
     x3 <- x1 + x2
@@ -56,13 +60,13 @@ test_that("map with proxy", {
         
         sum(input[[4]]) + sum(input[[3]] - input[[2]] - input[[1]])
     }, .buffer_count = bc)
-    expect_equal(re, colSums(matrix(x4[], ncol = bc)))    
+    expect_equal(re, colSums(matrix(x4[], ncol = bc)))
     
     
     # check fmap
     bc <- 12
     
-    y <- filearray_create(temp_path(), dimension = c(12,1))
+    y <- filearray_create(temp_path(), dimension = c(12, 1))
     fmap(x, function(input) {
         testthat::expect_length(input, 4)
         testthat::expect_length(input[[1]], length(x1) / bc)
@@ -81,13 +85,17 @@ test_that("map with proxy", {
 
 
 test_that("map filearrays", {
-    
     # A large array example
-    x <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 301, 4), initialize = FALSE, partition_size = 3L)
+    x <- filearray_create(
+        temp_path(check = TRUE),
+        dimension = c(28, 100, 301, 4),
+        initialize = FALSE,
+        partition_size = 3L
+    )
     dnames <- list(
         Trial = sample(c("A", "B"), 28, replace = TRUE),
         Marker = 1:100,
-        Time = seq(-1,2,0.01),
+        Time = seq(-1, 2, 0.01),
         Location = 1:4
     )
     dimnames(x) <- dnames
@@ -97,11 +105,16 @@ test_that("map filearrays", {
     y <- array(rnorm(length(x)), dim(x))
     x[] <- y
     
-    output <- filearray_create(temp_path(check = TRUE), dimension = dim(x), initialize = FALSE, partition_size = 4L)
+    output <- filearray_create(
+        temp_path(check = TRUE),
+        dimension = dim(x),
+        initialize = FALSE,
+        partition_size = 4L
+    )
     
-    f <- function(input){
+    f <- function(input) {
         # get locational data
-        if(is.list(input)){
+        if (is.list(input)) {
             location_data <- input[[1]]
         } else {
             location_data <- input
@@ -111,13 +124,17 @@ test_that("map filearrays", {
         
         # collapse over first 50 time points for
         # each trial, and marker
-        baseline <- apply(location_data[,,1:50], c(1,2), mean)
+        baseline <- apply(location_data[, , 1:50], c(1, 2), mean)
         
         # calibrate
-        calibrated <- sweep(location_data, c(1,2), baseline,
-                            FUN = function(data, bl){
-                                (data / bl - 1) * 100
-                            })
+        calibrated <- sweep(
+            location_data,
+            c(1, 2),
+            baseline,
+            FUN = function(data, bl) {
+                (data / bl - 1) * 100
+            }
+        )
         return(calibrated)
     }
     
@@ -138,43 +155,62 @@ test_that("map filearrays", {
 
 
 test_that("fwhich", {
-    x <- filearray_create(temp_path(check = TRUE), dimension = c(28, 100, 301, 4), initialize = FALSE, partition_size = 3L, type = "complex")
+    x <- filearray_create(
+        temp_path(check = TRUE),
+        dimension = c(28, 100, 301, 4),
+        initialize = FALSE,
+        partition_size = 3L,
+        type = "complex"
+    )
     dnames <- list(
         Trial = sample(c("A", "B"), 28, replace = TRUE),
         Marker = 1:100,
-        Time = seq(-1,2,0.01),
+        Time = seq(-1, 2, 0.01),
         Location = 1:4
     )
     dimnames(x) <- dnames
     
     y <- array(rnorm(length(x)), dim(x))
     x[] <- y
-    x[1,c(1,3),301,4] <- c(80 + 10i, 80 + 10i)
+    x[1, c(1, 3), 301, 4] <- c(80 + 10i, 80 + 10i)
     y <- x[]
     
-    idx <- fwhich(x, val = 80 + 10i, arr.ind = FALSE, ret.values = FALSE)
+    idx <- fwhich(x,
+                  val = 80 + 10i,
+                  arr.ind = FALSE,
+                  ret.values = FALSE)
     expect_equal(idx, which(y == (80 + 10i)))
     
-    idx <- fwhich(x, val = 80 + 10i, arr.ind = FALSE, ret.values = TRUE)
+    idx <- fwhich(x,
+                  val = 80 + 10i,
+                  arr.ind = FALSE,
+                  ret.values = TRUE)
     expect_equal(attr(idx, "values"), rep(80 + 10i, length(idx)))
     
-    idx1 <- fwhich(x, val = 80 + 10i, arr.ind = TRUE, ret.values = TRUE)
-    idx2 <- fwhich(y, val = 80 + 10i, arr.ind = TRUE, ret.values = TRUE)
+    idx1 <- fwhich(x,
+                   val = 80 + 10i,
+                   arr.ind = TRUE,
+                   ret.values = TRUE)
+    idx2 <- fwhich(y,
+                   val = 80 + 10i,
+                   arr.ind = TRUE,
+                   ret.values = TRUE)
     expect_equal(idx1, idx2)
     
     # val is a function
-    impl <- function(z) { Re(z) > 4 }
+    impl <- function(z) {
+        Re(z) > 4
+    }
     idx1 <- fwhich(x, impl, arr.ind = FALSE, ret.values = TRUE)
     idx2 <- fwhich(x[], impl, arr.ind = FALSE, ret.values = TRUE)
     expect_equal(idx1, idx2)
     
-    impl <- function(z) { Im(z) < -100 }
+    impl <- function(z) {
+        Im(z) < -100
+    }
     idx1 <- fwhich(x, impl, arr.ind = TRUE, ret.values = TRUE)
     idx2 <- fwhich(x[], impl, arr.ind = TRUE, ret.values = TRUE)
     expect_equal(idx1, idx2)
     
     x$delete()
 })
-
-
-

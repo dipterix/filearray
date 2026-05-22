@@ -18,13 +18,13 @@ ENDIANNESS <- "little"
 max_buffer_size <- local({
     # By default, maximum of 2MB buffer size
     size <- 2097152
-    function(v){
-        if(!missing(v)){
-            if(v < 64){
+    function(v) {
+        if (!missing(v)) {
+            if (v < 64) {
                 stop("Maximum buffer size is too small.")
             }
             v <- 2^ceiling(log2(v))
-            if(v > 2^30){
+            if (v > 2^30) {
                 stop("Maximum buffer size is too large.")
             }
             size <<- v
@@ -33,40 +33,40 @@ max_buffer_size <- local({
     }
 })
 
-quiet_warning <- function(..., call. = FALSE){
-    if(!getOption("filearray.quiet", FALSE)){
+quiet_warning <- function(..., call. = FALSE) {
+    if (!getOption("filearray.quiet", FALSE)) {
         warning(..., '\n\n* To suppress this message, set `options("filearray.quiet" = TRUE)`', call. = call.)
     }
 }
 
-get_os <- function(){
-    if("windows" %in% tolower(.Platform$OS.type)){
+get_os <- function() {
+    if ("windows" %in% tolower(.Platform$OS.type)) {
         return("windows")
     }
     os <- tolower(R.version$os)
-    if(startsWith(os, "darwin")){
-        return('darwin')
+    if (startsWith(os, "darwin")) {
+        return("darwin")
     }
-    if(startsWith(os, "linux")){
-        return('linux')
+    if (startsWith(os, "linux")) {
+        return("linux")
     }
-    if(startsWith(os, "solaris")){
-        return('solaris')
+    if (startsWith(os, "solaris")) {
+        return("solaris")
     }
-    if(startsWith(os, "win")){
-        return('windows')
+    if (startsWith(os, "win")) {
+        return("windows")
     }
-    return('unknown')
+    return("unknown")
 }
 
 
-deparse1 <- function (expr, collapse = " ") {
+deparse1 <- function(expr, collapse = " ") {
     paste(deparse(expr), collapse = collapse)
 }
 
 temp_dir <- function(check = FALSE) {
     re <- file.path(getOption("filearray.temporary.path", tempdir()), "_filearray_tempdir")
-    if(check && !dir.exists(re)) {
+    if (check && !dir.exists(re)) {
         dir.create(re, showWarnings = FALSE, recursive = TRUE)
     }
     re
@@ -78,7 +78,7 @@ temp_path <- function(pattern = "tmpfilearray", fileext = ".farr", check = FALSE
 
 clear_cache <- function() {
     tdir <- temp_dir()
-    if(dir.exists(tdir)) {
+    if (dir.exists(tdir)) {
         unlink(tdir, recursive = TRUE)
     }
 }

@@ -11,7 +11,7 @@ dim <- c(400, 500, dim3, 5)
 
 arr <- filearray_create(file, dim, type = 'integer', partition_size = 2)
 x <- array(as.integer(seq_len(prod(dim))), dim)
-for(ii in 1:5){
+for(ii in 1:5) {
     x[1,1,1,ii] <- NA
 }
 
@@ -23,7 +23,7 @@ system.time({
 
 basefile <- paste0(normalizePath(arr$.filebase), arr$.sep)
 
-sample1 = function(x, ...){x}
+sample1 = function(x, ...) {x}
 sample1 <- base::sample
 sample2 <- base::sample
 replace <- TRUE

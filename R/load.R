@@ -63,7 +63,7 @@
 #' # Prepare
 #' library(filearray)
 #' filebase <- tempfile()
-#' if(file.exists(filebase)){ unlink(filebase, TRUE) }
+#' if(file.exists(filebase)) { unlink(filebase, TRUE) }
 #' 
 #' # create array
 #' x <- filearray_create(filebase, dimension = c(200, 30, 8))
@@ -115,19 +115,19 @@ NULL
 #' @export
 filearray_create <- function(
     filebase, dimension, 
-    type = c('double', 'float', 'integer', 'logical', 'raw', 'complex'), 
+    type = c("double", "float", "integer", "logical", "raw", "complex"), 
     partition_size = NA,
     initialize = FALSE,
     ...)
 {
     type <- match.arg(type)
     
-    if(length(dimension) < 2 || any(dimension == 0)){
+    if (length(dimension) < 2 || any(dimension == 0)) {
         stop("Invalid dimension: FileArray dimension must not contain 0. Its length must be at least 2.")
     }
     
     size <- get_elem_size(type)
-    if(is.na(partition_size)) {
+    if (is.na(partition_size)) {
         partition_size <- guess_partition(dimension, size)
     } else {
         partition_size <- round(partition_size)
@@ -143,7 +143,7 @@ filearray_create <- function(
         type = type,
         partition_size = partition_size
     )
-    if(initialize){
+    if (initialize) {
         arr$initialize_partition()
     }
     arr
@@ -151,7 +151,7 @@ filearray_create <- function(
 
 #' @rdname filearray
 #' @export
-filearray_load <- function(filebase, mode = c('readwrite', 'readonly')){
+filearray_load <- function(filebase, mode = c("readwrite", "readonly")) {
     mode <- match.arg(mode)
     arr <- new("FileArray")
     arr$load(
@@ -167,26 +167,26 @@ filearray_checkload <- function(
     filebase, mode = c("readonly", "readwrite"), ..., symlink_ok = TRUE
 ) {
     mode <- match.arg(mode)
-    if(!dir.exists(filebase)){
+    if (!dir.exists(filebase)) {
         stop("Filearray does not exists.")
     }
     arr <- filearray::filearray_load(filebase, mode = mode)
     
-    if(!symlink_ok){
+    if (!symlink_ok) {
         bind_info <- arr$get_header("filearray_bind", list())
-        if(isTRUE(bind_info$symlink)){
+        if (isTRUE(bind_info$symlink)) {
             stop("The array partition files contain symlinks")
         }
     }
     
-    if(...length() == 0){ return(arr) }
+    if (...length() == 0) { return(arr) }
     header_list <- list(...)
     header_names <- names(header_list)
     
-    for(nm in header_names){
+    for (nm in header_names) {
         expected <- arr$get_header(nm)
         given <- header_list[[nm]]
-        if(nm != "" && !identical(given, expected)){
+        if (nm != "" && !identical(given, expected)) {
             stop("The header `", nm, "` (", deparse1(expected), ") is not identical with given values (", deparse1(given), ").")
         }
     }
@@ -204,18 +204,18 @@ filearray_load_or_create <- function(
 ) {
     mode <- match.arg(mode)
     filebase <- normalizePath(filebase, mustWork = FALSE, winslash = "/")
-    if(length(filebase) != 1 || grepl("(^|^[A-Za-z]:)/$", filebase)) {
+    if (length(filebase) != 1 || grepl("(^|^[A-Za-z]:)/$", filebase)) {
         stop("Invalid filebase to store a file array.")
     }
     
     
     dimension <- as.integer(dimension)
-    if(length(dimension) < 2 || any(is.na(dimension) | dimension < 0)) {
+    if (length(dimension) < 2 || any(is.na(dimension) | dimension < 0)) {
         stop("Incorrect dimension for a file array: `dimension` must a valid positive integer vector with length of two or above.")
     }
     
-    if(!is.null(on_missing)) {
-        if(!is.function(on_missing) || !length(formals(on_missing))) {
+    if (!is.null(on_missing)) {
+        if (!is.function(on_missing) || !length(formals(on_missing))) {
             stop("`filearray_load_or_create`: `on_missing` must be a function with one argument (i.e. the file array)")
         }
     }
@@ -223,8 +223,8 @@ filearray_load_or_create <- function(
     
     additional_headers <- list(...)
     add_header_names <- names(additional_headers)
-    if(length(additional_headers)) {
-        if(!length(add_header_names) || "" %in% trimws(additional_headers)) {
+    if (length(additional_headers)) {
+        if (!length(add_header_names) || "" %in% trimws(additional_headers)) {
             stop("`filearray_load_or_create`: additional parameters must be named.")
         }
     }
@@ -240,8 +240,8 @@ filearray_load_or_create <- function(
             
             # If no error raised, the array has been loaded
             
-            if(!is.na(type)) {
-                if(!identical(arr$type(), type)) {
+            if (!is.na(type)) {
+                if (!identical(arr$type(), type)) {
                     stop("`filearray_load_or_create`: Requested array type does not match with existing array.")
                 }
             } else {
@@ -252,25 +252,25 @@ filearray_load_or_create <- function(
             
             # Now check the dimension
             arr_dim <- as.integer(arr$dimension())
-            if(!identical(arr_dim, dimension)) {
+            if (!identical(arr_dim, dimension)) {
                 stop("`filearray_load_or_create`: Requested dimension does not match with existing array.")
             }
             
             arr
         },
         error = function(e) {
-            if(verbose) {
+            if (verbose) {
                 message("`filearray_load_or_create`: cannot load the existing file array: ", e$message, "\nTrying creating a new one. If the array already exists, its file path will be removed.")
             }
-            if(file.exists(filebase)) {
+            if (file.exists(filebase)) {
                 unlink(filebase, recursive = TRUE, force = TRUE)
             }
             pdir <- dirname(filebase)
-            if(!dir.exists(pdir)) {
+            if (!dir.exists(pdir)) {
                 dir.create(pdir, showWarnings = FALSE, recursive = TRUE)
             }
             # create the array
-            if(is.na(type)) { type <- 'double' }
+            if (is.na(type)) { type <- "double" }
             arr <- filearray_create(
                 filebase = filebase,
                 dimension = dimension,
@@ -279,13 +279,13 @@ filearray_load_or_create <- function(
                 initialize =  initialize
             )
             # seal the header
-            if( auto_set_headers ) {
-                for(nm in add_header_names) {
+            if ( auto_set_headers ) {
+                for (nm in add_header_names) {
                     arr$set_header(key = nm, value = additional_headers[[nm]], save = FALSE)
                 }
             }
             # run on_missing if the function exists
-            if(is.function(on_missing)) {
+            if (is.function(on_missing)) {
                 arr$.mode <- "readwrite"
                 on_missing(arr)
             }

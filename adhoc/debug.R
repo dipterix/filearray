@@ -1,4 +1,4 @@
-f <- function(seed){
+f <- function(seed) {
     require(testthat)
     require(bit64)
     bsz <- get_buffer_size()
@@ -46,7 +46,7 @@ f <- function(seed){
     expect_equal(is.na(a), is.na(b))
     
     
-    if(length(a[sel])){
+    if (length(a[sel])) {
         # fail the test
         print(a[sel])
         print(b[sel])
@@ -57,7 +57,7 @@ f <- function(seed){
     unlink(file, recursive = TRUE)
 }
 # setThreads(1)
-for(i in 1:1000){
+for(i in 1:1000) {
     print(i)
     f(i)
 }

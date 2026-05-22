@@ -14,10 +14,10 @@ threads <- c(1,2,4,8)
 
 # run in order to make sure we have cold start
 speed1 <- rowMeans(replicate(5, {
-    res <- sapply(threads, function(thread){
+    res <- sapply(threads, function(thread) {
         filearray::filearray_threads(thread)
         gc()
-        if(cold_start){system("sudo -kS purge", input = sudo_pwd)}
+        if (cold_start) {system("sudo -kS purge", input = sudo_pwd)}
         Sys.sleep(1)
         system.time({
             filex[,,,1:25 + (log2(thread) * 25)] <- tmp
@@ -30,10 +30,10 @@ rm(tmp); gc()
 
 
 speed2 <- rowMeans(replicate(5, {
-    res <- sapply(threads, function(thread){
+    res <- sapply(threads, function(thread) {
         filearray::filearray_threads(thread)
         gc()
-        if(cold_start){system("sudo -kS purge", input = sudo_pwd)}
+        if (cold_start) {system("sudo -kS purge", input = sudo_pwd)}
         Sys.sleep(1)
         system.time({
             filex[,,,1:25 + (log2(thread) * 25)]
@@ -45,16 +45,16 @@ speed2 <- rowMeans(replicate(5, {
 
 # 800 MB data indices
 set.seed(1)
-locs <- lapply(dim, function(d){
+locs <- lapply(dim, function(d) {
     sample(1:d, replace = FALSE, size = 100)
 })
 
 # CMD: sudo purge
 speed3 <- rowMeans(replicate(5, {
-    res <- sapply(threads, function(thread){
+    res <- sapply(threads, function(thread) {
         filearray::filearray_threads(thread)
         gc()
-        if(cold_start){system("sudo -kS purge", input = sudo_pwd)}
+        if (cold_start) {system("sudo -kS purge", input = sudo_pwd)}
         Sys.sleep(1)
         system.time({
             filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
@@ -67,11 +67,11 @@ speed3 <- rowMeans(replicate(5, {
 tmp <- rnorm(prod(sapply(locs, length)))
 # filex <- filearray::filearray_load(filex$.filebase)
 speed4 <- rowMeans(replicate(5, {
-    res <- sapply(threads, function(thread){
+    res <- sapply(threads, function(thread) {
         filearray::filearray_threads(thread)
         stopifnot(filearray::filearray_threads() == thread)
         gc()
-        if(cold_start){system("sudo -kS purge", input = sudo_pwd)}
+        if (cold_start) {system("sudo -kS purge", input = sudo_pwd)}
         Sys.sleep(1)
         system.time({
             filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
@@ -83,7 +83,7 @@ speed4 <- rowMeans(replicate(5, {
 rm(tmp, sudo_pwd); gc()
 # save.image("./adhoc/other docs/comparison-threads.RData")
 
-f <- function(txt_cex = 0.7){
+f <- function(txt_cex = 0.7) {
     
     par(mfrow = c(1,2))
     

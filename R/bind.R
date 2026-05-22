@@ -87,19 +87,19 @@
 filearray_bind <- function(
     ..., .list = list(), filebase = tempfile(), 
     symlink = FALSE, overwrite = FALSE, cache_ok = FALSE
-){
+) {
     stopifnot(length(filebase) == 1)
     symlink <- as.logical(symlink)[[1]]
     # options("filearray.symlink_enabled" = TRUE)
-    if(symlink && !getOption("filearray.symlink_enabled", symlink_enabled())){
+    if (symlink && !getOption("filearray.symlink_enabled", symlink_enabled())) {
         symlink <- FALSE
         quiet_warning("Symbolic link is disabled. Force `symlink` to be FALSE")
     }
     arrays <- c(list(...), .list)
-    if(!length(arrays)){
+    if (!length(arrays)) {
         stop("`filearray_bind`: No file arrays to bind")
     }
-    if(!all(sapply(arrays, is_filearray))){
+    if (!all(sapply(arrays, is_filearray))) {
         stop("`filearray_bind`: All inputs must be file arrays")
     }
     # TODO: This is quick fix, should change this
@@ -109,20 +109,20 @@ filearray_bind <- function(
     dim <- arrays[[1]]$dimension()
     dim[[length(dim)]] <- part_size
     
-    last_margin <- sapply(arrays, function(x){
-        if(!x$valid()){
+    last_margin <- sapply(arrays, function(x) {
+        if (!x$valid()) {
             stop("`filearray_bind`: some input arrays are invalid")
         }
-        if(x$type() != type){
+        if (x$type() != type) {
             stop("`filearray_bind`: All arrays must be the same type")
         }
-        if(x$partition_size() != part_size){
+        if (x$partition_size() != part_size) {
             stop("`filearray_bind`: All arrays must share the same `partition_size`")
         }
         xdim <- x$dimension()
         xdim[[length(xdim)]] <- part_size
         
-        if(!identical(as.double(xdim), as.double(dim))){
+        if (!identical(as.double(xdim), as.double(dim))) {
             stop("`filearray_bind`: The partition size mismatch: they must be the same for all arrays")
         }
         x$initialize_partition()
@@ -130,9 +130,9 @@ filearray_bind <- function(
     })
     
     last_margins <- sapply(arrays, dim)
-    last_margins <- last_margins[nrow(last_margins),]
+    last_margins <- last_margins[nrow(last_margins), ]
     
-    if(!all(last_margins %% part_size == 0)){
+    if (!all(last_margins %% part_size == 0)) {
         quiet_warning("One or more arrays have last margin size that cannot be devided by `partition_size`. This will cause binding arrays to be mis-aligned. ")
     }
     
@@ -147,14 +147,14 @@ filearray_bind <- function(
         dimension = as.double(dim), 
         type = type, 
         partition_size = as.double(part_size),
-        partition_header_signatures = sapply(arrays, function(y){ y$header_signature(include_path = TRUE) })
+        partition_header_signatures = sapply(arrays, function(y) { y$header_signature(include_path = TRUE) })
     )
     bind_signature <- digest::digest(bind_info, algo = "sha256")
     
     source_info <- list()
-    for(ii in seq_along(last_margin)){
+    for (ii in seq_along(last_margin)) {
         arr <- arrays[[ii]]
-        end <- start -1 + last_margin[[ii]]
+        end <- start - 1 + last_margin[[ii]]
         idx <- seq.int(start, end)
         source_info[[ii]] <- arr$partition_path(seq_len(last_margin[[ii]]))
         start <- end + 1
@@ -162,29 +162,29 @@ filearray_bind <- function(
     bind_info$source_info <- source_info
     bind_info$symlink  <- symlink
     
-    if(file.exists(filebase)) {
+    if (file.exists(filebase)) {
         
-        if(!overwrite){
+        if (!overwrite) {
             stop("Array has already existed at: ", filebase)
         } 
         
-        if(cache_ok){
+        if (cache_ok) {
             check <- tryCatch({
                 check <- FALSE
-                if(file.exists(file.path(filebase, "meta"))){
+                if (file.exists(file.path(filebase, "meta"))) {
                     header <- load_meta(filebase)
-                    if(
+                    if (
                         identical(header$filearray_bind_signature, bind_signature) &&
                         identical(header$filearray_bind$symlink, symlink)
-                    ){
+                    ) {
                         check <- TRUE
                     }
                 }
                 check
-            }, error = function(e){
+            }, error = function(e) {
                 FALSE
             })
-            if(check){
+            if (check) {
                 re <- filearray_load(filebase = filebase, mode = "readonly")
                 attr(re, "cached_bind") <- TRUE
                 return(re)
@@ -198,11 +198,11 @@ filearray_bind <- function(
     start <- 1
     end <- 1
     
-    for(ii in seq_along(last_margin)){
+    for (ii in seq_along(last_margin)) {
         arr <- arrays[[ii]]
-        end <- start -1 + last_margin[[ii]]
+        end <- start - 1 + last_margin[[ii]]
         idx <- seq.int(start, end)
-        if( symlink ){
+        if ( symlink ) {
             file.symlink(
                 arr$partition_path(seq_len(last_margin[[ii]])),
                 re$partition_path(idx)
@@ -220,7 +220,7 @@ filearray_bind <- function(
     re$.header$filearray_bind_signature <- bind_signature
     re$.save_header()
     
-    if(symlink){
+    if (symlink) {
         re$.mode <- "readonly"
     } 
     re

@@ -2,10 +2,10 @@ require(filearray)
 dim <- c(100,100,10,40)
 set.seed(1); 
 tmp <- seq_len(1e5)
-xs <- lapply(1:2, function(i){
+xs <- lapply(1:2, function(i) {
     file <- tempfile(); unlink(file, recursive = TRUE)
     x <- filearray_create(file, dim, type = 'double')
-    for(i in 1:40){
+    for (i in 1:40) {
         x[,,,i] <- tmp
     }
     x
@@ -19,7 +19,7 @@ system.time({
     z <- xs[[1]]$collapse(keep = c(2,3,4), method = "sum")
 })
 system.time({
-    fmap(xs, function(x, a){
+    fmap(xs, function(x, a) {
         # a <<- c(a, Sys.time() - now)
         z <- x[[1]] + x[[2]]
         dim(z) <- c(100,100,10)
@@ -51,7 +51,7 @@ system.time({
     fmap_element_wise(xs, function(input) {
         input[[1]] + input[[2]]
     }, y
-    , profile = function(){
+    , profile = function() {
         env$a[[env$count]] <- Sys.time() - now
         now <<- Sys.time()
         env$count <- env$count + 1

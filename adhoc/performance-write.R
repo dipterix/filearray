@@ -12,9 +12,9 @@ pna <- local({
     dim[[length(dim)]] <- x$partition_size()
     rep(na, prod(dim))
 })
-reset <- function(){
+reset <- function() {
     system.time({
-        lapply(seq_len(ceiling(dim[[length(dim)]] / x$partition_size())), function(i){
+        lapply(seq_len(ceiling(dim[[length(dim)]] / x$partition_size())), function(i) {
             dim[[length(dim)]] <- x$partition_size()
             write_partition(
                 file = x$partition_path(i),
@@ -27,12 +27,12 @@ reset <- function(){
     })
 }
 
-sample <- function(x, ...){x}
+sample <- function(x, ...) {x}
 sample <- base::sample
 
-listOrEnv <- function(seed){
+listOrEnv <- function(seed) {
     set.seed(seed)
-    lapply(dim, function(d){
+    lapply(dim, function(d) {
         sample(seq_len(d), size = sample(seq_len(d), size = 1), replace = FALSE)
     })
 }

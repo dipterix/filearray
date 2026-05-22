@@ -7,7 +7,7 @@ test_that("R: FileArray-class", {
     
     expect_equal(x$dimension(), dim)
     expect_true(x$can_write())
-    expect_equal(x$type(), 'double')
+    expect_equal(x$type(), "double")
     expect_equal(x$element_size(), get_elem_size(x$type()))
     expect_error(x$fill_partition(-1, 1))
     expect_error(x$fill_partition(NA, 1))
@@ -21,12 +21,12 @@ test_that("R: FileArray-class", {
     expect_equal(x$.mode, "readwrite")
     x$fill_partition(1, 2)
     
-    x <- filearray_load(file, mode = 'readonly')
+    x <- filearray_load(file, mode = "readonly")
     expect_equal(x$.mode, "readonly")
     expect_error(x$fill_partition(1, 1))
     
     x$initialize_partition(1:2)
-    expect_equal(x[1,1,1:2], c(2,NA))
+    expect_equal(x[1, 1, 1:2], c(2, NA))
     expect_equal(file.exists(x$partition_path(1:3)), c(TRUE, TRUE, FALSE))
     expect_equal(x$.mode, "readonly")
     
@@ -57,11 +57,11 @@ test_that("R: S3 methods", {
     dim <- 3:5
     x <- filearray_create(file, dim, partition_size = 3, initialize = FALSE)
     expect_equal(file.exists(x$partition_path(1:3)), c(FALSE, FALSE, FALSE))
-    x[,,4] <- 1:12
-    expect_equal(as.integer(x[,,4]), 1:12)
+    x[, , 4] <- 1:12
+    expect_equal(as.integer(x[, , 4]), 1:12)
     expect_equal(file.exists(x$partition_path(1:3)), c(FALSE, TRUE, FALSE))
     
-    expect_equal(typeof(x), 'double')
+    expect_equal(typeof(x), "double")
     expect_equal(range(x, na.rm = TRUE), as.double(c(1, 12)))
     expect_equal(file.exists(x$partition_path(1:3)), c(FALSE, TRUE, FALSE))
     expect_equal(range(x), as.double(c(NA, NA)))

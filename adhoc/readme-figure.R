@@ -11,12 +11,12 @@ set.seed(1)
 tmp <- rnorm(4e7)
 res1 <- microbenchmark::microbenchmark(
     lazyarray = {
-        for(i in 1:10){
+        for (i in 1:10) {
             lazyx[,,,(i-1)*10 +1:10] <- tmp
         }
     },
     filearray = {
-        for(i in 1:10){
+        for (i in 1:10) {
             filex[,,,(i-1)*10 +1:10] <- tmp
         }
     }, times = 5, setup = quote(gc())
@@ -24,7 +24,7 @@ res1 <- microbenchmark::microbenchmark(
 
 
 
-speed1 <- sapply(split(res1, res1$expr), function(res){
+speed1 <- sapply(split(res1, res1$expr), function(res) {
     speed <- length(filex) *8000 / res$time
     c(mean(speed), sd(speed) / 2)
 }); speed1
@@ -32,17 +32,17 @@ speed1 <- sapply(split(res1, res1$expr), function(res){
 
 res2 <- microbenchmark::microbenchmark(
     lazyarray = {
-        for(i in 1:10){
+        for (i in 1:10) {
             lazyx[,,,1:10 + (i-1) * 10]
         }
     },
     filex = {
-        for(i in 1:10){
+        for (i in 1:10) {
             filex[,,,1:10 + (i-1) * 10]
         }
     }, times = 5, setup = quote(gc())
 )
-speed2 <- sapply(split(res2, res2$expr), function(res){
+speed2 <- sapply(split(res2, res2$expr), function(res) {
     speed <- length(filex) *8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }); speed2
@@ -50,7 +50,7 @@ speed2 <- sapply(split(res2, res2$expr), function(res){
 
 
 set.seed(1)
-locs <- lapply(dim, function(d){
+locs <- lapply(dim, function(d) {
     sample(1:d, replace = FALSE, size = sample(ifelse(d>50,50,1):d, 1))
 })
 
@@ -63,7 +63,7 @@ res3 <- microbenchmark::microbenchmark(
     }, 
     times = 10, setup = quote(gc()))
 
-speed3 <- sapply(split(res3, res3$expr), function(res){
+speed3 <- sapply(split(res3, res3$expr), function(res) {
     speed <- prod(sapply(locs, length)) * 8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }); speed3
@@ -75,7 +75,7 @@ res5 <- microbenchmark::microbenchmark(
         z[locs[[1]],locs[[2]],locs[[3]],locs[[4]]]
     }, 
     times = 10, setup = quote(gc()))
-speed3 <- cbind(speed3, sapply(split(res5, res5$expr), function(res){
+speed3 <- cbind(speed3, sapply(split(res5, res5$expr), function(res) {
     speed <- prod(sapply(locs, length)) * 8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }))
@@ -91,7 +91,7 @@ res4 <- microbenchmark::microbenchmark(
         filex[locs[[1]],locs[[2]],locs[[3]],locs[[4]]] <- tmp
     }, times = 10, setup = quote(gc())
 )
-speed4 <- sapply(split(res4, res4$expr), function(res){
+speed4 <- sapply(split(res4, res4$expr), function(res) {
     speed <- prod(sapply(locs, length)) * 8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }); speed4
@@ -103,13 +103,13 @@ res5 <- microbenchmark::microbenchmark(
     }, times = 10, setup = quote(gc())
 )
 rm(z); gc()
-speed4 <- cbind(speed4, sapply(split(res5, res5$expr), function(res){
+speed4 <- cbind(speed4, sapply(split(res5, res5$expr), function(res) {
     speed <- prod(sapply(locs, length)) * 8000 / res$time
     c(mean(speed), sd(speed) / 3)
 }))
 mean(prod(sapply(locs, length)) / 1e8 * 800 / res5$time) * 1e9
 
-f <- function(){
+f <- function() {
     
     par(mfrow = c(1,4))
     

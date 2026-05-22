@@ -35,14 +35,14 @@ FileArrayProxy <- setRefClass(
         },
         initialize = function() {
             # callNextMethod()
-            if(length(.self$.filebase) == 1) {
+            if (length(.self$.filebase) == 1) {
                 .self$.uuid <- sprintf("0000-%s", .self$.filebase)
             } else {
                 .self$.uuid <- new_uuid()
             }
         },
         uuid = function() {
-            if(length(.self$.ops)) {
+            if (length(.self$.ops)) {
                 return(.self$.ops[[length(.self$.ops)]]$uuid)
             }
             return(.self$.uuid)
@@ -54,13 +54,13 @@ FileArrayProxy <- setRefClass(
         # Only get unique arrays
         linked_arrays = function(exclude_uuids = NULL) {
             re <- list()
-            if(!.self$.uuid %in% exclude_uuids) {
+            if (!.self$.uuid %in% exclude_uuids) {
                 re[[.self$.uuid]] <- .self
                 exclude_uuids <- c(exclude_uuids, .self$get_all_uuids())
             }
-            for(proxy in .self$.linked) {
+            for (proxy in .self$.linked) {
                 linked_subs <- proxy$linked_arrays(exclude_uuids = exclude_uuids)
-                if(length(linked_subs)) {
+                if (length(linked_subs)) {
                     uuids <- get_inital_uuids(linked_subs)
                     uuids <- uuids[!uuids %in% exclude_uuids]
                     re[uuids] <- linked_subs[uuids]
@@ -95,12 +95,12 @@ FileArrayProxy <- setRefClass(
                 
                 # operation function
                 op_func = function(env, data, verbose = FALSE) {
-                    if(is.null(env[[ output_uuid ]])) {
-                        if( verbose ) {
+                    if (is.null(env[[ output_uuid ]])) {
+                        if ( verbose ) {
                             message(label)
                         }
                         tmp <- operator(env, data)
-                        if(!identical(typeof(tmp), out_mode)) {
+                        if (!identical(typeof(tmp), out_mode)) {
                             storage.mode(tmp) <- out_mode
                         }
                         env[[ output_uuid ]] <- tmp
@@ -109,8 +109,8 @@ FileArrayProxy <- setRefClass(
             )
         },
         collapse = function(
-            keep, method = c('mean', 'sum'),
-            transform = c('asis', '10log10', 'square', 'sqrt', 'normalize'), 
+            keep, method = c("mean", "sum"),
+            transform = c("asis", "10log10", "square", "sqrt", "normalize"), 
             na.rm = FALSE
         ) {
             # TODO This is a quick fix
@@ -125,10 +125,10 @@ FileArrayProxy <- setRefClass(
         expand = function(n) {
             stop("Cannot expand a proxy array. Please mature the array first before expanding.")
         },
-        show = function(){
-            if(.self$valid()){
-                cat('Reference class object of class "FileArrayProxy"\n')
-                cat('Mode:', .self$.mode, "\n")
+        show = function() {
+            if (.self$valid()) {
+                cat("Reference class object of class \"FileArrayProxy\"\n")
+                cat("Mode:", .self$.mode, "\n")
                 tryCatch({
                     cat(sprintf("UUID: %s (depth=%d)\n", .self$uuid(), length(.self$.ops)))
                     cat("Dimension:", paste(.self$dimension(), collapse = "x"), "\n")
@@ -136,12 +136,12 @@ FileArrayProxy <- setRefClass(
                     cat("Partition size:", .self$partition_size(), "\n")
                     cat("Data type:", typeof(.self), "\n")
                     cat("Internal type:", .self$type(), "\n")
-                }, error = function(e){
+                }, error = function(e) {
                     quiet_warning("Partition information is unavailable: might be broken or improperly set.", immediate. = FALSE)
                 })
                 cat("Location:", .self$.filebase, "\n")
             } else {
-                if(.self$.valid){
+                if (.self$.valid) {
                     cat("The FileArray is invalid (it has not been initialized).")
                 } else {
                     cat("The FileArray is invalid (unable to locate the array in the file system).")
@@ -165,7 +165,7 @@ as_filearrayproxy <- function(x, ...) {
 as_filearrayproxy.FileArray <- function(x, ...) {
     proxy <- new("FileArrayProxy")
     proxy$load(x$.filebase)
-    if(length(x$.filebase) == 1) {
+    if (length(x$.filebase) == 1) {
         proxy$.uuid <- sprintf("0000-%s", x$.filebase)
     }
     return(proxy)
@@ -188,11 +188,11 @@ as_filearrayproxy.default <- function(x, ...) {
 
 fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
     stopifnot(is_filearray(e1) || is_filearray(e2))
-    if(is.null(out_type)) {
+    if (is.null(out_type)) {
         out_type <- operation_output_type(typeof(e1), typeof(e2))
     }
-    if(is.null(label)) {
-        if(is.character(op)) {
+    if (is.null(label)) {
+        if (is.character(op)) {
             label <- sprintf("e1 %s e2", op)
         } else {
             label <- deparse1(op)
@@ -200,7 +200,7 @@ fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
     }
     
     # check if e1 is scalar
-    if(length(e1) == 1) {
+    if (length(e1) == 1) {
         e2 <- as_filearrayproxy(e2)
         uuid2 <- e2$uuid()
         op_func <- function(v, ...) {
@@ -211,7 +211,7 @@ fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
         return(e2)
     }
     # check if e2 is scalar
-    if(length(e2) == 1) {
+    if (length(e2) == 1) {
         e1 <- as_filearrayproxy(e1)
         uuid1 <- e1$uuid()
         op_func <- function(v, ...) {
@@ -224,22 +224,22 @@ fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
     }
     
     # check if e1 or e2 is numerical
-    if(!is_filearray(e1)) {
-        if(!is_same_dim(e1, e2)) {
+    if (!is_filearray(e1)) {
+        if (!is_same_dim(e1, e2)) {
             stop("non-conformable arrays")
         }
         e1 <- as_filearray(e1, dimension = dim(e2))
     }
     
-    if(!is_filearray(e2)) {
-        if(!is_same_dim(e2, e1)) {
+    if (!is_filearray(e2)) {
+        if (!is_same_dim(e2, e1)) {
             stop("non-conformable arrays")
         }
         e2 <- as_filearray(e2, dimension = dim(e1))
     }
     
     # e1 and e2 must be filearray or filearray proxy
-    if(!is_same_dim(e1, e2)) {
+    if (!is_same_dim(e1, e2)) {
         stop("non-conformable arrays")
     }
     
@@ -263,12 +263,12 @@ fa_pairwise_operator <- function(e1, e2, op, out_type = NULL, label = NULL) {
 
 fa_operator <- function(x, op, ..., out_type = NULL, label = NULL) {
     stopifnot(is_filearray(x))
-    if(is.null(out_type)) {
+    if (is.null(out_type)) {
         out_type <- typeof(x)
     }
-    if(is.null(label)) {
-        if(is.null(label)) {
-            if(is.character(op)) {
+    if (is.null(label)) {
+        if (is.null(label)) {
+            if (is.character(op)) {
                 label <- sprintf("%s(x)", op)
             } else {
                 label <- deparse1(op)
@@ -308,23 +308,23 @@ fa_eval_ops <- function(
     
     
     has_addon <- is.function(addon)
-    if( has_addon ) {
+    if ( has_addon ) {
         fml <- formals(addon)
-        if(length(fml) < 3 && !"..." %in% names(fml)) {
+        if (length(fml) < 3 && !"..." %in% names(fml)) {
             stop("`fa_eval_ops`: addon function must take 3 parameters (environment, list of data, output UUID)")
         }
     }
     
-    if(!inherits(x, "FileArrayProxy") ) {
-        if( has_addon ) {
+    if (!inherits(x, "FileArrayProxy") ) {
+        if ( has_addon ) {
             x <- as_filearrayproxy(x)
         } else {
             return(x)
         }
     }
-    if(!length(x$.ops) && !has_addon) { return(x) }
+    if (!length(x$.ops) && !has_addon) { return(x) }
     
-    if( !has_addon ) {
+    if ( !has_addon ) {
         addon_func <- function(...) {}
     } else {
         addon_func <- addon
@@ -350,14 +350,14 @@ fa_eval_ops <- function(
         x$get_all_uuids(),
         addon = addon
     ))
-    if(length(filebase) != 1 || !is.character(filebase) || is.na(filebase)) {
+    if (length(filebase) != 1 || !is.character(filebase) || is.na(filebase)) {
         fbase <- file.path(tempdir(check = TRUE), sprintf("filearrayproxy_%s", signature))
     } else {
         fbase <- filebase
     }
     
     
-    if(verbose) {
+    if (verbose) {
         message("Results will be saved to: ", fbase)
     }
     
@@ -378,15 +378,15 @@ fa_eval_ops <- function(
         }
     )
     
-    if(!use_cache || !isTRUE(re$get_header("matured")) || has_addon) {
+    if (!use_cache || !isTRUE(re$get_header("matured")) || has_addon) {
         
-        if( length(input_size) == 1 && !is.na(input_size) ) {
+        if ( length(input_size) == 1 && !is.na(input_size) ) {
             nruns <- length(x) / input_size
-            if(!isTRUE(nruns == round(nruns))) {
+            if (!isTRUE(nruns == round(nruns))) {
                 input_size <- NULL
             }
         } 
-        if( length(input_size) != 1 || is.na(input_size) ) {
+        if ( length(input_size) != 1 || is.na(input_size) ) {
             input_size <- guess_fmap_buffer_size(dim(x), x$element_size())
         }
         
@@ -402,7 +402,7 @@ fa_eval_ops <- function(
                 # tmp <- as.list(env)
                 # print(tmp[order(names(tmp))])
                 
-                if(has_addon) {
+                if (has_addon) {
                     addon_func(env, data, uuid_x)
                 }
                 

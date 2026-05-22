@@ -1,7 +1,7 @@
 sudo_pwd <- rstudioapi::askForPassword("sudo password")
 cold_start <- TRUE
-purge_memory <- function(){
-    if(cold_start){
+purge_memory <- function() {
+    if (cold_start) {
         system("sudo -kS purge", input = sudo_pwd)
         Sys.sleep(1)
     }
@@ -25,11 +25,11 @@ tmp <- rnorm(4e7)
 
 
 speed1 <- rowMeans(replicate(5, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         purge_memory()
         system.time({
-            for(i in 1:10){
+            for (i in 1:10) {
                 x[,,,(i-1)*10 +1:10] <- tmp
             }
         }, gcFirst = TRUE)
@@ -38,11 +38,11 @@ speed1 <- rowMeans(replicate(5, {
 })); speed1
 
 speed2 <- rowMeans(replicate(5, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         purge_memory()
         system.time({
-            for(i in 1:10){
+            for (i in 1:10) {
                 x[,,,(i-1)*10 +1:10]
             }
         }, gcFirst = TRUE)
@@ -51,12 +51,12 @@ speed2 <- rowMeans(replicate(5, {
 })); speed2
 
 set.seed(1)
-locs <- lapply(dim, function(d){
+locs <- lapply(dim, function(d) {
     sample(1:d, replace = FALSE, size = 100)
 })
 
 speed3 <- rowMeans(replicate(5, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         purge_memory()
         system.time({
@@ -68,7 +68,7 @@ speed3 <- rowMeans(replicate(5, {
 
 tmp <- rnorm(prod(sapply(locs, length)))
 speed4 <- rowMeans(replicate(5, {
-    res <- sapply(xs, function(x){
+    res <- sapply(xs, function(x) {
         gc()
         purge_memory()
         system.time({
@@ -81,7 +81,7 @@ speed4 <- rowMeans(replicate(5, {
 
 rm(tmp, sudo_pwd); gc()
 
-f <- function(){
+f <- function() {
     
     cols <- c("orange", "dodgerblue3")
     speed <- cbind(

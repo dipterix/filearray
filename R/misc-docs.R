@@ -6,16 +6,16 @@
 #' @param ... internally used
 #' @return An integer of current number of threads
 #' @export
-filearray_threads <- function(n, ...){
+filearray_threads <- function(n, ...) {
     
-    if(!missing(n)){
+    if (!missing(n)) {
         setThreads(n, ...)
     }
     
     return(getThreads(FALSE))
 }
 
-setThreads <- function (n = "auto", stack_size = "auto", ...) {
+setThreads <- function(n = "auto", stack_size = "auto", ...) {
     if (identical(n, "auto")) {
         n <- -1L
     } else {

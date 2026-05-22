@@ -1,8 +1,8 @@
-in_rcmdcheck <- function (...) {
+in_rcmdcheck <- function(...) {
     evidences <- list()
     args <- commandArgs()
     is_vanilla <- is.element("--vanilla", args)
-    if(!is_vanilla){
+    if (!is_vanilla) {
         return(FALSE)
     }
     pwd <- getwd()
@@ -10,12 +10,12 @@ in_rcmdcheck <- function (...) {
     parent <- basename(dirname(pwd))
     pattern <- ".+[.]Rcheck$"
     in_test <- (grepl(pattern, parent) && grepl("^tests(|_.*)$", dirname))
-    if(!(in_test || grepl(pattern, dirname))){
+    if (!(in_test || grepl(pattern, dirname))) {
         return(FALSE)
     }
     in_examples <- is.element("CheckExEnv", search())
     in_win_builder <- (.Platform$OS.type == "windows" && grepl("Rterm[.]exe$", args[1]))
-    if(in_win_builder){
+    if (in_win_builder) {
         n <- length(args)
         if (!all(c("--no-save", "--no-restore", "--no-site-file", 
                   "--no-init-file") %in% args)) {
@@ -25,10 +25,10 @@ in_rcmdcheck <- function (...) {
             return(FALSE)
         }
     }
-    if(in_test){
+    if (in_test) {
         return(structure(TRUE, status = "tests"))
     }
-    if(in_examples){
+    if (in_examples) {
         return(structure(TRUE, status = "examples"))
     }
     return(FALSE)
@@ -36,16 +36,16 @@ in_rcmdcheck <- function (...) {
 
 symlink_enabled <- local({
     enabled <- NA
-    function(){
-        if(!is.na(enabled)){ return(enabled) }
+    function() {
+        if (!is.na(enabled)) { return(enabled) }
         tempdir(check = TRUE)
-        f1 <- temp_path(pattern = 'filearray_simlink_test_from')
-        f2 <- temp_path(pattern = 'filearray_simlink_test_to')
+        f1 <- temp_path(pattern = "filearray_simlink_test_from")
+        f2 <- temp_path(pattern = "filearray_simlink_test_to")
         on.exit({
-            if(file.exists(f1)){
+            if (file.exists(f1)) {
                 unlink(f1)
             }
-            if(file.exists(f2)){
+            if (file.exists(f2)) {
                 unlink(f2)
             }
         }, add = FALSE)
@@ -53,22 +53,22 @@ symlink_enabled <- local({
         writeLines(s, con = f1)
         file.symlink(f1, to = f2)
         en <- tryCatch({
-            if(identical(readLines(f2), s)){
+            if (identical(readLines(f2), s)) {
                 TRUE
             } else {
                 FALSE
             }
-        }, error = function(e){
+        }, error = function(e) {
             FALSE
-        }, warning = function(e){
+        }, warning = function(e) {
             FALSE
         })
         enabled <<- en
         
-        if(file.exists(f1)){
+        if (file.exists(f1)) {
             unlink(f1)
         }
-        if(file.exists(f2)){
+        if (file.exists(f2)) {
             unlink(f2)
         }
         on.exit({}, add = FALSE)
@@ -78,17 +78,17 @@ symlink_enabled <- local({
 })
 
 
-.onLoad <- function(libname, pkgname){
+.onLoad <- function(libname, pkgname) {
     # Check if in R CMD check mode
-    if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
+    if (Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE") {
         #  R CMD check with --as-cran
         n <- 2L
-    } else if(in_rcmdcheck()){
+    } else if (in_rcmdcheck()) {
         #  R CMD check (without CRAN)
         n <- 2L
     } else {
         n <- filearray_threads(-1)
-        if(n > 8L){
+        if (n > 8L) {
             n <- 8L
         }
     }
@@ -98,12 +98,12 @@ symlink_enabled <- local({
     ns$NA_float_ <- get_float_na()
 }
 
-.onAttach <- function(libname, pkgname){
-    if(Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE"){
+.onAttach <- function(libname, pkgname) {
+    if (Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE") {
         packageStartupMessage(
             "Found environment variable `_R_CHECK_LIMIT_CORES_`=TRUE. Using ",
             filearray_threads(), " threads.")
-    } else if(in_rcmdcheck()){
+    } else if (in_rcmdcheck()) {
         packageStartupMessage("R CMD check mode. Using ", 
                               filearray_threads(), " threads.")
     } else {

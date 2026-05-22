@@ -129,7 +129,7 @@ integer while provided is a double, then the check will result in failure.
 # Prepare
 library(filearray)
 filebase <- tempfile()
-if(file.exists(filebase)){ unlink(filebase, TRUE) }
+if(file.exists(filebase)) { unlink(filebase, TRUE) }
 
 # create array
 x <- filearray_create(filebase, dimension = c(200, 30, 8))

@@ -84,13 +84,13 @@ x[] <- rnorm(1e5)
 ## calculate summation
 # identical to sum(x[]), but is more feasible in large cases
 
-mapreduce(x, map = function(data, size){
+mapreduce(x, map = function(data, size) {
     # make sure `data` is all from array
-    if(length(data) != size){
+    if (length(data) != size) {
         data <- data[1:size]
     }
     sum(data)
-}, reduce = function(mapped_list){
+}, reduce = function(mapped_list) {
     do.call(sum, mapped_list)
 })
 
@@ -109,7 +109,7 @@ positions <- mapreduce(
     }
 )
 
-if(length(positions)){
+if(length(positions)) {
     x[[positions[1]]]
 }
 

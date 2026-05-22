@@ -11,7 +11,7 @@
 
 # Normal subset via indices
 fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE, split_dim = 0) {
-    if(!x$valid()){
+    if (!x$valid()) {
         stop("Invalid file array")
     }
     drop <- isTRUE(drop)
@@ -21,31 +21,31 @@ fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimna
     dim <- x$dimension()
     
     listOrEnv <- list()
-    if(arglen == 1){
+    if (arglen == 1) {
         missing_args <- check_missing_dots(environment())
-        if(length(missing_args) > 0 && !missing_args[[1]]){
+        if (length(missing_args) > 0 && !missing_args[[1]]) {
             tmp <- ...elt(1)
-            if(length(tmp)){
+            if (length(tmp)) {
                 stop("Subset FileArray only allows x[], x[i:j] or x[i,j,...] (single logical index like x[c(TRUE, ...)] is not allowed)")
             }
         }
         
         
-    } else if(arglen > 1){
-        if(arglen != length(dim)){
+    } else if (arglen > 1) {
+        if (arglen != length(dim)) {
             stop("Subset FileArray dimension mismatch.")
         }
         missing_args <- check_missing_dots(environment())
         
-        for(ii in seq_len(arglen)){
-            if( missing_args[[ii]] ){
+        for (ii in seq_len(arglen)) {
+            if ( missing_args[[ii]] ) {
                 listOrEnv[[ii]] <- seq_len(dim[[ii]])
             } else {
                 tmp <- ...elt(ii)
-                if(!length(tmp)){
+                if (!length(tmp)) {
                     tmp <- integer(0L)
-                } else if(is.logical(tmp)){
-                    if(length(tmp) > dim[[ii]]){
+                } else if (is.logical(tmp)) {
+                    if (length(tmp) > dim[[ii]]) {
                         stop("(subscript) logical subscript too long")
                     }
                     tmp <- rep(tmp, ceiling(dim[[ii]] / length(tmp)))
@@ -60,9 +60,9 @@ fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimna
     # guess split dim
     max_buffer <- get_buffer_size() / elem_size
     
-    if(length(listOrEnv) == length(dim)){
-        idxrange <- sapply(listOrEnv, function(x){
-            if(!length(x) || all(is.na(x))){ return(1L) }
+    if (length(listOrEnv) == length(dim)) {
+        idxrange <- sapply(listOrEnv, function(x) {
+            if (!length(x) || all(is.na(x))) { return(1L) }
             rg <- range(x, na.rm = TRUE)
             return(rg[2] - rg[1] + 1)
         })
@@ -70,7 +70,7 @@ fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimna
         idxrange <- dim
     }
     split_dim <- as.integer(split_dim)
-    if(is.na(split_dim) || split_dim <= 0 || split_dim >= length(dim)){
+    if (is.na(split_dim) || split_dim <= 0 || split_dim >= length(dim)) {
         # worst-case time-complexity
         time_complexity <-
             sapply(seq_len(length(dim) - 1), function(split_dim) {
@@ -106,9 +106,9 @@ fa_subset1 <- function(x, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimna
 fa_subset2 <- function(x, i, ...) {
     
     single_index <- FALSE
-    if(!is_filearray(i)) {
-        if(is.array(i) && is.logical(i)) {
-            if(!is_same_dim(x, i)) {
+    if (!is_filearray(i)) {
+        if (is.array(i) && is.logical(i)) {
+            if (!is_same_dim(x, i)) {
                 stop("x[i]: `x` and `i` must share the same dimension when i is a logical array.")
             }
             i <- as_filearray(i)
@@ -119,7 +119,7 @@ fa_subset2 <- function(x, i, ...) {
         }
     }
     
-    if( single_index ) {
+    if ( single_index ) {
         stop("Single vector indexing (e.g. x[c(1,2,3,4,...)]) hasn't been implemented yet.")
         # re <- fastmap::fastqueue()
         # idx <- fastmap::fastmap()
@@ -130,7 +130,7 @@ fa_subset2 <- function(x, i, ...) {
         # fa_eval_ops(x, addon = function(env, data, uuid) {
         #     idx_left <- idx$get("idx_left")
         #     
-        #     if( idx_left < 0 ) {
+        #     if ( idx_left < 0 ) {
         #         return(NULL)
         #     }
         #     start_idx <- idx$get("start_idx")
@@ -139,8 +139,8 @@ fa_subset2 <- function(x, i, ...) {
         #     
         #     end_idx <- start_idx + length(vec)
         #     sel <- i[ i > start_idx & i <= end_idx] - start_idx
-        #     if(length(sel)) {
-        #         if(idx_left <= length(sel)) {
+        #     if (length(sel)) {
+        #         if (idx_left <= length(sel)) {
         #             sel <- sel[seq_len(idx_left)]
         #             re$add(vec[sel])
         #             idx_left <- 0L
@@ -167,7 +167,7 @@ fa_subset2 <- function(x, i, ...) {
     
     expected_mode <- operation_output_type(
         typeof(x), typeof(x), float = "double", logical = "logical")
-    if(!identical(expected_mode, mode(re))) {
+    if (!identical(expected_mode, mode(re))) {
         mode(re) <- expected_mode
     }
     return(re)
@@ -178,10 +178,10 @@ fa_subset2 <- function(x, i, ...) {
 #' @export
 `[.FileArray` <- function(x, i, ..., drop = TRUE, reshape = NULL, strict = TRUE, dimnames = TRUE, split_dim = 0) {
     x <- fa_eval_ops(x)
-    if(missing(i)) {
+    if (missing(i)) {
         return(fa_subset1(x, , ..., drop = drop, reshape = reshape, strict = strict, dimnames = dimnames, split_dim = split_dim))
     } else {
-        if(is_filearray(i) || is.array(i) || 
+        if (is_filearray(i) || is.array(i) || 
            ( ...length() == 0 && !is.logical(i) )) {
             return(fa_subset2(x, i))
         } else {

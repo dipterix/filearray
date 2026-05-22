@@ -1,3 +1,7 @@
+# filearray 0.2.2
+
+* Fixed out-of-bound indexing leading to segfault along certain margins
+
 # filearray 0.2.1
 
 * Fixed incorrect `NA` propagation in complex array `collapse`: `NaN == NaN` is always `FALSE` per IEEE 754, so `NA` detection now uses `ISNAN()` instead of `== NA_REAL`. Also added a missing "result already `NA`" short-circuit guard matching the non-complex path.

@@ -7,19 +7,19 @@
 setGeneric("typeof")
 
 #' @rdname typeof
-setMethod('typeof', signature(x = "FileArray"), function(x){
-    if(!x$valid()){
+setMethod("typeof", signature(x = "FileArray"), function(x) {
+    if (!x$valid()) {
         stop("Invalid file array")
     }
     x$type()
 })
 
 #' @rdname typeof
-setMethod('typeof', signature(x = "FileArrayProxy"), function(x){
-    if(!x$valid()){
+setMethod("typeof", signature(x = "FileArrayProxy"), function(x) {
+    if (!x$valid()) {
         stop("Invalid file array")
     }
-    if( length(x$.ops) ) {
+    if ( length(x$.ops) ) {
         final_op <- x$.ops[[length(x$.ops)]]
         return( final_op$output_type )
     } else {

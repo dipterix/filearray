@@ -21,7 +21,7 @@ system.time({
 filearray::filearray_threads(1)
 tmp <- rnorm(128^3)
 system.time({
-    for(i in 1:128){
+    for (i in 1:128) {
         x[,,,i] <- tmp
     }
 })
@@ -32,7 +32,7 @@ system.time({
 
 
 system.time({
-    for(i in 1:128){
+    for (i in 1:128) {
         x[,,i,] <- tmp
     }
 })
@@ -44,7 +44,7 @@ system.time({
 # write to slow margin - Never recommended to write on single 
 # (see next section - block write)
 system.time({
-    # for(i in 1:128){
+    # for(i in 1:128) {
         x[1,,,] <- tmp
     # }
 })
