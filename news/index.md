@@ -2,6 +2,8 @@
 
 ## filearray 0.2.2
 
+CRAN release: 2026-05-23
+
 - Fixed out-of-bound indexing leading to segfault along certain margins
 - Fixed `ASAN` issue that may cause run-time error: signed integer
   overflow: 9223372036854775807 + 1 cannot be represented in type
