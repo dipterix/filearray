@@ -7,16 +7,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/dipterix/filearray/blob/v0.2.2/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/dipterix/filearray/blob/main/DESCRIPTION)
 
 Wang Z (2026). *filearray: File-Backed Array for Out-of-Memory
-Computation*. R package version 0.2.2,
+Computation*. R package version 0.2.2.1,
 <https://dipterix.org/filearray/>.
 
     @Manual{,
       title = {filearray: File-Backed Array for Out-of-Memory Computation},
       author = {Zhengjia Wang},
       year = {2026},
-      note = {R package version 0.2.2},
+      note = {R package version 0.2.2.1},
       url = {https://dipterix.org/filearray/},
     }
