@@ -1,3 +1,7 @@
+# filearray (development version)
+
+* `as_filearray` takes `RAVE` file array proxy
+
 # filearray 0.2.2
 
 * Fixed out-of-bound indexing leading to segfault along certain margins

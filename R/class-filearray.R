@@ -705,3 +705,15 @@ as_filearray.FileArray <- function(x, ...) {
 as_filearray.FileArrayProxy <- function(x, ...) {
     x
 }
+
+#' @export
+as_filearray.RAVEFileArray <- function(x, ...) {
+    # x <- ravepipeline::RAVEFileArray$new(filearray::as_filearray(array(1:16, c(4,4))))
+    if (inherits(x, c("FileArray", "FileArrayProxy"))) {
+        return(x)
+    }
+    if (inherits(x$`@impl`, c("FileArray", "FileArrayProxy"))) {
+        return(x$`@impl`)
+    }
+    stop("`x` is not a valid `RAVEFileArray` object.")
+}
