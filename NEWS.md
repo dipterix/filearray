@@ -1,4 +1,4 @@
-# filearray (development version)
+# filearray 0.2.3
 
 * `as_filearray` takes `RAVE` file array proxy
 
