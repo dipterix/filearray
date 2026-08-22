@@ -170,7 +170,7 @@ print(x)
 #> Partition count: 8 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpekcwrP/file1a1b1bee890b 
+#> Location: /tmp/RtmpMKB5Lm/file198b1d80f6ed 
 
 # Assign values
 x[] <- rnorm(48000)
@@ -188,7 +188,7 @@ filearray_load(filebase)
 #> Partition count: 8 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpekcwrP/file1a1b1bee890b 
+#> Location: /tmp/RtmpMKB5Lm/file198b1d80f6ed 
 
 x$set_header("signature", "tom")
 filearray_checkload(filebase, signature = "tom")
@@ -198,7 +198,7 @@ filearray_checkload(filebase, signature = "tom")
 #> Partition count: 8 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpekcwrP/file1a1b1bee890b 
+#> Location: /tmp/RtmpMKB5Lm/file198b1d80f6ed 
 
 if (FALSE) { # \dontrun{
 # Trying to load with wrong signature
