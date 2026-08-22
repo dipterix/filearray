@@ -1,0 +1,195 @@
+# TEMPORARY DIAGNOSTIC WORKFLOW -- DO NOT MERGE TO main.
+#
+# Reproduces the conda-forge win-64 failure seen on r-filearray-feedstock PR #11:
+#
+#   ** testing if installed package can be loaded from temporary location
+#   ERROR: loading failed
+#   *** stack smashing detected ***: terminated
+#
+# That message is GCC's stack-protector runtime (__stack_chk_fail), not a stack
+# overflow. conda-forge's GCC is built with --enable-default-ssp, so
+# -fstack-protector-strong is on even though the feedstock's compile lines only
+# show "-O2 -Wall -march=x86-64 -mtune=generic".
+#
+# The install-time abort prints no stack trace, so this workflow does two things:
+#
+#   1. Bisects the load path. Because tools:::code2LazyLoadDB calls
+#      loadNamespace(partial = TRUE), the byte-compile step never dyn.load()s the
+#      DLL -- the test-load step is the FIRST time filearray.dll is ever loaded.
+#      Only three C++ entry points run: DLL init, getThreads(FALSE), and
+#      get_float_na().
+#
+#   2. A/Bs -fno-stack-protector. If the protector-off build loads cleanly, there
+#      is no real memory corruption and the abort is a toolchain artifact.
+
+name: win-conda-repro
+
+# A workflow_dispatch-only file has to sit on the default branch before the "Run
+# workflow" button appears, and this one is not meant to land on main. The push
+# trigger is scoped to a throwaway branch so it can be driven from there:
+#
+#   git switch -c diagnose/win-conda && git push -u origin diagnose/win-conda
+on:
+  push:
+    branches: ['diagnose/win-conda**']
+  workflow_dispatch:
+    inputs:
+      r_version:
+        description: 'r-base version (feedstock used 4.5.3)'
+        required: false
+        default: '4.5.3'
+      extra_pins:
+        description: 'Extra conda specs to force the failing toolchain, e.g. "gxx_win-64=15.3.0" "libgcc=16.1.0"'
+        required: false
+        default: ''
+
+permissions: read-all
+
+jobs:
+  repro:
+    runs-on: windows-latest
+
+    name: win-conda (ssp ${{ matrix.ssp }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ssp: [default, disabled]
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge
+          channel-priority: strict
+
+      # One solve, not an incremental install. Adding the toolchain to an existing
+      # env is itself implicated in conda-forge/m2w64-sysroot-feedstock#23, and
+      # keeping that out of the picture keeps the variable count down.
+      - name: Create environment
+        env:
+          R_VERSION: ${{ inputs.r_version }}
+          EXTRA_PINS: ${{ inputs.extra_pins }}
+        run: |
+          # EXTRA_PINS is intentionally unquoted so multiple specs word-split.
+          conda create -n fa -y -c conda-forge --override-channels \
+            "r-base=${R_VERSION:-4.5.3}" \
+            r-rcpp r-bh r-digest r-fastmap r-uuid r-testthat \
+            gxx_win-64 gcc_win-64 m2-base make \
+            ${EXTRA_PINS}
+
+      # Compare this against the build/host lists in the failing feedstock job.
+      # The failing build compiled with gcc 15.3.0 while r-base and the libgcc /
+      # libstdcxx runtime were 16.1.0.
+      - name: Record toolchain
+        run: |
+          conda activate fa
+          echo "::group::conda list"
+          conda list
+          echo "::endgroup::"
+          R --version | head -2
+          x86_64-w64-mingw32-g++ --version | head -1
+          x86_64-w64-mingw32-g++ -v 2>&1 | grep -Ei 'thread model|^Target|gcc version' || true
+
+      # A fresh checkout carries no build artifacts (src/.gitignore covers
+      # *.o/*.so/*.dll), but linking stale objects would invalidate the whole
+      # experiment, so be explicit.
+      - name: Clean stale objects
+        run: rm -f src/*.o src/*.so src/*.dll
+
+      # --no-test-load so the DLL lands on disk and the bisect below controls
+      # exactly when it is first loaded.
+      #
+      # src/Makevars only sets PKG_CPPFLAGS and there is no Makevars.win, so the
+      # PKG_CXXFLAGS environment variable reaches the compile rule unopposed.
+      - name: Install (no test load)
+        env:
+          PKG_CXXFLAGS: ${{ matrix.ssp == 'disabled' && '-fno-stack-protector' || '' }}
+        run: |
+          conda activate fa
+          echo "PKG_CXXFLAGS=[${PKG_CXXFLAGS}]"
+          R CMD INSTALL --no-test-load .
+
+      # Directly probative for the "spurious canary" hypothesis: if the guard and
+      # the failure handler come from a separate runtime DLL, filearray.dll and
+      # R.dll can disagree about __stack_chk_guard without any buffer ever being
+      # overrun.
+      - name: Inspect SSP linkage
+        run: |
+          set +e
+          conda activate fa
+          R --vanilla -s -e 'cat(list.files(system.file("libs", package = "filearray"), pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1])' > dll.txt
+          DLL=$(cat dll.txt)
+          echo "DLL = $DLL"
+          OBJDUMP=$(command -v x86_64-w64-mingw32-objdump || command -v objdump)
+          echo "objdump = $OBJDUMP"
+          echo "::group::imported DLLs"
+          "$OBJDUMP" -p "$DLL" | grep -i 'DLL Name'
+          echo "::endgroup::"
+          echo "::group::stack_chk / ssp symbols"
+          "$OBJDUMP" -x "$DLL" | grep -i 'stack_chk\|ssp'
+          echo "::endgroup::"
+
+      - name: Write bisect scripts
+        run: |
+          cat > step_a.R <<'EOF'
+          dll <- list.files(system.file("libs", package = "filearray"),
+                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
+          dyn.load(dll)
+          cat("A: dyn.load OK\n")
+          EOF
+
+          cat > step_c.R <<'EOF'
+          dll <- list.files(system.file("libs", package = "filearray"),
+                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
+          dyn.load(dll)
+          print(.Call("_filearray_get_float_na"))
+          cat("C: get_float_na OK\n")
+          EOF
+
+          cat > step_b.R <<'EOF'
+          dll <- list.files(system.file("libs", package = "filearray"),
+                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
+          dyn.load(dll)
+          print(.Call("_filearray_getThreads", FALSE))
+          cat("B: getThreads OK\n")
+          EOF
+
+          cat > step_d.R <<'EOF'
+          library(filearray)
+          cat("D: library OK\n")
+          EOF
+
+      # One process per step. A canary abort kills the process, so the last "OK"
+      # line printed names the last step that survived.
+      #
+      #   A = static ctors + R_init_filearray (src/RcppExports.cpp:440)
+      #   C = get_float_na            (src/conversion.cpp:450)
+      #   B = getThreads              (src/threadSettings.cpp:16)
+      #         -> tthread::thread::hardware_concurrency()
+      #         -> SYSTEM_INFO si; GetSystemInfo(&si)
+      #            (inst/include/tthread/tinythread.h:981)
+      #         the only stack-buffer write anywhere on the load path
+      #   D = full .onLoad + .onAttach
+      - name: Bisect the load path
+        run: |
+          set +e
+          conda activate fa
+          for s in a c b d; do
+            echo "--- step ${s} ---"
+            R --vanilla -s -f "step_${s}.R"
+            echo "exit=$?"
+          done
+
+      - name: Run tests (only meaningful if step D passed)
+        run: |
+          set +e
+          conda activate fa
+          R --vanilla -s -e 'library(testthat); library(filearray); test_dir("tests/testthat", stop_on_failure = FALSE)'
+          echo "exit=$?"
