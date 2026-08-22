@@ -1,34 +1,40 @@
-# TEMPORARY DIAGNOSTIC WORKFLOW -- DO NOT MERGE TO main.
+# TEMPORARY DIAGNOSTIC WORKFLOW -- DELETE BEFORE RELEASE.
 #
-# Reproduces the conda-forge win-64 failure seen on r-filearray-feedstock PR #11:
+# Chasing the conda-forge win-64 failure on r-filearray-feedstock PR #11:
 #
 #   ** testing if installed package can be loaded from temporary location
 #   ERROR: loading failed
 #   *** stack smashing detected ***: terminated
 #
-# That message is GCC's stack-protector runtime (__stack_chk_fail), not a stack
-# overflow. conda-forge's GCC is built with --enable-default-ssp, so
-# -fstack-protector-strong is on even though the feedstock's compile lines only
-# show "-O2 -Wall -march=x86-64 -mtune=generic".
+# That is GCC's stack-PROTECTOR runtime (__stack_chk_fail), not a stack overflow.
+# conda-forge's GCC is built with --enable-default-ssp, so -fstack-protector-strong
+# is on even though the feedstock's compile lines show only "-O2 -Wall".
 #
-# The install-time abort prints no stack trace, so this workflow does two things:
+# ROUND 1 (run 32597629664) failed at the "Record toolchain" step -- BEFORE
+# R CMD INSTALL ever ran, in both matrix lanes. filearray was never compiled and
+# never loaded, so the abort is not (or not only) filearray's C++. But round 1's
+# harness had three defects that have to go before that conclusion is trustworthy:
 #
-#   1. Bisects the load path. Because tools:::code2LazyLoadDB calls
-#      loadNamespace(partial = TRUE), the byte-compile step never dyn.load()s the
-#      DLL -- the test-load step is the FIRST time filearray.dll is ever loaded.
-#      Only three C++ entry points run: DLL init, getThreads(FALSE), and
-#      get_float_na().
+#   1. `shell: bash -el {0}` on windows-latest is GIT BASH, which carries its own
+#      msys-2.0.dll while the env holds m2-msys2-runtime + m2-coreutils. Two MSYS2
+#      runtimes in one process tree abort exactly like this. conda-build does NOT
+#      do this -- it drives bld.bat from cmd.exe.
+#   2. setup-miniconda appends `set -eo pipefail` to .bash_profile. The failing
+#      line was `R --version | head -2`, which aborted the whole step at exit 127
+#      and destroyed any attribution: R, head, and an R wrapper are all still
+#      suspects, and 127 is not the 134 a SIGABRT child should produce.
+#   3. `m2-base` was requested explicitly; the feedstock only gets m2-* transitively.
 #
-#   2. A/Bs -fno-stack-protector. If the protector-off build loads cleanly, there
-#      is no real memory corruption and the abort is a toolchain artifact.
+# This round therefore: runs the probes under cmd.exe (matching conda-build) AND
+# Git Bash side by side, never uses a pipe or `set -e` in a measurement, echoes an
+# exit code after every single command, and marks every diagnostic step
+# continue-on-error so one abort cannot hide the remaining signal again.
 
 name: win-conda-repro
 
-# A workflow_dispatch-only file has to sit on the default branch before the "Run
-# workflow" button appears, and this one is not meant to land on main. The push
-# trigger is scoped to a throwaway branch so it can be driven from there:
-#
-#   git switch -c diagnose/win-conda && git push -u origin diagnose/win-conda
+# A workflow_dispatch-only file must sit on the default branch for the "Run
+# workflow" button to appear. The push trigger is scoped to a throwaway branch so
+# this can also be driven from there without landing on main.
 on:
   push:
     branches: ['diagnose/win-conda**']
@@ -39,26 +45,24 @@ on:
         required: false
         default: '4.5.3'
       extra_pins:
-        description: 'Extra conda specs to force the failing toolchain, e.g. "gxx_win-64=15.3.0" "libgcc=16.1.0"'
+        description: 'Extra specs to force the failing toolchain, e.g. "gxx_win-64=15.3.0 libgcc=16.1.0"'
         required: false
         default: ''
 
 permissions: read-all
 
 jobs:
-  repro:
+  # ---------------------------------------------------------------------------
+  # PHASE 1 -- name the binary that aborts, and say whether it needs Git Bash.
+  # ---------------------------------------------------------------------------
+  probe:
     runs-on: windows-latest
-
-    name: win-conda (ssp ${{ matrix.ssp }})
+    name: probe (${{ matrix.msys }})
 
     strategy:
       fail-fast: false
       matrix:
-        ssp: [default, disabled]
-
-    defaults:
-      run:
-        shell: bash -el {0}
+        msys: [with-m2, no-m2]
 
     steps:
       - uses: actions/checkout@v6
@@ -69,127 +73,222 @@ jobs:
           channels: conda-forge
           channel-priority: strict
 
-      # One solve, not an incremental install. Adding the toolchain to an existing
-      # env is itself implicated in conda-forge/m2w64-sysroot-feedstock#23, and
-      # keeping that out of the picture keeps the variable count down.
+      # One solve. Adding the toolchain to an existing env is itself implicated in
+      # conda-forge/m2w64-sysroot-feedstock#23, so keep that out of the picture.
       - name: Create environment
+        shell: cmd /C CALL {0}
         env:
-          R_VERSION: ${{ inputs.r_version }}
+          R_VERSION: ${{ inputs.r_version || '4.5.3' }}
+          EXTRA_PINS: ${{ inputs.extra_pins }}
+          M2_SPECS: ${{ matrix.msys == 'with-m2' && 'm2-base make' || '' }}
+        run: |
+          call conda create -n fa -y -c conda-forge --override-channels r-base=%R_VERSION% r-rcpp r-bh r-digest r-fastmap r-uuid r-testthat gxx_win-64 gcc_win-64 %M2_SPECS% %EXTRA_PINS%
+          echo exit=%ERRORLEVEL%
+
+      # Compare against the build/host lists in the failing feedstock job: it
+      # compiled with gcc 15.3.0 while r-base and the libgcc/libstdcxx runtime
+      # were 16.1.0.
+      - name: Package list
+        continue-on-error: true
+        shell: cmd /C CALL {0}
+        run: |
+          call conda activate fa
+          conda list
+
+      # THE decisive lane: cmd.exe is what conda-build actually uses. If the abort
+      # shows up here, it is a real conda-forge problem (H1b). If it only shows up
+      # in the Git Bash lane below, round 1's failure was my harness (H1a).
+      - name: Probe under cmd.exe
+        continue-on-error: true
+        shell: cmd /C CALL {0}
+        run: |
+          call conda activate fa
+          echo ===== CONDA_PREFIX =====
+          echo %CONDA_PREFIX%
+          echo ===== where R =====
+          where R
+          echo exit=%ERRORLEVEL%
+          echo ===== R --version (no pipe) =====
+          R --version
+          echo exit=%ERRORLEVEL%
+          echo ===== R.exe by absolute path, bypassing any wrapper =====
+          "%CONDA_PREFIX%\Lib\R\bin\x64\R.exe" --version
+          echo exit=%ERRORLEVEL%
+          echo ===== Rterm.exe by absolute path =====
+          "%CONDA_PREFIX%\Lib\R\bin\x64\Rterm.exe" --version
+          echo exit=%ERRORLEVEL%
+          echo ===== what else claims the name R =====
+          dir /b "%CONDA_PREFIX%\Scripts\R*" 2>nul
+          echo ===== where head (m2-coreutils?) =====
+          where head
+          echo exit=%ERRORLEVEL%
+          echo ===== head --version =====
+          head --version
+          echo exit=%ERRORLEVEL%
+          echo ===== msys-2.0.dll copies visible on PATH =====
+          where msys-2.0.dll
+          echo exit=%ERRORLEVEL%
+          echo ===== compiler =====
+          x86_64-w64-mingw32-g++ --version
+          echo exit=%ERRORLEVEL%
+          x86_64-w64-mingw32-g++ -v
+          echo exit=%ERRORLEVEL%
+
+      # Same probes under the shell round 1 used. `set +eo pipefail` undoes the
+      # `set -eo pipefail` that setup-miniconda writes into .bash_profile, so a
+      # crash no longer takes the rest of the step with it.
+      - name: Probe under Git Bash
+        continue-on-error: true
+        shell: bash -el {0}
+        run: |
+          set +eo pipefail
+          conda activate fa
+          echo "===== which bash is this ====="
+          echo "BASH=$BASH  OSTYPE=$OSTYPE  MSYSTEM=${MSYSTEM:-unset}"
+          bash --version
+          echo "exit=$?"
+          echo "===== type -a R ====="
+          type -a R
+          echo "exit=$?"
+          echo "===== R --version (no pipe) ====="
+          R --version
+          echo "exit=$?"
+          echo "===== R.exe by absolute path ====="
+          "$CONDA_PREFIX/Lib/R/bin/x64/R.exe" --version
+          echo "exit=$?"
+          echo "===== type -a head ====="
+          type -a head
+          echo "exit=$?"
+          echo "===== head --version (no pipe) ====="
+          head --version
+          echo "exit=$?"
+          echo "===== the exact round-1 shape: a pipe into head ====="
+          echo hi | head -1
+          echo "exit=$?"
+          echo "===== and the exact round-1 line ====="
+          R --version | head -2
+          echo "exit=$?"
+
+  # ---------------------------------------------------------------------------
+  # PHASE 2 -- once the env is usable, find which entry point aborts.
+  #
+  # tools:::code2LazyLoadDB calls loadNamespace(partial = TRUE), which returns
+  # before library.dynam and before .onLoad. So in a normal install the test-load
+  # step is the FIRST time filearray.dll is ever loaded, and only three C++ entry
+  # points run. One process per step: the last "OK" line names the last survivor.
+  # ---------------------------------------------------------------------------
+  bisect:
+    runs-on: windows-latest
+    name: bisect (ssp ${{ matrix.ssp }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ssp: [default, disabled]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Create environment
+        shell: cmd /C CALL {0}
+        env:
+          R_VERSION: ${{ inputs.r_version || '4.5.3' }}
           EXTRA_PINS: ${{ inputs.extra_pins }}
         run: |
-          # EXTRA_PINS is intentionally unquoted so multiple specs word-split.
-          conda create -n fa -y -c conda-forge --override-channels \
-            "r-base=${R_VERSION:-4.5.3}" \
-            r-rcpp r-bh r-digest r-fastmap r-uuid r-testthat \
-            gxx_win-64 gcc_win-64 m2-base make \
-            ${EXTRA_PINS}
+          call conda create -n fa -y -c conda-forge --override-channels r-base=%R_VERSION% r-rcpp r-bh r-digest r-fastmap r-uuid r-testthat gxx_win-64 gcc_win-64 m2-base make %EXTRA_PINS%
+          echo exit=%ERRORLEVEL%
 
-      # Compare this against the build/host lists in the failing feedstock job.
-      # The failing build compiled with gcc 15.3.0 while r-base and the libgcc /
-      # libstdcxx runtime were 16.1.0.
-      - name: Record toolchain
+      # Plain `bash {0}`: no `-l`, so no profile, no conda, no `set -e`. This step
+      # only writes files, so Git Bash is harmless here.
+      - name: Write bisect scripts
+        shell: bash {0}
         run: |
-          conda activate fa
-          echo "::group::conda list"
-          conda list
-          echo "::endgroup::"
-          R --version | head -2
-          x86_64-w64-mingw32-g++ --version | head -1
-          x86_64-w64-mingw32-g++ -v 2>&1 | grep -Ei 'thread model|^Target|gcc version' || true
+          # A fresh checkout has no build artifacts (src/.gitignore covers
+          # *.o/*.so/*.dll), but linking stale objects would invalidate everything.
+          rm -f src/*.o src/*.so src/*.dll
 
-      # A fresh checkout carries no build artifacts (src/.gitignore covers
-      # *.o/*.so/*.dll), but linking stale objects would invalidate the whole
-      # experiment, so be explicit.
-      - name: Clean stale objects
-        run: rm -f src/*.o src/*.so src/*.dll
+          FIND='dll <- list.files(system.file("libs", package = "filearray"), pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]'
 
-      # --no-test-load so the DLL lands on disk and the bisect below controls
-      # exactly when it is first loaded.
-      #
-      # src/Makevars only sets PKG_CPPFLAGS and there is no Makevars.win, so the
-      # PKG_CXXFLAGS environment variable reaches the compile rule unopposed.
+          # A: DLL init only -- static ctors + R_init_filearray (RcppExports.cpp:440)
+          printf '%s\ndyn.load(dll)\ncat("A: dyn.load OK\\n")\n' "$FIND" > step_a.R
+
+          # C: get_float_na (conversion.cpp:450) -- writes 4 bytes into a length-1
+          #    INTSXP. R heap, no stack object, identical on every platform.
+          printf '%s\ndyn.load(dll)\nprint(.Call("_filearray_get_float_na"))\ncat("C: get_float_na OK\\n")\n' "$FIND" > step_c.R
+
+          # B: getThreads (threadSettings.cpp:16) -> tthread::thread::hardware_concurrency()
+          #    -> SYSTEM_INFO si; GetSystemInfo(&si)  (tinythread.h:981)
+          #    The only stack-buffer write anywhere on the load path.
+          printf '%s\ndyn.load(dll)\nprint(.Call("_filearray_getThreads", FALSE))\ncat("B: getThreads OK\\n")\n' "$FIND" > step_b.R
+
+          # D: the full thing -- .onLoad + .onAttach
+          printf 'library(filearray)\ncat("D: library OK\\n")\n' > step_d.R
+
+          # Used by the objdump step to locate the built DLL from cmd.
+          printf '%s\nwriteLines(dll, "dll.txt")\n' "$FIND" > find_dll.R
+
+          echo "--- step_b.R ---"; cat step_b.R
+
+      # --no-test-load so the DLL lands on disk and the bisect controls exactly
+      # when it first loads. src/Makevars sets only PKG_CPPFLAGS and there is no
+      # Makevars.win, so PKG_CXXFLAGS from the environment reaches the compile
+      # rule unopposed.
       - name: Install (no test load)
+        continue-on-error: true
+        shell: cmd /C CALL {0}
         env:
           PKG_CXXFLAGS: ${{ matrix.ssp == 'disabled' && '-fno-stack-protector' || '' }}
         run: |
-          conda activate fa
-          echo "PKG_CXXFLAGS=[${PKG_CXXFLAGS}]"
+          call conda activate fa
+          echo PKG_CXXFLAGS=[%PKG_CXXFLAGS%]
           R CMD INSTALL --no-test-load .
+          echo exit=%ERRORLEVEL%
 
-      # Directly probative for the "spurious canary" hypothesis: if the guard and
-      # the failure handler come from a separate runtime DLL, filearray.dll and
-      # R.dll can disagree about __stack_chk_guard without any buffer ever being
-      # overrun.
+      # Directly probative for the spurious-canary hypothesis: if the guard and the
+      # failure handler live in a separate runtime DLL, filearray.dll and R.dll can
+      # disagree about __stack_chk_guard with no buffer ever overrun.
       - name: Inspect SSP linkage
+        continue-on-error: true
+        shell: cmd /C CALL {0}
         run: |
-          set +e
-          conda activate fa
-          R --vanilla -s -e 'cat(list.files(system.file("libs", package = "filearray"), pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1])' > dll.txt
-          DLL=$(cat dll.txt)
-          echo "DLL = $DLL"
-          OBJDUMP=$(command -v x86_64-w64-mingw32-objdump || command -v objdump)
-          echo "objdump = $OBJDUMP"
-          echo "::group::imported DLLs"
-          "$OBJDUMP" -p "$DLL" | grep -i 'DLL Name'
-          echo "::endgroup::"
-          echo "::group::stack_chk / ssp symbols"
-          "$OBJDUMP" -x "$DLL" | grep -i 'stack_chk\|ssp'
-          echo "::endgroup::"
+          call conda activate fa
+          R --vanilla -s -f find_dll.R
+          set /p DLL=<dll.txt
+          echo DLL=%DLL%
+          echo ===== imported DLLs =====
+          x86_64-w64-mingw32-objdump -p "%DLL%" | findstr /i "DLL Name"
+          echo ===== stack_chk / ssp symbols =====
+          x86_64-w64-mingw32-objdump -x "%DLL%" | findstr /i "stack_chk ssp"
+          echo exit=%ERRORLEVEL%
 
-      - name: Write bisect scripts
-        run: |
-          cat > step_a.R <<'EOF'
-          dll <- list.files(system.file("libs", package = "filearray"),
-                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
-          dyn.load(dll)
-          cat("A: dyn.load OK\n")
-          EOF
-
-          cat > step_c.R <<'EOF'
-          dll <- list.files(system.file("libs", package = "filearray"),
-                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
-          dyn.load(dll)
-          print(.Call("_filearray_get_float_na"))
-          cat("C: get_float_na OK\n")
-          EOF
-
-          cat > step_b.R <<'EOF'
-          dll <- list.files(system.file("libs", package = "filearray"),
-                            pattern = "filearray[.]dll$", recursive = TRUE, full.names = TRUE)[1]
-          dyn.load(dll)
-          print(.Call("_filearray_getThreads", FALSE))
-          cat("B: getThreads OK\n")
-          EOF
-
-          cat > step_d.R <<'EOF'
-          library(filearray)
-          cat("D: library OK\n")
-          EOF
-
-      # One process per step. A canary abort kills the process, so the last "OK"
-      # line printed names the last step that survived.
-      #
-      #   A = static ctors + R_init_filearray (src/RcppExports.cpp:440)
-      #   C = get_float_na            (src/conversion.cpp:450)
-      #   B = getThreads              (src/threadSettings.cpp:16)
-      #         -> tthread::thread::hardware_concurrency()
-      #         -> SYSTEM_INFO si; GetSystemInfo(&si)
-      #            (inst/include/tthread/tinythread.h:981)
-      #         the only stack-buffer write anywhere on the load path
-      #   D = full .onLoad + .onAttach
       - name: Bisect the load path
+        continue-on-error: true
+        shell: cmd /C CALL {0}
         run: |
-          set +e
-          conda activate fa
-          for s in a c b d; do
-            echo "--- step ${s} ---"
-            R --vanilla -s -f "step_${s}.R"
-            echo "exit=$?"
-          done
+          call conda activate fa
+          echo ===== A: DLL init =====
+          R --vanilla -s -f step_a.R
+          echo exit=%ERRORLEVEL%
+          echo ===== C: get_float_na =====
+          R --vanilla -s -f step_c.R
+          echo exit=%ERRORLEVEL%
+          echo ===== B: getThreads -^> GetSystemInfo(^&si) =====
+          R --vanilla -s -f step_b.R
+          echo exit=%ERRORLEVEL%
+          echo ===== D: full library() =====
+          R --vanilla -s -f step_d.R
+          echo exit=%ERRORLEVEL%
 
-      - name: Run tests (only meaningful if step D passed)
+      - name: Run tests (only meaningful if D passed)
+        continue-on-error: true
+        shell: cmd /C CALL {0}
         run: |
-          set +e
-          conda activate fa
-          R --vanilla -s -e 'library(testthat); library(filearray); test_dir("tests/testthat", stop_on_failure = FALSE)'
-          echo "exit=$?"
+          call conda activate fa
+          R --vanilla -s -e "library(testthat); library(filearray); test_dir('tests/testthat', stop_on_failure = FALSE)"
+          echo exit=%ERRORLEVEL%
