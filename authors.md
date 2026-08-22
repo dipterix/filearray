@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/dipterix/filearray/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/dipterix/filearray/blob/v0.2.3/DESCRIPTION)
 
 Wang Z (2026). *filearray: File-Backed Array for Out-of-Memory
 Computation*. R package version 0.2.3,

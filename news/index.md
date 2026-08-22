@@ -2,6 +2,8 @@
 
 ## filearray 0.2.3
 
+CRAN release: 2026-08-21
+
 - `as_filearray` takes `RAVE` file array proxy
 
 ## filearray 0.2.2
