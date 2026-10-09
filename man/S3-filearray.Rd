@@ -84,11 +84,11 @@ These are 'S3' methods for 'FileArray'
 }
 \section{Functions}{
 \itemize{
-\item \code{[}: subset array
+\item \code{FileArray[]}: subset array
 
-\item \code{`[`(FileArray) <- value}: subset assign array
+\item \code{FileArray[] <- value}: subset assign array
 
-\item \code{[[}: get element by index
+\item \code{FileArray[[]]}: get element by index
 
 \item \code{as.array(FileArray)}: converts file array to native array in R
 

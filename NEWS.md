@@ -1,3 +1,8 @@
+# filearray 0.2.4
+
+* Partition files are written to a temporary file and then renamed into place, so other processes loading the same array no longer fail with "File size too small" while a partition is being created or filled
+* `filearray_load` only treats files named `<n>.farr` as partitions
+
 # filearray 0.2.3
 
 * `as_filearray` takes `RAVE` file array proxy

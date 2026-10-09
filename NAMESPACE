@@ -43,9 +43,11 @@ exportClasses(FileArrayProxy)
 exportMethods(apply)
 exportMethods(mapreduce)
 importFrom(Rcpp,sourceCpp)
-importFrom(methods,new)
-importFrom(methods,setGeneric)
-importFrom(methods,setMethod)
-importFrom(methods,setRefClass)
-importFrom(methods,signature)
+importFrom(methods,
+  new,
+  setGeneric,
+  setMethod,
+  setRefClass,
+  signature
+)
 useDynLib(filearray, .registration = TRUE)

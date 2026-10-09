@@ -259,7 +259,7 @@ FileArray <- setRefClass(
             )
             
             # load partition information
-            files <- list.files(filebase, pattern = "[0-9]+.farr", 
+            files <- list.files(filebase, pattern = "^[0-9]+\\.farr$",
                                 recursive = FALSE, all.files = FALSE, 
                                 full.names = FALSE, ignore.case = TRUE, 
                                 include.dirs = FALSE)
@@ -483,11 +483,25 @@ FileArray <- setRefClass(
             )
             size <- get_elem_size(type)
             file <- .self$partition_path(part)
-            fid <- file(file, "wb")
+
+            # Write to a temporary file, then rename it to the partition:
+            # another process that loads this array while the partition is
+            # being written would reject a file shorter than the 1024-byte
+            # header. `load()` lists only `<n>.farr`, never `<n>..tmp`
+            tmp <- sprintf("%s.tmp", gsub("farr$", "", file, ignore.case = TRUE))
+            fid <- file(tmp, "wb")
+            fid_closed <- FALSE
+
             on.exit({
-                close(fid)
-            })
-            
+                # `tmp` still exists only if writing or renaming failed
+                if (file.exists(tmp)) {
+                    if (!fid_closed) {
+                        close(fid)
+                    }
+                    unlink(tmp)
+                }
+            }, add = TRUE)
+
             if ( part <= nrow(.self$.partition_info)) {
                 partition_size <- .self$.partition_info[part, 2]
             } else {
@@ -495,6 +509,12 @@ FileArray <- setRefClass(
             }
             dimension <- .self$dimension()
             dimension[[length(dimension)]] <- partition_size
+            part_len <- prod(dimension)
+            buffer_len <- get_buffer_size() / size
+            if (buffer_len > part_len) {
+                buffer_len <- part_len
+            }
+
             write_header(
                 fid = fid,
                 partition = part,
@@ -503,13 +523,12 @@ FileArray <- setRefClass(
                 size = size
             )
             seek(con = fid, where = HEADER_SIZE, rw = "write")
-            part_len <- prod(dimension)
-            buffer_len <- get_buffer_size() / size
-            if (buffer_len > part_len) {
-                buffer_len <- part_len
-            }
-            buf <- writeBin(con = raw(), object = rep(value, buffer_len), 
-                           size = size, endian = ENDIANNESS)
+            buf <- writeBin(
+                con = raw(),
+                object = rep(value, buffer_len),
+                size = size,
+                endian = ENDIANNESS
+            )
             nloop <- floor(part_len / buffer_len)
             replicate(nloop, {
                 writeBin(con = fid, object = buf)
@@ -520,9 +539,16 @@ FileArray <- setRefClass(
                 writeBin(con = fid, object = buf[seq_len(rest * size)])
             }
             seek(con = fid, where = HEADER_SIZE - 8L, rw = "write")
-            writeBin(con = fid, object = part_len, 
-                     size = 8L, endian = ENDIANNESS)
-            seek(con = fid, where = 0, rw = "write")
+            writeBin(con = fid, object = part_len, size = 8L, endian = ENDIANNESS)
+
+            close(fid)
+            fid_closed <- TRUE
+
+            # rename() replaces `file` in one step, so other processes see
+            # either the old partition or the new one, never a partial one
+            if (!file.rename(tmp, file)) {
+                stop("Cannot write partition file: ", file)
+            }
             invisible()
         },
         initialize_partition = function(parts) {
