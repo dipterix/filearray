@@ -107,11 +107,11 @@ subset(x, ..., drop = FALSE, .env = parent.frame())
 
 ## Functions
 
-- `[`: subset array
+- `FileArray[]`: subset array
 
-- `` `[`(FileArray) <- value ``: subset assign array
+- `FileArray[] <- value`: subset assign array
 
-- `[[`: get element by index
+- `FileArray[[]]`: get element by index
 
 - `as.array(FileArray)`: converts file array to native array in R
 
