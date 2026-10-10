@@ -2,6 +2,12 @@
 
 * Partition files are written to a temporary file and then renamed into place, so other processes loading the same array no longer fail with "File size too small" while a partition is being created or filled
 * `filearray_load` only treats files named `<n>.farr` as partitions
+* Writes lock the partitions they change, so several processes (for example `parallel`, `callr` or `mirai` workers, or several applications) can write to one array without losing each other's data: sub-assignment (`x[...] <- value`), `fill_partition`, `initialize_partition`, `set_partition`, `fmap`, `fmap_element_wise` and `filearray_bind` wait while another process holds one of their partitions. Reading takes no locks, except that functions that must first create missing partitions (such as `max` or `sum`) lock the partitions they create
+* Added `lock_partition(parts, timeout)` and `unlock_partition(parts)` methods to hold partitions over several operations (for example to check whether a partition has been computed and write it only if not); `lock_partition` waits and retries until the partitions are free or `timeout` seconds have passed
+* Locks are byte-range locks on an empty file `.filearray.lock` in the array directory, released by the operating system when a process exits. `options(filearray.lock = FALSE)` (environment variable `FILEARRAY_LOCK`) turns off automatic locking; `options(filearray.lock.timeout = <seconds>)` (`FILEARRAY_LOCK_TIMEOUT`) limits how long writes wait, by default without limit
+* A missing partition is created only if no other process has created it in the meantime, and every partition write uses its own temporary file, so concurrent writers no longer replace each other's partitions or share a temporary file
+* `fmap` stops when the mapping function raises an error or is interrupted, instead of warning "cannot finish map" and returning a partly written result
+* `delete()` releases the locks the session holds on the array before removing it
 
 # filearray 0.2.3
 

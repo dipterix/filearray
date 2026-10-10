@@ -77,6 +77,42 @@ FARR_subset2 <- function(filebase, listOrEnv, reshape = NULL, drop = FALSE, use_
     .Call(`_filearray_FARR_subset2`, filebase, listOrEnv, reshape, drop, use_dimnames, thread_buffer, split_dim, strict)
 }
 
+FARR_lock_acquire <- function(lock_path, parts, scope_id) {
+    .Call(`_filearray_FARR_lock_acquire`, lock_path, parts, scope_id)
+}
+
+FARR_lock_release_scope <- function(scope_id) {
+    .Call(`_filearray_FARR_lock_release_scope`, scope_id)
+}
+
+FARR_lock_commit_scope <- function(scope_id) {
+    .Call(`_filearray_FARR_lock_commit_scope`, scope_id)
+}
+
+FARR_lock_release_explicit <- function(lock_path, parts, all = FALSE) {
+    .Call(`_filearray_FARR_lock_release_explicit`, lock_path, parts, all)
+}
+
+FARR_lock_forget <- function(lock_path) {
+    .Call(`_filearray_FARR_lock_forget`, lock_path)
+}
+
+FARR_lock_release_all <- function() {
+    .Call(`_filearray_FARR_lock_release_all`)
+}
+
+FARR_link_noreplace <- function(from, to) {
+    .Call(`_filearray_FARR_link_noreplace`, from, to)
+}
+
+FARR_lock_status <- function(lock_path) {
+    .Call(`_filearray_FARR_lock_status`, lock_path)
+}
+
+FARR_lock_registry <- function() {
+    .Call(`_filearray_FARR_lock_registry`)
+}
+
 FARR_buffer_map <- function(input_filebases, output_filebase, map, buffer_nelems, result_nelems = 0L) {
     .Call(`_filearray_FARR_buffer_map`, input_filebases, output_filebase, map, buffer_nelems, result_nelems)
 }

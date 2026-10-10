@@ -207,6 +207,11 @@ SEXP FARR_buffer_map(
             current_pos_save += expected_res_nelem;
         
         }
+    } catch (const Rcpp::LongjumpException& e) {
+        // An R error or interrupt in `map` (including a partition lock
+        // time-out): let R continue the jump, which also resets the
+        // protection stack
+        std::rethrow_exception(std::current_exception());
     } catch(std::exception &ex){
         UNPROTECT(2 + narrays);
         forward_exception_to_r(ex);

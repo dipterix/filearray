@@ -219,8 +219,12 @@ filearray_map_internal <- function(x, fun, y = NULL, .buffer_count = NA_integer_
             stop("Input & output arrays have inconsistent lengths. Cannot map functions")
         }
         buffer_nelems <- all_lens / .buffer_count
-        
-        
+
+        # Hold every partition of `y` while mapping into it; `fun` may write
+        # `y` itself, since this session's locks are re-entrant
+        lock_scope <- lock_scope_begin()
+        on.exit(lock_scope_end(lock_scope), add = TRUE)
+        lock_scope_acquire(lock_scope, y, y$.partition_info[, 1])
         y$initialize_partition()
         
         FARR_buffer_map(
@@ -301,8 +305,6 @@ fmap_element_wise_internal <- function(x, fun, .y, ..., .input_size = NA) {
             stop("Dimensions of x[[1]] and .y mismatch")
         }
     }
-    .y$initialize_partition()
-    
     if (is.na(.input_size)) {
         .input_size <- guess_fmap_buffer_size(dim(.y), .y$element_size())
         # .input_size <- get_buffer_size() / .y$element_size()
@@ -328,6 +330,13 @@ fmap_element_wise_internal <- function(x, fun, .y, ..., .input_size = NA) {
     if (length(x[[1]]) > length(.y) ) {
         stop("Inconsistent input and output length")
     }
+
+    # Hold every partition of `.y` while mapping into it. The inputs were
+    # initialized above, so this never waits for them while holding `.y`
+    lock_scope <- lock_scope_begin()
+    on.exit(lock_scope_end(lock_scope), add = TRUE)
+    lock_scope_acquire(lock_scope, .y, .y$.partition_info[, 1])
+    .y$initialize_partition()
     
     FARR_buffer_map(
         input_filebases = fbases,

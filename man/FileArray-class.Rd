@@ -24,13 +24,70 @@ to create instances.
 \item{\code{expand(n)}}{Expand array along the last margin; returns true if expanded; if the \code{dimnames} have been assigned prior to expansion, the last dimension names will be filled with \code{NA}}
 \item{\code{initialize_partition()}}{Make sure a partition file exists; if not, create one and fill with \code{NA}s or 0 (\code{type='raw'})}
 \item{\code{load(filebase, mode = c("readwrite", "readonly"))}}{Load file array from existing directory}
+\item{\code{lock_partition(parts, timeout = NULL)}}{Lock partitions \code{parts} (default: all) for this \R session, so that other processes cannot write to them; waits and retries until all of them are locked or \code{timeout} seconds have passed (\code{NULL}: option \code{filearray.lock.timeout}, which defaults to waiting without limit; \code{0}: try once). Returns \code{TRUE} once locked, or \code{FALSE} after the time-out, with nothing locked; see section 'Partition locks'}
 \item{\code{partition_path(part)}}{Get partition file path}
 \item{\code{partition_size()}}{Get partition size; see \code{\link{filearray}}}
 \item{\code{set_partition(part, value, ..., strict = TRUE)}}{Set partition value}
 \item{\code{sexp_type()}}{Get data \code{SEXP} type; see R internal manuals}
 \item{\code{show()}}{Print information}
 \item{\code{type()}}{Get data type}
+\item{\code{unlock_partition(parts)}}{Release one \code{lock_partition} lock on each of \code{parts}, or every \code{lock_partition} lock this \R session holds on the array if \code{parts} is missing; returns \code{TRUE} if a lock was released}
 \item{\code{valid()}}{Check if the array is valid.}
+}
+}
+
+\section{Partition locks}{
+
+Several processes (for example \pkg{parallel}, \pkg{callr} or \pkg{mirai}
+workers) can write to one array. Writes lock the partitions they change:
+sub-assignment (\code{x[...] <- value}), \code{fill_partition},
+\code{initialize_partition}, \code{set_partition}, \code{\link{fmap}},
+\code{\link{fmap_element_wise}} and \code{\link{filearray_bind}} wait
+while another process holds one of their partitions, so concurrent writers
+never lose each other's data. Reading takes no locks, so a reader may see a
+write that is still in progress. Functions that read but must first create
+missing partitions (\code{max}, \code{min}, \code{range} and \code{sum}
+with \code{na.rm = FALSE}, inputs of \code{fmap}, \code{filearray_bind},
+evaluating array operations) lock the partitions they create, so they can
+wait too.
+
+To keep partitions to yourself over several operations, for example to
+check whether a partition has been computed and write it only if not, lock
+them explicitly:
+\preformatted{
+if (!x$lock_partition(k, timeout = 60)) stop("partition ", k, " is busy")
+on.exit(x$unlock_partition(k), add = TRUE)
+if (is.na(x[1, 1, k])) x[, , k] <- compute(k)
+}
+Locks belong to the \R session, not to the object: every object of the
+same array shares them, writes of this session to partitions it holds do
+not wait, and each \code{lock_partition} call needs one
+\code{unlock_partition} call. Lock everything you need in one call: two
+sessions that each hold one partition and wait for the other's wait until
+their time-outs. Likewise, do not hold partitions that forked workers
+(\code{mclapply}) of the same session write. Non-interactive workers
+should set a time-out.
+
+The locks are byte-range locks on an empty file \code{.filearray.lock} in
+the array directory (byte \code{k} locks partition \code{k}). They are
+advisory: older versions of this package and other programs ignore them.
+The operating system releases them when a process exits, so a crashed or
+killed process never leaves a stale lock. On file systems that cannot lock
+(for example some network mounts) writes warn once and proceed unlocked;
+cloud-synchronized folders lock on one computer only. Copying or archiving
+the array directory in the session that holds its locks releases them on
+\verb{POSIX} systems.
+
+Options (each falls back to the environment variable, which worker
+processes inherit):
+\describe{
+\item{\code{filearray.lock} (\code{FILEARRAY_LOCK})}{set to \code{FALSE}
+to stop writes from locking automatically; \code{lock_partition} still
+locks}
+\item{\code{filearray.lock.timeout} (\code{FILEARRAY_LOCK_TIMEOUT})}{seconds
+a write waits for a locked partition before it fails with an error of class
+\code{filearray_lock_timeout}; default \code{Inf}, wait until the
+partition is free}
 }
 }
 

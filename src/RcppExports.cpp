@@ -259,6 +259,108 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FARR_lock_acquire
+List FARR_lock_acquire(const std::string& lock_path, const NumericVector& parts, const double scope_id);
+RcppExport SEXP _filearray_FARR_lock_acquire(SEXP lock_pathSEXP, SEXP partsSEXP, SEXP scope_idSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type lock_path(lock_pathSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type parts(partsSEXP);
+    Rcpp::traits::input_parameter< const double >::type scope_id(scope_idSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_acquire(lock_path, parts, scope_id));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_release_scope
+double FARR_lock_release_scope(const double scope_id);
+RcppExport SEXP _filearray_FARR_lock_release_scope(SEXP scope_idSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double >::type scope_id(scope_idSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_release_scope(scope_id));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_commit_scope
+double FARR_lock_commit_scope(const double scope_id);
+RcppExport SEXP _filearray_FARR_lock_commit_scope(SEXP scope_idSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double >::type scope_id(scope_idSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_commit_scope(scope_id));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_release_explicit
+double FARR_lock_release_explicit(const std::string& lock_path, const NumericVector& parts, const bool all);
+RcppExport SEXP _filearray_FARR_lock_release_explicit(SEXP lock_pathSEXP, SEXP partsSEXP, SEXP allSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type lock_path(lock_pathSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type parts(partsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type all(allSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_release_explicit(lock_path, parts, all));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_forget
+double FARR_lock_forget(const std::string& lock_path);
+RcppExport SEXP _filearray_FARR_lock_forget(SEXP lock_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type lock_path(lock_pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_forget(lock_path));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_release_all
+double FARR_lock_release_all();
+RcppExport SEXP _filearray_FARR_lock_release_all() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_release_all());
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_link_noreplace
+IntegerVector FARR_link_noreplace(const std::string& from, const std::string& to);
+RcppExport SEXP _filearray_FARR_link_noreplace(SEXP fromSEXP, SEXP toSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type from(fromSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type to(toSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_link_noreplace(from, to));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_status
+List FARR_lock_status(const std::string& lock_path);
+RcppExport SEXP _filearray_FARR_lock_status(SEXP lock_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type lock_path(lock_pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_status(lock_path));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FARR_lock_registry
+List FARR_lock_registry();
+RcppExport SEXP _filearray_FARR_lock_registry() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(FARR_lock_registry());
+    return rcpp_result_gen;
+END_RCPP
+}
 // FARR_buffer_map
 SEXP FARR_buffer_map(std::vector<std::string>& input_filebases, const std::string& output_filebase, const Function& map, std::vector<int>& buffer_nelems, int result_nelems);
 RcppExport SEXP _filearray_FARR_buffer_map(SEXP input_filebasesSEXP, SEXP output_filebaseSEXP, SEXP mapSEXP, SEXP buffer_nelemsSEXP, SEXP result_nelemsSEXP) {
@@ -423,6 +525,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_filearray_filearray_subset", (DL_FUNC) &_filearray_filearray_subset, 5},
     {"_filearray_FARR_subset_sequential", (DL_FUNC) &_filearray_FARR_subset_sequential, 7},
     {"_filearray_FARR_subset2", (DL_FUNC) &_filearray_FARR_subset2, 8},
+    {"_filearray_FARR_lock_acquire", (DL_FUNC) &_filearray_FARR_lock_acquire, 3},
+    {"_filearray_FARR_lock_release_scope", (DL_FUNC) &_filearray_FARR_lock_release_scope, 1},
+    {"_filearray_FARR_lock_commit_scope", (DL_FUNC) &_filearray_FARR_lock_commit_scope, 1},
+    {"_filearray_FARR_lock_release_explicit", (DL_FUNC) &_filearray_FARR_lock_release_explicit, 3},
+    {"_filearray_FARR_lock_forget", (DL_FUNC) &_filearray_FARR_lock_forget, 1},
+    {"_filearray_FARR_lock_release_all", (DL_FUNC) &_filearray_FARR_lock_release_all, 0},
+    {"_filearray_FARR_link_noreplace", (DL_FUNC) &_filearray_FARR_link_noreplace, 2},
+    {"_filearray_FARR_lock_status", (DL_FUNC) &_filearray_FARR_lock_status, 1},
+    {"_filearray_FARR_lock_registry", (DL_FUNC) &_filearray_FARR_lock_registry, 0},
     {"_filearray_FARR_buffer_map", (DL_FUNC) &_filearray_FARR_buffer_map, 5},
     {"_filearray_FARR_buffer_map2", (DL_FUNC) &_filearray_FARR_buffer_map2, 3},
     {"_filearray_FARR_buffer_mapreduce", (DL_FUNC) &_filearray_FARR_buffer_mapreduce, 4},

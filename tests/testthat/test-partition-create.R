@@ -41,7 +41,8 @@ test_that("load() never lists a partition that is still being written", {
     x$fill_partition(1, 5)
 
     expect_equal(loads, list(TRUE, TRUE))
-    expect_setequal(list.files(fb, all.files = TRUE, no.. = TRUE),
+    # apart from the lock file
+    expect_setequal(setdiff(list.files(fb, all.files = TRUE, no.. = TRUE), LOCK_FILE_NAME),
                     c("meta", "0.farr"))
 })
 
@@ -70,7 +71,8 @@ test_that("fill_partition() stops when the partition file cannot be replaced", {
 
     expect_error(suppressWarnings(x$fill_partition(1, 5)), "0.farr", fixed = TRUE)
     # and no temporary file is left behind
-    expect_setequal(list.files(fb, all.files = TRUE, no.. = TRUE),
+    # apart from the lock file
+    expect_setequal(setdiff(list.files(fb, all.files = TRUE, no.. = TRUE), LOCK_FILE_NAME),
                     c("meta", "0.farr"))
 })
 
