@@ -488,7 +488,7 @@ FileArray <- setRefClass(
             # another process that loads this array while the partition is
             # being written would reject a file shorter than the 1024-byte
             # header. `load()` lists only `<n>.farr`, never `<n>..tmp`
-            tmp <- sprintf("%s.tmp", gsub("farr$", "", file, ignore.case = TRUE))
+            tmp <- sprintf("%s.tmp%s", gsub("farr$", "", file, ignore.case = TRUE), Sys.getpid())
             fid <- file(tmp, "wb")
             fid_closed <- FALSE
 
