@@ -8,6 +8,8 @@
 * A missing partition is created only if no other process has created it in the meantime, and every partition write uses its own temporary file, so concurrent writers no longer replace each other's partitions or share a temporary file
 * `fmap` stops when the mapping function raises an error or is interrupted, instead of warning "cannot finish map" and returning a partly written result
 * `delete()` releases the locks the session holds on the array before removing it
+* Fixed `mapreduce` (and so `sum`, `max`, `min`, `range` and `fwhich`) reading only the first slice of every partition after the first when `partition_size` is greater than 1, which gave wrong results and wrong `fwhich` indices
+* `fmap2` reports the error raised by the mapping function instead of "Unknown error."
 
 # filearray 0.2.3
 
