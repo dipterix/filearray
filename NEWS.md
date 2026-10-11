@@ -8,6 +8,8 @@
 * A missing partition is created only if no other process has created it in the meantime, and every partition write uses its own temporary file, so concurrent writers no longer replace each other's partitions or share a temporary file
 * `fmap` stops when the mapping function raises an error or is interrupted, instead of warning "cannot finish map" and returning a partly written result
 * `delete()` releases the locks the session holds on the array before removing it
+* Added `with_filelock(expr, lockfile, timeout, on_unsupported)` to evaluate code while holding an exclusive lock on any lock file, so that only one R session at a time runs it; other sessions wait. It is not tied to file arrays, so other packages can use it. `on_unsupported` chooses what happens when the lock cannot be taken: warn (default), stop, or ignore
+* Partition locks never make a write fail when the lock itself cannot be taken: any error while locking (for example a stale network file handle or too many open files, not only file systems without lock support) now warns once and the write proceeds, and an invalid `filearray.lock.timeout` option or `FILEARRAY_LOCK_TIMEOUT` value warns once and is ignored instead of stopping every write
 * Fixed `mapreduce` (and so `sum`, `max`, `min`, `range` and `fwhich`) reading only the first slice of every partition after the first when `partition_size` is greater than 1, which gave wrong results and wrong `fwhich` indices
 * `fmap2` reports the error raised by the mapping function instead of "Unknown error."
 

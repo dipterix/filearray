@@ -298,15 +298,43 @@ test_that("lock arguments are validated", {
     expect_error(x$lock_partition(1, timeout = NA), "timeout")
     expect_error(x$lock_partition(1, timeout = c(1, 2)), "timeout")
     expect_false(lock_status(x)$open)
+})
 
-    old <- options(filearray.lock.timeout = "soon")
-    on.exit(options(old), add = TRUE)
-    expect_error(x[] <- 1, "filearray.lock.timeout")
+test_that("a bad time-out option warns instead of stopping writes", {
+    x <- new_lock_array()
+    old <- options(filearray.lock.timeout = "soon", filearray.quiet = FALSE)
+    on.exit({
+        options(old)
+        x$delete(force = TRUE)
+    }, add = TRUE)
+
+    expect_warning(x[] <- 1, "filearray.lock.timeout")
+    expect_equal(x[1, 1, 1], 1)
 
     options(filearray.lock.timeout = NULL)
     restore_env <- set_env_var("FILEARRAY_LOCK_TIMEOUT", "-5")
     on.exit(restore_env(), add = TRUE)
-    expect_error(x[] <- 1, "FILEARRAY_LOCK_TIMEOUT")
+    expect_warning(x[] <- 2, "FILEARRAY_LOCK_TIMEOUT")
+    expect_equal(x[1, 1, 1], 2)
+})
+
+test_that("a lock file that cannot be opened does not stop writes", {
+    x <- new_lock_array()
+    old <- options(filearray.quiet = FALSE)
+    on.exit({
+        options(old)
+        x$delete(force = TRUE)
+    }, add = TRUE)
+
+    # a directory where the lock file belongs cannot be opened as a file
+    dir.create(lock_file(x))
+
+    expect_warning(x[, , 1] <- 1:6, "Cannot lock partitions")
+    expect_equal(x[, , 1], matrix(as.double(1:6), 2, 3))
+
+    expect_warning(res <- x$lock_partition(2), "not locked")
+    expect_true(res)
+    expect_identical(attr(res, "locked"), FALSE)
 })
 
 test_that("lock_partition() works on read-only arrays", {

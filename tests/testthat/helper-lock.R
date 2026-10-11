@@ -49,9 +49,9 @@ in_worker <- function(f) {
     f
 }
 
-# Starts `n` PSOCK workers that load a filearray build with partition locks,
-# or skips the test
-lock_test_cluster <- function(n = 1) {
+# Starts `n` PSOCK workers that load a filearray build with partition locks
+# (and the function named by `need`, if any), or skips the test
+lock_test_cluster <- function(n = 1, need = NULL) {
     testthat::skip_on_cran()
     # `R CMD check` sets R_TESTS to a relative path, which the base Rprofile
     # sources at start-up; workers started from this directory would fail
@@ -64,18 +64,17 @@ lock_test_cluster <- function(n = 1) {
     if (is.null(cl)) {
         testthat::skip("Cannot start PSOCK workers")
     }
-    setup <- in_worker(function(libs, version) {
+    setup <- in_worker(function(libs, version, need) {
         .libPaths(libs)
         ns <- tryCatch(asNamespace("filearray"), error = function(e) { NULL })
         # a regression should fail the test, not hang it
         options(filearray.lock.timeout = 30)
-        !is.null(ns) && identical(
-            get0("LOCK_PROTOCOL_VERSION", envir = ns, inherits = FALSE),
-            version
-        )
+        !is.null(ns) &&
+            identical(get0("LOCK_PROTOCOL_VERSION", envir = ns, inherits = FALSE), version) &&
+            (is.null(need) || exists(need, envir = ns, inherits = FALSE))
     })
     ok <- tryCatch(
-        all(unlist(parallel::clusterCall(cl, setup, .libPaths(), LOCK_PROTOCOL_VERSION))),
+        all(unlist(parallel::clusterCall(cl, setup, .libPaths(), LOCK_PROTOCOL_VERSION, need))),
         error = function(e) { FALSE }
     )
     if (!ok) {
