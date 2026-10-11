@@ -7,16 +7,17 @@
 
 using namespace Rcpp;
 
-// Partition numbers to lock bytes, validated before anything is locked
+// Bytes to lock (partition numbers, or 0 for with_filelock()), validated
+// before anything is locked
 static std::vector<int64_t> lock_bytes(const NumericVector& parts) {
     std::vector<int64_t> bytes;
     bytes.reserve(parts.size());
-    double previous = 0;
+    double previous = -1;
     for (R_xlen_t i = 0; i < parts.size(); i++) {
         const double v = parts[i];
-        if (!R_FINITE(v) || v < 1 || v != std::floor(v) ||
+        if (!R_FINITE(v) || v < 0 || v != std::floor(v) ||
             v > 9007199254740992.0 || v <= previous) {
-            Rcpp::stop("Partition numbers must be strictly increasing positive integers");
+            Rcpp::stop("Lock bytes must be strictly increasing non-negative integers");
         }
         previous = v;
         bytes.push_back((int64_t) v);

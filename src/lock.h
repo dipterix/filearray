@@ -2,18 +2,20 @@
 #define FARR_LOCK_H
 
 /*
- * Partition locks, protocol v1. This is a contract between filearray
- * versions; R/lock.R documents the same:
+ * File locks, protocol v1. This is a contract between filearray versions;
+ * R/lock.R documents the same:
  *
- * - "<filebase>/.filearray.lock" is an empty file, created by the first
- *   process that locks. Nothing writes to it; it is never renamed or removed
- *   except together with the array, and no other code opens it.
- * - Byte k >= 1 is the exclusive write lock of partition k (file
- *   "<k-1>.farr"). Byte 0 is reserved for a future array-level lock.
+ * - A lock file is an empty file, created by the first process that locks.
+ *   Nothing writes to it, it is never renamed or removed, and no other code
+ *   opens it. Each array has one: "<filebase>/.filearray.lock".
+ * - Byte 0 is the lock that with_filelock() takes. On an array's lock file
+ *   it is the array-level lock, which partition writers do not take.
+ * - Byte k >= 1 of an array's lock file is the exclusive write lock of
+ *   partition k (file "<k-1>.farr").
  * - POSIX: classic fcntl record lock F_WRLCK on [k, k + 1), taken with
  *   non-blocking F_SETLK only. Windows: LockFileEx at offset k, length 1.
- * - Only writers lock. The locks are advisory, and the operating system
- *   releases them when a process exits.
+ * - Locks are exclusive; of an array, only writers lock. The locks are
+ *   advisory, and the operating system releases them when a process exits.
  *
  * Locks belong to the process. A registry counts the holds per byte, so
  * nested writes and several objects for one array share a lock. Only the R
@@ -61,7 +63,7 @@ struct RegistryInfo {
     int64_t pid;
 };
 
-// Locks `bytes` (strictly increasing, >= 1) in order and stops at the first
+// Locks `bytes` (strictly increasing, >= 0) in order and stops at the first
 // byte that another process holds. Every hold taken is recorded under
 // `scope_id`; bytes this process already holds are re-entered without a
 // system call
