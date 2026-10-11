@@ -516,9 +516,11 @@ List schedule(const SEXP listOrEnv,
             idx2len_cum += Rf_xlength(idx2tmp);
             idx2lens[part_size] = idx2len_cum;
             part_size++;
-            // `tmp` is kept alive by `sliceIdx2` and `idx2tmp` by `idx2s`,
-            // so the per-iteration protections can be released here to keep
-            // the protection stack depth bounded.
+            // `tmp` is kept alive by the PROTECTed `sliceIdx2` and
+            // `idx2tmp` by the Rcpp `List idx2s` (whose backing SEXP is
+            // R-preserved after push_back), so the per-iteration
+            // protections can be released here to keep the protection
+            // stack depth bounded.
             UNPROTECT(2); // tmp, idx2tmp
         }
         part = 0;
@@ -550,7 +552,8 @@ List schedule(const SEXP listOrEnv,
         idx2len_cum += Rf_xlength(idx2tmp);
         idx2lens[part_size] = idx2len_cum;
         part_size++;
-        // `tmp` kept alive by `sliceIdx2`, `idx2tmp` by `idx2s`.
+        // `tmp` kept alive by the PROTECTed `sliceIdx2`, `idx2tmp` by the
+        // Rcpp `List idx2s` (R-preserved after push_back).
         UNPROTECT(2); // tmp, idx2tmp
     }
     if( part_size > 0 ){
