@@ -272,8 +272,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                 UNPROTECT(n_protected); // sliceIdx, dots
                 stop("Incorrect subscript dimensions, required: 0, ndim.");
             }
-            SET_VECTOR_ELT(sliceIdx, idx_size, PROTECT(CAR(dots)));
-            n_protected++;
+            SET_VECTOR_ELT(sliceIdx, idx_size, CAR(dots));
         }
         break;
     }
@@ -310,24 +309,24 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                 // el = PROTECT(Rf_eval( PREXPR(el), PRENV( el )));
                 // From R 4.5.0, PREXPR and PRENV are deprecated
                 // Directly evaluate the promise instead
-                el = PROTECT(Rf_eval( el, listOrEnv ));
-                n_protected++;
+                //
+                // The evaluated promise `ev` is PROTECTed only until the
+                // coerced result is stored into `sliceIdx` (which then
+                // protects it), so the protection stack stays bounded.
+                SEXP ev = PROTECT(Rf_eval( el, listOrEnv ));
                 
-                if( el == R_NilValue ){
-                    el = PROTECT(Rf_allocVector(REALSXP, 0));
-                    n_protected++;
+                if( ev == R_NilValue ){
+                    el = Rf_allocVector(REALSXP, 0);
                 } else {
-                    el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
-                    n_protected++;
+                    el = realToInt64(as<NumericVector>(ev), 1, dl, strict);
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
+                UNPROTECT(1); // ev
             } else {
                 if( el == R_MissingArg || el == R_NilValue ){
-                    el = PROTECT(seq_len_int64( dl ));
-                    n_protected++;
+                    el = seq_len_int64( dl );
                 } else {
-                    el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
-                    n_protected++;
+                    el = realToInt64(as<NumericVector>(el), 1, dl, strict);
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
             }
@@ -336,9 +335,8 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
         sliceIdx = PROTECT(Rf_allocVector(VECSXP, ndims));
         n_protected++;
         for(idx_size = 0; idx_size < ndims; idx_size++ ){
-            el = PROTECT(seq_len_int64(dim[idx_size]));
-            SET_VECTOR_ELT(sliceIdx, idx_size, el);
-            n_protected++;
+            // `sliceIdx` protects each element once stored.
+            SET_VECTOR_ELT(sliceIdx, idx_size, seq_len_int64(dim[idx_size]));
         }
     }
     Rf_setAttrib(sliceIdx, Rf_install("_asis_"), Shield<SEXP>(wrap(true)));
@@ -495,7 +493,6 @@ List schedule(const SEXP listOrEnv,
         // change partition, flush!
         if( l2 > l1 ){
             SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
-            n_protected++;
             Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
             lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
             tmpptr = (int64_t*) REAL(tmp);
@@ -511,7 +508,6 @@ List schedule(const SEXP listOrEnv,
             dim2[ndim2 - 1] = cum_part_sizes[part] - part_start;
             
             SEXP idx2tmp = PROTECT(loc2idx(sliceIdx2, dim2));
-            n_protected++;
             idx2s.push_back(idx2tmp);
             
             // partitions.insert()
@@ -520,6 +516,10 @@ List schedule(const SEXP listOrEnv,
             idx2len_cum += Rf_xlength(idx2tmp);
             idx2lens[part_size] = idx2len_cum;
             part_size++;
+            // `tmp` is kept alive by `sliceIdx2` and `idx2tmp` by `idx2s`,
+            // so the per-iteration protections can be released here to keep
+            // the protection stack depth bounded.
+            UNPROTECT(2); // tmp, idx2tmp
         }
         part = 0;
         while(cum_part_sizes[part] < *lastptr || (part > 0 && cum_part_sizes[part-1] >= *lastptr)){
@@ -529,7 +529,6 @@ List schedule(const SEXP listOrEnv,
     }
     if( l2 > l1 ){
         SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
-        n_protected++;
         Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
         lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
         tmpptr = (int64_t*) REAL(tmp);
@@ -545,14 +544,14 @@ List schedule(const SEXP listOrEnv,
         dim2[ndim2 - 1] = cum_part_sizes[part] - part_start;
         
         SEXP idx2tmp = PROTECT(loc2idx(sliceIdx2, dim2));
-        n_protected++;
         idx2s.push_back(idx2tmp);
         // partitions.push_back(part);
         partitions[part_size] = part;
         idx2len_cum += Rf_xlength(idx2tmp);
         idx2lens[part_size] = idx2len_cum;
         part_size++;
-        
+        // `tmp` kept alive by `sliceIdx2`, `idx2tmp` by `idx2s`.
+        UNPROTECT(2); // tmp, idx2tmp
     }
     if( part_size > 0 ){
         part_size--;

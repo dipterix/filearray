@@ -136,9 +136,12 @@ SEXP FARR_buffer_map(
     
     
     // allocate buffers
+    // `argbuffers` is PROTECTed once; every element stored via SET_VECTOR_ELT
+    // is protected by the container, so the elements are not PROTECTed
+    // individually (this keeps the protection stack depth bounded).
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
+        SET_VECTOR_ELT(argbuffers, ii, Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii]));
     }
     
     int64_t current_pos = 0;
@@ -211,16 +214,16 @@ SEXP FARR_buffer_map(
         // An R error or interrupt in `map` (including a partition lock
         // time-out): let R continue the jump, which also resets the
         // protection stack
-        std::rethrow_exception(std::current_exception());
+        throw;
     } catch(std::exception &ex){
-        UNPROTECT(2 + narrays);
+        UNPROTECT(2);
         forward_exception_to_r(ex);
     } catch(...){
-        // UNPROTECT(2 + narrays);
+        // UNPROTECT(2);
         Rcpp::warning("C++ `FARR_buffer_map`: cannot finish map");
     }
     
-    UNPROTECT(2 + narrays);
+    UNPROTECT(2);
     
     return(R_NilValue);
 }
@@ -282,9 +285,12 @@ SEXP FARR_buffer_map2(
     
     
     // allocate buffers
+    // `argbuffers` is PROTECTed once; every element stored via SET_VECTOR_ELT
+    // is protected by the container, so the elements are not PROTECTed
+    // individually (this keeps the protection stack depth bounded).
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
+        SET_VECTOR_ELT(argbuffers, ii, Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii]));
     }
     
     int64_t current_pos = 0;
@@ -320,19 +326,19 @@ SEXP FARR_buffer_map2(
         } catch (const Rcpp::LongjumpException& e) {
             // An R error or interrupt in `map`: let R continue the jump with
             // the original condition, which also resets the protection stack
-            std::rethrow_exception(std::current_exception());
+            throw;
         } catch(std::exception &ex){
-            UNPROTECT(2 + narrays);
+            UNPROTECT(2);
             forward_exception_to_r(ex);
         } catch(...){
-            UNPROTECT(2 + narrays);
+            UNPROTECT(2);
             stop("Unknown error.");
         }
 
 
     }
     
-    UNPROTECT(2 + narrays);
+    UNPROTECT(2);
     
     return(ret);
 }
