@@ -90,11 +90,13 @@ test_that("on_unsupported decides what happens when the lock cannot be taken", {
 })
 
 test_that("another session waits for with_filelock()", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(2, need = "with_filelock")
     lf <- tempfile(fileext = ".lock")
     marker <- tempfile()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         unlink(c(lf, marker))
     }, add = TRUE)
 
@@ -114,17 +116,19 @@ test_that("another session waits for with_filelock()", {
         filearray::with_filelock(TRUE, lf)
         proc.time()[["elapsed"]] - start
     })
-    res <- parallel::clusterApply(cl, 1:2, task, lf = lf, marker = marker)
+    res <- parallel$clusterApply(cl, 1:2, task, lf = lf, marker = marker)
 
     expect_gt(res[[2]], 0.5)
 })
 
 test_that("with_filelock() gives up after its time-out without running expr", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(2, need = "with_filelock")
     lf <- tempfile(fileext = ".lock")
     marker <- tempfile()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         unlink(c(lf, marker))
     }, add = TRUE)
 
@@ -151,17 +155,19 @@ test_that("with_filelock() gives up after its time-out without running expr", {
         })
         list(class = cls, ran = ran)
     })
-    res <- parallel::clusterApply(cl, 1:2, task, lf = lf, marker = marker)
+    res <- parallel$clusterApply(cl, 1:2, task, lf = lf, marker = marker)
 
     expect_identical(res[[2]], list(class = "filearray_lock_timeout", ran = FALSE))
 })
 
 test_that("with_filelock() lets one session at a time run", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(2, need = "with_filelock")
     lf <- tempfile(fileext = ".lock")
     log <- tempfile()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         unlink(c(lf, log))
     }, add = TRUE)
 
@@ -175,7 +181,7 @@ test_that("with_filelock() lets one session at a time run", {
         }
         TRUE
     })
-    parallel::clusterApply(cl, 1:2, task, lf = lf, log = log)
+    parallel$clusterApply(cl, 1:2, task, lf = lf, log = log)
 
     lines <- readLines(log)
     expect_length(lines, 12)

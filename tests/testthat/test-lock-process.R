@@ -1,11 +1,15 @@
 # Partition locks between processes. PSOCK workers load the installed
-# filearray: under devtools::test(), run R CMD INSTALL first or these skip
+# filearray: install this build first (R CMD INSTALL), or these tests skip.
+# `parallel` and `tools` come with R but are not declared in DESCRIPTION, so
+# they are reached with asNamespace(), only in tests that skip on CRAN
 
 test_that("another process cannot lock a partition this session holds", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(1)
     x <- new_lock_array()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         x$unlock_partition()
         x$delete(force = TRUE)
     }, add = TRUE)
@@ -22,23 +26,25 @@ test_that("another process cannot lock a partition this session holds", {
     })
 
     x$lock_partition(2)
-    res <- parallel::clusterCall(cl, probe, x$.filebase, 2, 0.5)[[1]]
+    res <- parallel$clusterCall(cl, probe, x$.filebase, 2, 0.5)[[1]]
     expect_false(res$locked)
     expect_gte(res$waited, 0.4)
-    res <- parallel::clusterCall(cl, probe, x$.filebase, 3, 0)[[1]]
+    res <- parallel$clusterCall(cl, probe, x$.filebase, 3, 0)[[1]]
     expect_true(res$locked)
 
     x$unlock_partition(2)
-    res <- parallel::clusterCall(cl, probe, x$.filebase, 2, 0)[[1]]
+    res <- parallel$clusterCall(cl, probe, x$.filebase, 2, 0)[[1]]
     expect_true(res$locked)
 })
 
 test_that("a write waits while another process holds the partition", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(2)
     x <- new_lock_array()
     marker <- tempfile()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         unlink(marker)
         x$delete(force = TRUE)
     }, add = TRUE)
@@ -61,18 +67,20 @@ test_that("a write waits while another process holds the partition", {
         y[, , 1] <- 2
         proc.time()[["elapsed"]] - start
     })
-    res <- parallel::clusterApply(cl, 1:2, task, fb = x$.filebase, marker = marker)
+    res <- parallel$clusterApply(cl, 1:2, task, fb = x$.filebase, marker = marker)
 
     expect_gt(res[[2]], 0.5)
     expect_equal(x[, , 1], matrix(2, 2, 3))
 })
 
 test_that("processes creating the same partition keep each other's data", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(2)
     # one partition holding both slices, created by whichever process is first
     x <- new_lock_array(c(2, 3, 2), partition_size = 2)
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         x$delete(force = TRUE)
     }, add = TRUE)
 
@@ -89,19 +97,21 @@ test_that("processes creating the same partition keep each other's data", {
         y[, , k] <- k
         TRUE
     })
-    parallel::clusterApply(cl, 1:2, task, fb = x$.filebase)
+    parallel$clusterApply(cl, 1:2, task, fb = x$.filebase)
 
     expect_equal(x[, , 1], matrix(1, 2, 3))
     expect_equal(x[, , 2], matrix(2, 2, 3))
 })
 
 test_that("a write that times out raises an error and holds nothing", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
     cl <- lock_test_cluster(1)
     x <- new_lock_array()
     old <- options(filearray.lock.timeout = 0.3)
     on.exit({
         options(old)
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         x$delete(force = TRUE)
     }, add = TRUE)
 
@@ -113,7 +123,7 @@ test_that("a write that times out raises an error and holds nothing", {
     })
 
     x[] <- 0
-    expect_true(parallel::clusterCall(cl, hold, x$.filebase)[[1]])
+    expect_true(parallel$clusterCall(cl, hold, x$.filebase)[[1]])
 
     start <- proc.time()[["elapsed"]]
     expect_error(x[, , 1] <- 1, class = "filearray_lock_timeout")
@@ -145,16 +155,19 @@ test_that("a write that times out raises an error and holds nothing", {
     expect_equal(x[, , 2], matrix(2, 2, 3))
 
     expect_false(x$lock_partition(1, timeout = 0))
-    parallel::clusterCall(cl, release, x$.filebase)
+    parallel$clusterCall(cl, release, x$.filebase)
     expect_true(x$lock_partition(1, timeout = 0))
     x$unlock_partition()
 })
 
 test_that("the locks of a killed process are released", {
+    skip_on_cran()
+    parallel <- asNamespace("parallel")
+    tools <- asNamespace("tools")
     cl <- lock_test_cluster(1)
     x <- new_lock_array()
     on.exit({
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         x$unlock_partition()
         x$delete(force = TRUE)
     }, add = TRUE)
@@ -162,16 +175,16 @@ test_that("the locks of a killed process are released", {
     hold <- in_worker(function(fb) {
         filearray::filearray_load(fb)$lock_partition(1, timeout = 0)
     })
-    pid <- parallel::clusterCall(cl, Sys.getpid)[[1]]
+    pid <- parallel$clusterCall(cl, Sys.getpid)[[1]]
     # a killed R process cannot remove its own session temporary directory
-    worker_tmp <- parallel::clusterCall(cl, tempdir)[[1]]
+    worker_tmp <- parallel$clusterCall(cl, tempdir)[[1]]
     on.exit(unlink(worker_tmp, recursive = TRUE), add = TRUE)
 
-    expect_true(parallel::clusterCall(cl, hold, x$.filebase)[[1]])
+    expect_true(parallel$clusterCall(cl, hold, x$.filebase)[[1]])
     expect_false(x$lock_partition(1, timeout = 0))
 
-    signal <- if (.Platform$OS.type == "windows") tools::SIGTERM else tools::SIGKILL
-    tools::pskill(pid, signal)
+    signal <- if (.Platform$OS.type == "windows") tools$SIGTERM else tools$SIGKILL
+    tools$pskill(pid, signal)
     # Windows may release the locks of a terminated process with a delay
     expect_true(x$lock_partition(1, timeout = 10))
 })
@@ -179,6 +192,7 @@ test_that("the locks of a killed process are released", {
 test_that("forked children do not inherit the parent's locks", {
     skip_on_cran()
     skip_on_os("windows")
+    parallel <- asNamespace("parallel")
     x <- new_lock_array()
     on.exit({
         x$unlock_partition()
@@ -186,14 +200,14 @@ test_that("forked children do not inherit the parent's locks", {
     }, add = TRUE)
 
     x$lock_partition(1)
-    job <- parallel::mcparallel(list(
+    job <- parallel$mcparallel(list(
         busy = x$lock_partition(1, timeout = 0),
         free = isTRUE(x$lock_partition(2, timeout = 0))
     ))
-    expect_identical(parallel::mccollect(job)[[1]], list(busy = FALSE, free = TRUE))
+    expect_identical(parallel$mccollect(job)[[1]], list(busy = FALSE, free = TRUE))
 
     # the first child's exit did not release the parent's lock
-    job <- parallel::mcparallel(x$lock_partition(1, timeout = 0))
-    expect_false(parallel::mccollect(job)[[1]])
+    job <- parallel$mcparallel(x$lock_partition(1, timeout = 0))
+    expect_false(parallel$mccollect(job)[[1]])
     expect_equal(lock_status(x)$explicit, 1L)
 })

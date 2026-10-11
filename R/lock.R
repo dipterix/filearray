@@ -371,8 +371,8 @@ filelock_unsupported <- function(lockfile, reason, type = c("warning", "error"))
 #' lock, and on 'Windows' the locked byte cannot be read or written.
 #'
 #' The lock is advisory: it only excludes code that locks the same file.
-#' Forked workers (such as those of \code{parallel::mclapply}) do not inherit
-#' it. Sessions that nest locks on two files in opposite orders wait for each
+#' Forked workers (such as those of \code{mclapply} in \pkg{parallel}) do not
+#' inherit it. Sessions that nest locks on two files in opposite orders wait for each
 #' other until their time-outs. On network file systems the lock works across
 #' computers only if the file system supports locks; folders synchronized by
 #' cloud services are locked on one computer only.

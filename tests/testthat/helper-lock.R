@@ -53,12 +53,14 @@ in_worker <- function(f) {
 # (and the function named by `need`, if any), or skips the test
 lock_test_cluster <- function(n = 1, need = NULL) {
     testthat::skip_on_cran()
+    # `parallel` comes with R but is not declared in DESCRIPTION
+    parallel <- asNamespace("parallel")
     # `R CMD check` sets R_TESTS to a relative path, which the base Rprofile
     # sources at start-up; workers started from this directory would fail
     restore <- set_env_var("R_TESTS", "")
     on.exit(restore(), add = TRUE)
     cl <- tryCatch(
-        parallel::makePSOCKcluster(n, timeout = 120),
+        parallel$makePSOCKcluster(n, timeout = 120),
         error = function(e) { NULL }
     )
     if (is.null(cl)) {
@@ -74,11 +76,11 @@ lock_test_cluster <- function(n = 1, need = NULL) {
             (is.null(need) || exists(need, envir = ns, inherits = FALSE))
     })
     ok <- tryCatch(
-        all(unlist(parallel::clusterCall(cl, setup, .libPaths(), LOCK_PROTOCOL_VERSION, need))),
+        all(unlist(parallel$clusterCall(cl, setup, .libPaths(), LOCK_PROTOCOL_VERSION, need))),
         error = function(e) { FALSE }
     )
     if (!ok) {
-        try(parallel::stopCluster(cl), silent = TRUE)
+        try(parallel$stopCluster(cl), silent = TRUE)
         testthat::skip("Workers load a filearray build without partition locks; install this build first")
     }
     cl
