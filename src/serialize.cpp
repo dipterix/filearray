@@ -1,10 +1,13 @@
 #include "serialize.h"
 using namespace Rcpp;
 
+// `read_byte` and `read_bytes` are called by R's `R_Unserialize` (C code), so
+// they signal errors with `Rf_error`: a C++ exception must not travel through
+// R's C frames (or through the `Rcpp::unwindProtect` in `FARR_meta`)
 int read_byte(R_inpstream_t stream){
     buffer_t *buf = (buffer_t *)stream->data;
     if (buf->pos >= buf->length) {
-        stop("Overflow in `read_byte()`");
+        Rf_error("Overflow in `read_byte()`");
     }
     return buf->data[buf->pos++];
 }
@@ -12,47 +15,43 @@ int read_byte(R_inpstream_t stream){
 void read_bytes(R_inpstream_t stream, void *dst, int length) {
     buffer_t *buf = (buffer_t *)stream->data;
     if (buf->pos + length > buf->length) {
-        stop("Overflow in `read_bytes()`");
+        Rf_error("Overflow in `read_bytes()`");
     }
     memcpy(dst, buf->data + buf->pos, length);
     buf->pos += length;
 }
 
+// Signals errors with `Rf_error` (see `read_byte`): it runs inside the
+// `Rcpp::unwindProtect` in `FARR_meta`, where a C++ exception must not be
+// thrown
 SEXP unserialize_raw(SEXP x) {
     if (TYPEOF(x) != RAWSXP) {
-        stop("`unserialize_raw` requires raw input");
+        Rf_error("`unserialize_raw` requires raw input");
     }
     Rbyte *vec = RAW(x);
     R_xlen_t len = Rf_xlength(x);
-    
-    buffer_t *buf = (buffer_t*) malloc(sizeof(buffer_t));
-    if (buf == NULL) {
-        stop("`unserialize_raw` Cannot allocate memory for buffer");
-    }
-    buf->length = len;
-    buf->pos    = 0;
-    buf->data   = (unsigned char *) vec;
-    
+
+    // on the stack, so an R error in `R_Unserialize` cannot leak it
+    buffer_t buf;
+    buf.length = len;
+    buf.pos    = 0;
+    buf.data   = (unsigned char *) vec;
+
     // Treat the data buffer as an input stream
     struct R_inpstream_st input_stream;
-    
+
     R_InitInPStream(
-        &input_stream,                 
-        (R_pstream_data_t) buf,      
-        R_pstream_any_format,        
-        read_byte, 
-        read_bytes, 
-        NULL,       
-        NULL        
+        &input_stream,
+        (R_pstream_data_t) &buf,
+        R_pstream_any_format,
+        read_byte,
+        read_bytes,
+        NULL,
+        NULL
     );
-    
+
     // Unserialize!
-    SEXP ret  = PROTECT(R_Unserialize(&input_stream));
-    
-    free(buf);
-    buf = NULL;
-    UNPROTECT(1);
-    return ret;
+    return R_Unserialize(&input_stream);
 }
 
 SEXP unserialize_connection(FILE* conn, size_t len) {

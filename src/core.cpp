@@ -89,8 +89,32 @@ List FARR_meta(const std::string& filebase) {
     size_t content_len2 = (size_t) content_len;
     
     SEXP dimnames = R_NilValue;
+    SEXP extra_headers = R_NilValue;
     if( content_len2 > 0 ){
-        SEXP extra_headers = PROTECT(unserialize_connection(conn, content_len2));
+        // try ... finally: close the meta file (and free `buf`) however this
+        // read ends, or the file stays open until R exits (on Windows it then
+        // cannot be deleted or replaced). `unserialize_connection` calls R
+        // (`Rf_allocVector`, `R_Unserialize`), and an R error is a long jump
+        // that skips C++ catch blocks; `Rcpp::unwindProtect` turns it into a
+        // C++ exception so the catch block runs, then `throw;` lets the
+        // original error continue to R
+        try {
+            extra_headers = PROTECT(Rcpp::unwindProtect([&]() {
+                return unserialize_connection(conn, content_len2);
+            }));
+        } catch (...) {
+            fclose(conn);
+            conn = NULL;
+            free(buf);
+            buf = NULL;
+            throw;
+        }
+    }
+    // finally, on the normal path: the file is not needed any more
+    fclose(conn);
+    conn = NULL;
+
+    if( content_len2 > 0 ){
         if(TYPEOF(extra_headers) == VECSXP){
             
             // extra_headers is protected
@@ -134,11 +158,9 @@ List FARR_meta(const std::string& filebase) {
             
             // extra_names
             UNPROTECT(1);
-            
+
         }
     }
-    fclose(conn);
-    conn = NULL;
     
     SEXP file_version = PROTECT(Rf_allocVector(INTSXP, 3)); 
     memcpy(INTEGER(file_version), buf2 + 8, 3 * 4); // 20
@@ -272,8 +294,8 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                 UNPROTECT(n_protected); // sliceIdx, dots
                 stop("Incorrect subscript dimensions, required: 0, ndim.");
             }
-            SET_VECTOR_ELT(sliceIdx, idx_size, PROTECT(CAR(dots)));
-            n_protected++;
+            // `CAR(dots)` stays reachable from `listOrEnv`, no PROTECT needed
+            SET_VECTOR_ELT(sliceIdx, idx_size, CAR(dots));
         }
         break;
     }
@@ -310,26 +332,28 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
                 // el = PROTECT(Rf_eval( PREXPR(el), PRENV( el )));
                 // From R 4.5.0, PREXPR and PRENV are deprecated
                 // Directly evaluate the promise instead
-                el = PROTECT(Rf_eval( el, listOrEnv ));
-                n_protected++;
-                
-                if( el == R_NilValue ){
+                SEXP ev = PROTECT(Rf_eval( el, listOrEnv ));
+
+                // `el` stays PROTECTed until stored: the temporary
+                // `NumericVector` from `as<>` is destroyed after the
+                // assignment, and its destructor calls into Rcpp
+                if( ev == R_NilValue ){
                     el = PROTECT(Rf_allocVector(REALSXP, 0));
-                    n_protected++;
                 } else {
-                    el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
-                    n_protected++;
+                    el = PROTECT(realToInt64(as<NumericVector>(ev), 1, dl, strict));
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
+                // `sliceIdx` protects `el` now; release within the
+                // iteration so the protection stack depth stays constant
+                UNPROTECT(2); // el, ev
             } else {
                 if( el == R_MissingArg || el == R_NilValue ){
                     el = PROTECT(seq_len_int64( dl ));
-                    n_protected++;
                 } else {
                     el = PROTECT(realToInt64(as<NumericVector>(el), 1, dl, strict));
-                    n_protected++;
                 }
                 SET_VECTOR_ELT(sliceIdx, idx_size, el);
+                UNPROTECT(1); // el, protected by `sliceIdx` now
             }
         }
     } else {
@@ -338,7 +362,7 @@ SEXP locationList(const SEXP listOrEnv, const NumericVector& dim, const int stri
         for(idx_size = 0; idx_size < ndims; idx_size++ ){
             el = PROTECT(seq_len_int64(dim[idx_size]));
             SET_VECTOR_ELT(sliceIdx, idx_size, el);
-            n_protected++;
+            UNPROTECT(1); // el, protected by `sliceIdx` now
         }
     }
     Rf_setAttrib(sliceIdx, Rf_install("_asis_"), Shield<SEXP>(wrap(true)));
@@ -495,7 +519,6 @@ List schedule(const SEXP listOrEnv,
         // change partition, flush!
         if( l2 > l1 ){
             SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
-            n_protected++;
             Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
             lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
             tmpptr = (int64_t*) REAL(tmp);
@@ -511,15 +534,18 @@ List schedule(const SEXP listOrEnv,
             dim2[ndim2 - 1] = cum_part_sizes[part] - part_start;
             
             SEXP idx2tmp = PROTECT(loc2idx(sliceIdx2, dim2));
-            n_protected++;
             idx2s.push_back(idx2tmp);
-            
+
             // partitions.insert()
             // partitions.push_back(part);
             partitions[part_size] = part;
             idx2len_cum += Rf_xlength(idx2tmp);
             idx2lens[part_size] = idx2len_cum;
             part_size++;
+            // `sliceIdx2` keeps `tmp` and the Rcpp `List idx2s` keeps
+            // `idx2tmp` alive, so release both within the iteration to keep
+            // the protection stack depth constant
+            UNPROTECT(2); // tmp, idx2tmp
         }
         part = 0;
         while(cum_part_sizes[part] < *lastptr || (part > 0 && cum_part_sizes[part-1] >= *lastptr)){
@@ -529,7 +555,6 @@ List schedule(const SEXP listOrEnv,
     }
     if( l2 > l1 ){
         SEXP tmp = PROTECT(Rf_allocVector(REALSXP, l2 - l1));
-        n_protected++;
         Rf_setAttrib(tmp, R_ClassSymbol, Shield<SEXP>(wrap("integer64")));
         lastptr2 = ((int64_t*) REAL(last_dim)) + l1;
         tmpptr = (int64_t*) REAL(tmp);
@@ -545,14 +570,13 @@ List schedule(const SEXP listOrEnv,
         dim2[ndim2 - 1] = cum_part_sizes[part] - part_start;
         
         SEXP idx2tmp = PROTECT(loc2idx(sliceIdx2, dim2));
-        n_protected++;
         idx2s.push_back(idx2tmp);
         // partitions.push_back(part);
         partitions[part_size] = part;
         idx2len_cum += Rf_xlength(idx2tmp);
         idx2lens[part_size] = idx2len_cum;
         part_size++;
-        
+        UNPROTECT(2); // tmp, idx2tmp (kept alive by `sliceIdx2`, `idx2s`)
     }
     if( part_size > 0 ){
         part_size--;

@@ -135,10 +135,12 @@ SEXP FARR_buffer_map(
     }
     
     
-    // allocate buffers
+    // allocate buffers; `argbuffers` protects each buffer once stored, so
+    // the buffers are not PROTECTed one by one (keeps the protection stack
+    // depth constant)
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
+        SET_VECTOR_ELT(argbuffers, ii, Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii]));
     }
     
     int64_t current_pos = 0;
@@ -209,18 +211,29 @@ SEXP FARR_buffer_map(
         }
     } catch (const Rcpp::LongjumpException& e) {
         // An R error or interrupt in `map` (including a partition lock
-        // time-out): let R continue the jump, which also resets the
-        // protection stack
-        std::rethrow_exception(std::current_exception());
-    } catch(std::exception &ex){
-        UNPROTECT(2 + narrays);
-        forward_exception_to_r(ex);
-    } catch(...){
-        // UNPROTECT(2 + narrays);
-        Rcpp::warning("C++ `FARR_buffer_map`: cannot finish map");
+        // time-out): rethrow so Rcpp's generated wrapper resumes the jump
+        // with the original condition. Use `throw;`, never
+        // `std::rethrow_exception`: a package built with libc++ can run in
+        // an R that loaded libstdc++, and `exception_ptr` would mix the two
+        // C++ runtimes
+        throw;
+    } catch (const Rcpp::internal::InterruptedException& e) {
+        // An interrupt with older Rcpp (without unwind protection): rethrow
+        // so the wrapper interrupts R, instead of `catch(...)` below
+        throw;
+    } catch (const std::exception& e) {
+        // A C++ error (e.g. `stop()` above, a failed partition write):
+        // rethrow so the wrapper turns it into an R error. Do not call
+        // `forward_exception_to_r` here: it raises the R error from inside
+        // this catch block, which skips the destructors in this function
+        throw;
+    } catch (...) {
+        throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_buffer_map`.");
     }
+    // No UNPROTECT in the handlers: each one ends in an R error, and R
+    // restores the protection stack when the error jumps
     
-    UNPROTECT(2 + narrays);
+    UNPROTECT(2); // argbuffers, tmp_val
     
     return(R_NilValue);
 }
@@ -281,10 +294,12 @@ SEXP FARR_buffer_map2(
     }
     
     
-    // allocate buffers
+    // allocate buffers; `argbuffers` protects each buffer once stored, so
+    // the buffers are not PROTECTed one by one (keeps the protection stack
+    // depth constant)
     SEXP argbuffers = PROTECT(Rf_allocVector(VECSXP, narrays));
     for(int ii = 0; ii < narrays; ii++){
-        SET_VECTOR_ELT(argbuffers, ii, PROTECT(Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii])));
+        SET_VECTOR_ELT(argbuffers, ii, Rf_allocVector(memory_buffer_types[ii], buffer_nelems[ii]));
     }
     
     int64_t current_pos = 0;
@@ -318,21 +333,24 @@ SEXP FARR_buffer_map2(
         try{
             SET_VECTOR_ELT(ret, iter, Shield<SEXP>(map(argbuffers)));
         } catch (const Rcpp::LongjumpException& e) {
-            // An R error or interrupt in `map`: let R continue the jump with
-            // the original condition, which also resets the protection stack
-            std::rethrow_exception(std::current_exception());
-        } catch(std::exception &ex){
-            UNPROTECT(2 + narrays);
-            forward_exception_to_r(ex);
-        } catch(...){
-            UNPROTECT(2 + narrays);
-            stop("Unknown error.");
+            // An R error or interrupt in `map`: rethrow so the wrapper
+            // resumes the jump with the original condition (`throw;`, see
+            // `FARR_buffer_map`)
+            throw;
+        } catch (const Rcpp::internal::InterruptedException& e) {
+            throw;
+        } catch (const std::exception& e) {
+            // rethrow; no `forward_exception_to_r` (see `FARR_buffer_map`)
+            throw;
+        } catch (...) {
+            throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_buffer_map2`.");
         }
 
 
     }
     
-    UNPROTECT(2 + narrays);
+    // No UNPROTECT in the handlers (see `FARR_buffer_map`)
+    UNPROTECT(2); // argbuffers, ret
     
     return(ret);
 }

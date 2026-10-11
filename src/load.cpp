@@ -243,11 +243,14 @@ SEXP FARR_subset_sequential(
             }
             
         } catch (const Rcpp::LongjumpException& e) {
-            std::rethrow_exception(std::current_exception());
+            // Use `throw;`, never `std::rethrow_exception`: a package
+            // built with libc++ can run in an R that loaded libstdc++,
+            // and `exception_ptr` would mix the two C++ runtimes
+            throw;
         } catch (const boost::interprocess::interprocess_exception& e) {
             // unable to find the file, skip
         } catch (const std::exception& e) {
-            std::rethrow_exception(std::current_exception());
+            throw;
         } catch (...) {
             throw std::runtime_error("filearray C++: Caught an unknown exception in `FARR_subset_sequential`.");
         }
