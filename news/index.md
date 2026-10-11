@@ -54,6 +54,11 @@
   `fwhich` indices
 - `fmap2` reports the error raised by the mapping function instead of
   “Unknown error.”
+- Errors and interrupts raised in the functions passed to `fmap`,
+  `fmap2` and `mapreduce` now reach the caller unchanged on Linux builds
+  that compile packages with `libc++` while R itself loads `libstdc++`
+  (for example through ICU). Before, they arrived as “c++ exception
+  (unknown reason)” and could corrupt memory and crash the R session
 
 ## filearray 0.2.3
 

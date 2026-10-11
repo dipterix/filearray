@@ -54,6 +54,7 @@
 <li>Fixed <code>mapreduce</code> (and so <code>sum</code>, <code>max</code>, <code>min</code>, <code>range</code> and <code>fwhich</code>) reading only the first slice of every partition after the first when <code>partition_size</code> is greater than 1, which gave wrong results and wrong <code>fwhich</code> indices</li>
 <li>
 <code>fmap2</code> reports the error raised by the mapping function instead of “Unknown error.”</li>
+<li>Errors and interrupts raised in the functions passed to <code>fmap</code>, <code>fmap2</code> and <code>mapreduce</code> now reach the caller unchanged on Linux builds that compile packages with <code>libc++</code> while R itself loads <code>libstdc++</code> (for example through ICU). Before, they arrived as “c++ exception (unknown reason)” and could corrupt memory and crash the R session</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.3" id="filearray-023">filearray 0.2.3<a class="anchor" aria-label="anchor" href="#filearray-023"></a></h2><p class="text-muted">CRAN release: 2026-08-21</p>
