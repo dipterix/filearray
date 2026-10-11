@@ -129,12 +129,16 @@ SEXP FARR_buffer_mapreduce(
     for(R_xlen_t part = 0; part < nparts; part++){
         partition_path = fbase + std::to_string(part) + ".farr";
         
+        // pclptr holds the cumulative number of last-margin slices up to
+        // each partition: this partition has pclptr[part] - pclptr[part - 1]
+        // slices, and its first element follows those of the partitions
+        // before it
         if(part == 0){
             count = count2;
-            psize = (*pclptr + part);
+            psize = pclptr[0];
         } else {
-            psize = (*pclptr + part) - (*pclptr + (part-1));
-            count = count2 + plen * (*pclptr + (part-1));
+            psize = pclptr[part] - pclptr[part - 1];
+            count = count2 + plen * pclptr[part - 1];
         }
         
         try {

@@ -73,18 +73,20 @@ int guess_splitdim(SEXP dim, int elem_size, size_t buffer_bytes){
 }
 
 void set_buffer(SEXP dim, int elem_size, size_t buffer_bytes, int split_dim){
-    int buf_bytes = elem_size;
+    double buf_bytes = elem_size;
     for(int ii = 0; ii < split_dim; ii++){
-        buf_bytes *= (int) (*(REAL(dim) + ii));
-        if( buf_bytes > buffer_bytes ){
-            buf_bytes = buffer_bytes;
+        buf_bytes *= *(REAL(dim) + ii);
+        if( buf_bytes > (double) buffer_bytes ){
+            buf_bytes = (double) buffer_bytes;
             break;
         }
     }
-    if(buf_bytes == NA_INTEGER || buf_bytes <= 16){
+    if( ISNAN(buf_bytes) || buf_bytes <= 16 ){
         buf_bytes = 65536;
+    } else if (buf_bytes > 1073741824) {
+        buf_bytes = 1073741824;
     }
-    set_buffer_size(buf_bytes);
+    set_buffer_size((int) buf_bytes);
 }
 
 SEXPTYPE file_buffer_sxptype(SEXPTYPE array_type) {

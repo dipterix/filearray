@@ -28,7 +28,7 @@ fa_subsetAssign1 <- function(x, ..., value) {
             stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         target_dim <- dim
-        x$initialize_partition(x$.partition_info[, 1])
+        parts <- x$.partition_info[, 1]
     } else if (arglen > 1) {
         if (arglen != length(dim)) {
             stop("SubsetAssign FileArray dimension mismatch.")
@@ -66,25 +66,21 @@ fa_subsetAssign1 <- function(x, ..., value) {
             stop("SubsetAssign FileArray `value` length mismatch: `value` length must be either 1 or the same length of the subset.")
         }
         
-        # make sure partitions exist
-        tmp <- locs[[length(locs)]]
-        sapply(tmp, function(i) {
-            sel <- x$.partition_info[, 3] <= i
-            if (any(sel)) {
-                sel <- max(x$.partition_info[sel, 1])
-                if (x$.partition_info[sel, 3] < i) {
-                    sel <- sel + 1
-                }
-            } else {
-                sel <- 1
-            }
-            x$initialize_partition(sel)
-        })
+        # partitions holding the selected slices of the last margin
+        parts <- partitions_of_slices(x, locs[[length(locs)]])
     }
     
     if (prod(target_dim) == 0) {
         return(invisible(x))
     }
+
+    # Hold the partitions written below until this function returns; the
+    # nested initialize_partition() and fill_partition() reuse these locks
+    lock_scope <- lock_scope_begin()
+    on.exit(lock_scope_end(lock_scope), add = TRUE)
+    lock_scope_acquire(lock_scope, x, parts)
+    # make sure partitions exist
+    x$initialize_partition(parts)
     
     # decide split_dim
     buffer_sz <- buf_bytes / x$element_size()

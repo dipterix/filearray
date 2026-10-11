@@ -290,7 +290,7 @@ SEXP convert_as2(SEXP x, SEXP y, SEXPTYPE type) {
         return(y);
     }
     
-    if( TYPEOF(y) != type ){
+    if( (SEXPTYPE) TYPEOF(y) != type ){
         stop("`convert_as2` inconsistent y type"); 
     }
     
@@ -402,7 +402,7 @@ SEXP realToCplx2(SEXP x){
 
 
 void realToFloat(double* x, float* y, size_t nelem){
-    for(R_xlen_t ii = 0; ii < nelem; ii++, x++, y++){
+    for(size_t ii = 0; ii < nelem; ii++, x++, y++){
         if(*x == NA_REAL){
             *y = NA_FLOAT;
         } else {
@@ -412,7 +412,7 @@ void realToFloat(double* x, float* y, size_t nelem){
 }
 
 void floatToReal(float* x, double* y, size_t nelem){
-    for(R_xlen_t ii = 0; ii < nelem; ii++, y++, x++){
+    for(size_t ii = 0; ii < nelem; ii++, y++, x++){
         if(ISNAN(*x)){
             *y = NA_REAL;
         } else {

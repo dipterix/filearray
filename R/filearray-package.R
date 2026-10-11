@@ -98,6 +98,12 @@ symlink_enabled <- local({
     ns$NA_float_ <- get_float_na()
 }
 
+.onUnload <- function(libpath) {
+    # A reloaded package starts a new lock registry, which could not see the
+    # locks of this one: release them all
+    try(FARR_lock_release_all(), silent = TRUE)
+}
+
 .onAttach <- function(libname, pkgname) {
     if (Sys.getenv("_R_CHECK_LIMIT_CORES_") == "TRUE") {
         packageStartupMessage(

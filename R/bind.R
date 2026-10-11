@@ -194,7 +194,12 @@ filearray_bind <- function(
         unlink(filebase, recursive = TRUE)
     }
     re <- filearray_create(filebase = filebase, dimension = dim, type = type, partition_size = part_size)
-    
+
+    # The partition files are copied or linked in below
+    lock_scope <- lock_scope_begin()
+    on.exit(lock_scope_end(lock_scope), add = TRUE)
+    lock_scope_acquire(lock_scope, re, re$.partition_info[, 1])
+
     start <- 1
     end <- 1
     
