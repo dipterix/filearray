@@ -12,6 +12,7 @@
 * Partition locks never make a write fail when the lock itself cannot be taken: any error while locking (for example a stale network file handle or too many open files, not only file systems without lock support) now warns once and the write proceeds, and an invalid `filearray.lock.timeout` option or `FILEARRAY_LOCK_TIMEOUT` value warns once and is ignored instead of stopping every write
 * Fixed `mapreduce` (and so `sum`, `max`, `min`, `range` and `fwhich`) reading only the first slice of every partition after the first when `partition_size` is greater than 1, which gave wrong results and wrong `fwhich` indices
 * `fmap2` reports the error raised by the mapping function instead of "Unknown error."
+* Errors and interrupts raised in the functions passed to `fmap`, `fmap2` and `mapreduce` now reach the caller unchanged on Linux builds that compile packages with `libc++` while R itself loads `libstdc++` (for example through ICU). Before, they arrived as "c++ exception (unknown reason)" and could corrupt memory and crash the R session
 
 # filearray 0.2.3
 

@@ -243,6 +243,9 @@ SEXP FARR_subset_sequential(
             }
             
         } catch (const Rcpp::LongjumpException& e) {
+            // Use `throw;`, never `std::rethrow_exception`: a package
+            // built with libc++ can run in an R that loaded libstdc++,
+            // and `exception_ptr` would mix the two C++ runtimes
             throw;
         } catch (const boost::interprocess::interprocess_exception& e) {
             // unable to find the file, skip

@@ -213,7 +213,9 @@ SEXP FARR_buffer_map(
     } catch (const Rcpp::LongjumpException& e) {
         // An R error or interrupt in `map` (including a partition lock
         // time-out): let R continue the jump, which also resets the
-        // protection stack
+        // protection stack. Use `throw;`, never `std::rethrow_exception`:
+        // a package built with libc++ can run in an R that loaded
+        // libstdc++, and `exception_ptr` would mix the two C++ runtimes
         throw;
     } catch(std::exception &ex){
         UNPROTECT(2);

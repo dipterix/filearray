@@ -293,3 +293,35 @@ test_that("fmap2 passes on errors raised by the mapping function", {
         sum(input[[1]])
     }, .buffer_count = 2), c(21, 57))
 })
+
+test_that("mapreduce passes on errors raised by map and reduce", {
+    x <- filearray_create(temp_path(check = TRUE), c(2, 3, 2), partition_size = 1)
+    on.exit(x$delete(force = TRUE), add = TRUE)
+    x[] <- 1:12
+
+    expect_error(mapreduce(x, function(data) {
+        stop("boom from mapreduce map")
+    }), "boom from mapreduce map")
+
+    expect_error(mapreduce(x, function(data, size) {
+        sum(data[seq_len(size)])
+    }, reduce = function(mapped) {
+        stop("boom from mapreduce reduce")
+    }), "boom from mapreduce reduce")
+
+    # the condition itself reaches the caller, not only its message
+    cond <- structure(
+        class = c("mapreduce_test_error", "error", "condition"),
+        list(message = "custom condition", call = NULL)
+    )
+    expect_error(mapreduce(x, function(data) {
+        stop(cond)
+    }), class = "mapreduce_test_error")
+
+    # and mapreduce still works afterwards
+    expect_equal(mapreduce(x, function(data, size) {
+        sum(data[seq_len(size)])
+    }, reduce = function(mapped) {
+        sum(unlist(mapped))
+    }), 78)
+})
