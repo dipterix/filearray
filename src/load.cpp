@@ -63,7 +63,7 @@ SEXP FARR_subset_sequential(
         const int64_t from = 0, 
         const int64_t len = 1
 ) {
-    if( TYPEOF(ret) != array_memory_sxptype(array_type) ){
+    if( (SEXPTYPE) TYPEOF(ret) != array_memory_sxptype(array_type) ){
         stop("Inconsistent `array_type` and return type");
     }
     if( len > Rf_xlength(ret) ){
@@ -339,7 +339,7 @@ struct FARRSubsetter : public TinyParallel::Worker {
     
     void operator_mmap(std::size_t begin, std::size_t end) {
         
-        for(R_xlen_t ii = begin; ii < end; ii++){
+        for(R_xlen_t ii = begin; ii < (R_xlen_t) end; ii++){
             
             int part = partitions[ii];
             int64_t skips = 0;
@@ -440,7 +440,7 @@ struct FARRSubsetter : public TinyParallel::Worker {
     
     void operator_fread(std::size_t begin, std::size_t end) {
         std::size_t ncores = buf_ptrs.size();
-        for(R_xlen_t ii = begin; ii < end; ii++){
+        for(R_xlen_t ii = begin; ii < (R_xlen_t) end; ii++){
             
             int part = partitions[ii];
             int64_t skips = 0;

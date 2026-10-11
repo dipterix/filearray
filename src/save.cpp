@@ -361,7 +361,7 @@ struct FARRAssigner : public TinyParallel::Worker {
         
         int elem_size = sizeof(T);
         
-        for(R_xlen_t iter = begin; iter < end; iter++){
+        for(R_xlen_t iter = begin; iter < (R_xlen_t) end; iter++){
             
             if( has_error >= 0 ){ continue; }
             

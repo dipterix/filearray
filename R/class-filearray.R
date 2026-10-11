@@ -63,11 +63,15 @@
 #' the array directory (byte \code{k} locks partition \code{k}). They are
 #' advisory: older versions of this package and other programs ignore them.
 #' The operating system releases them when a process exits, so a crashed or
-#' killed process never leaves a stale lock. On file systems that cannot lock
-#' (for example some network mounts) writes warn once and proceed unlocked;
-#' cloud-synchronized folders lock on one computer only. Copying or archiving
-#' the array directory in the session that holds its locks releases them on
-#' \verb{POSIX} systems.
+#' killed process never leaves a stale lock. The locks guard writes but never
+#' make them fail: when a lock cannot be taken for a reason other than another
+#' process holding it (a file system without lock support such as some network
+#' mounts, no permission to create the lock file, a network error), writes warn
+#' once and proceed unlocked, and \code{lock_partition} warns and returns
+#' \code{TRUE} with attribute \code{locked = FALSE}. Cloud-synchronized
+#' folders lock on one computer only. Copying or archiving the array directory
+#' in the session that holds its locks releases them on \verb{POSIX} systems.
+#' To lock anything else the same way, see \code{\link{with_filelock}}.
 #'
 #' Options (each falls back to the environment variable, which worker
 #' processes inherit):
@@ -78,9 +82,10 @@
 #' \item{\code{filearray.lock.timeout} (\code{FILEARRAY_LOCK_TIMEOUT})}{seconds
 #' a write waits for a locked partition before it fails with an error of class
 #' \code{filearray_lock_timeout}; default \code{Inf}, wait until the
-#' partition is free}
+#' partition is free. A value that is not a non-negative number warns once and
+#' is ignored}
 #' }
-#' @seealso \code{\link{filearray}}
+#' @seealso \code{\link{filearray}}, \code{\link{with_filelock}}
 #' @exportClass FileArray
 NULL
 
