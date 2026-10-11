@@ -11,7 +11,7 @@ to create instances."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,6 +91,9 @@ to create instances.</p>
 <dt><code>load(filebase, mode = c("readwrite", "readonly"))</code></dt>
 <dd><p>Load file array from existing directory</p></dd>
 
+<dt><code>lock_partition(parts, timeout = NULL)</code></dt>
+<dd><p>Lock partitions <code>parts</code> (default: all) for this <span style="R">R</span> session, so that other processes cannot write to them; waits and retries until all of them are locked or <code>timeout</code> seconds have passed (<code>NULL</code>: option <code>filearray.lock.timeout</code>, which defaults to waiting without limit; <code>0</code>: try once). Returns <code>TRUE</code> once locked, or <code>FALSE</code> after the time-out, with nothing locked; see section 'Partition locks'</p></dd>
+
 <dt><code>partition_path(part)</code></dt>
 <dd><p>Get partition file path</p></dd>
 
@@ -109,14 +112,74 @@ to create instances.</p>
 <dt><code>type()</code></dt>
 <dd><p>Get data type</p></dd>
 
+<dt><code>unlock_partition(parts)</code></dt>
+<dd><p>Release one <code>lock_partition</code> lock on each of <code>parts</code>, or every <code>lock_partition</code> lock this <span style="R">R</span> session holds on the array if <code>parts</code> is missing; returns <code>TRUE</code> if a lock was released</p></dd>
+
 <dt><code>valid()</code></dt>
 <dd><p>Check if the array is valid.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
+    <h2 id="partition-locks">Partition locks<a class="anchor" aria-label="anchor" href="#partition-locks"></a></h2>
+
+
+<p>Several processes (for example <span class="pkg">parallel</span>, <span class="pkg">callr</span> or <span class="pkg">mirai</span>
+workers) can write to one array. Writes lock the partitions they change:
+sub-assignment (<code>x[...] &lt;- value</code>), <code>fill_partition</code>,
+<code>initialize_partition</code>, <code>set_partition</code>, <code><a href="fmap.html">fmap</a></code>,
+<code><a href="fmap.html">fmap_element_wise</a></code> and <code><a href="filearray_bind.html">filearray_bind</a></code> wait
+while another process holds one of their partitions, so concurrent writers
+never lose each other's data. Reading takes no locks, so a reader may see a
+write that is still in progress. Functions that read but must first create
+missing partitions (<code>max</code>, <code>min</code>, <code>range</code> and <code>sum</code>
+with <code>na.rm = FALSE</code>, inputs of <code>fmap</code>, <code>filearray_bind</code>,
+evaluating array operations) lock the partitions they create, so they can
+wait too.</p>
+<p>To keep partitions to yourself over several operations, for example to
+check whether a partition has been computed and write it only if not, lock
+them explicitly:</p><div class="sourceCode"><pre><code><span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">x</span><span class="op">$</span><span class="fu">lock_partition</span><span class="op">(</span><span class="va">k</span>, timeout <span class="op">=</span> <span class="fl">60</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"partition "</span>, <span class="va">k</span>, <span class="st">" is busy"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="fu">unlock_partition</span><span class="op">(</span><span class="va">k</span><span class="op">)</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="va">k</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="va">x</span><span class="op">[</span>, , <span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">compute</span><span class="op">(</span><span class="va">k</span><span class="op">)</span></span></code></pre></div><p>Locks belong to the <span style="R">R</span> session, not to the object: every object of the
+same array shares them, writes of this session to partitions it holds do
+not wait, and each <code>lock_partition</code> call needs one
+<code>unlock_partition</code> call. Lock everything you need in one call: two
+sessions that each hold one partition and wait for the other's wait until
+their time-outs. Likewise, do not hold partitions that forked workers
+(<code>mclapply</code>) of the same session write. Non-interactive workers
+should set a time-out.</p>
+<p>The locks are byte-range locks on an empty file <code>.filearray.lock</code> in
+the array directory (byte <code>k</code> locks partition <code>k</code>). They are
+advisory: older versions of this package and other programs ignore them.
+The operating system releases them when a process exits, so a crashed or
+killed process never leaves a stale lock. The locks guard writes but never
+make them fail: when a lock cannot be taken for a reason other than another
+process holding it (a file system without lock support such as some network
+mounts, no permission to create the lock file, a network error), writes warn
+once and proceed unlocked, and <code>lock_partition</code> warns and returns
+<code>TRUE</code> with attribute <code>locked = FALSE</code>. Cloud-synchronized
+folders lock on one computer only. Copying or archiving the array directory
+in the session that holds its locks releases them on <code>POSIX</code> systems.
+To lock anything else the same way, see <code><a href="with_filelock.html">with_filelock</a></code>.</p>
+<p>Options (each falls back to the environment variable, which worker
+processes inherit):</p><dl><dt><code>filearray.lock</code> (<code>FILEARRAY_LOCK</code>)</dt>
+<dd><p>set to <code>FALSE</code>
+to stop writes from locking automatically; <code>lock_partition</code> still
+locks</p></dd>
+
+<dt><code>filearray.lock.timeout</code> (<code>FILEARRAY_LOCK_TIMEOUT</code>)</dt>
+<dd><p>seconds
+a write waits for a locked partition before it fails with an error of class
+<code>filearray_lock_timeout</code>; default <code>Inf</code>, wait until the
+partition is free. A value that is not a non-negative number warns once and
+is ignored</p></dd>
+
+
+</dl></div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="filearray.html">filearray</a></code></p></div>
+    <div class="dont-index"><p><code><a href="filearray.html">filearray</a></code>, <code><a href="with_filelock.html">with_filelock</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

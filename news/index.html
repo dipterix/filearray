@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">filearray</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,19 @@
 <ul><li>Partition files are written to a temporary file and then renamed into place, so other processes loading the same array no longer fail with “File size too small” while a partition is being created or filled</li>
 <li>
 <code>filearray_load</code> only treats files named <code>&lt;n&gt;.farr</code> as partitions</li>
+<li>Writes lock the partitions they change, so several processes (for example <code>parallel</code>, <code>callr</code> or <code>mirai</code> workers, or several applications) can write to one array without losing each other’s data: sub-assignment (<code>x[...] &lt;- value</code>), <code>fill_partition</code>, <code>initialize_partition</code>, <code>set_partition</code>, <code>fmap</code>, <code>fmap_element_wise</code> and <code>filearray_bind</code> wait while another process holds one of their partitions. Reading takes no locks, except that functions that must first create missing partitions (such as <code>max</code> or <code>sum</code>) lock the partitions they create</li>
+<li>Added <code>lock_partition(parts, timeout)</code> and <code>unlock_partition(parts)</code> methods to hold partitions over several operations (for example to check whether a partition has been computed and write it only if not); <code>lock_partition</code> waits and retries until the partitions are free or <code>timeout</code> seconds have passed</li>
+<li>Locks are byte-range locks on an empty file <code>.filearray.lock</code> in the array directory, released by the operating system when a process exits. <code>options(filearray.lock = FALSE)</code> (environment variable <code>FILEARRAY_LOCK</code>) turns off automatic locking; <code>options(filearray.lock.timeout = &lt;seconds&gt;)</code> (<code>FILEARRAY_LOCK_TIMEOUT</code>) limits how long writes wait, by default without limit</li>
+<li>A missing partition is created only if no other process has created it in the meantime, and every partition write uses its own temporary file, so concurrent writers no longer replace each other’s partitions or share a temporary file</li>
+<li>
+<code>fmap</code> stops when the mapping function raises an error or is interrupted, instead of warning “cannot finish map” and returning a partly written result</li>
+<li>
+<code>delete()</code> releases the locks the session holds on the array before removing it</li>
+<li>Added <code>with_filelock(expr, lockfile, timeout, on_unsupported)</code> to evaluate code while holding an exclusive lock on any lock file, so that only one R session at a time runs it; other sessions wait. It is not tied to file arrays, so other packages can use it. <code>on_unsupported</code> chooses what happens when the lock cannot be taken: warn (default), stop, or ignore</li>
+<li>Partition locks never make a write fail when the lock itself cannot be taken: any error while locking (for example a stale network file handle or too many open files, not only file systems without lock support) now warns once and the write proceeds, and an invalid <code>filearray.lock.timeout</code> option or <code>FILEARRAY_LOCK_TIMEOUT</code> value warns once and is ignored instead of stopping every write</li>
+<li>Fixed <code>mapreduce</code> (and so <code>sum</code>, <code>max</code>, <code>min</code>, <code>range</code> and <code>fwhich</code>) reading only the first slice of every partition after the first when <code>partition_size</code> is greater than 1, which gave wrong results and wrong <code>fwhich</code> indices</li>
+<li>
+<code>fmap2</code> reports the error raised by the mapping function instead of “Unknown error.”</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.3" id="filearray-023">filearray 0.2.3<a class="anchor" aria-label="anchor" href="#filearray-023"></a></h2><p class="text-muted">CRAN release: 2026-08-21</p>

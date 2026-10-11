@@ -231,3 +231,6 @@
 
 - [`typeof()`](https://dipterix.org/filearray/reference/typeof.md) : The
   type of a file array (extended)
+
+- [`with_filelock()`](https://dipterix.org/filearray/reference/with_filelock.md)
+  : Evaluate an expression while holding a file lock
