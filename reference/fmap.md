@@ -106,7 +106,7 @@ fmap(list(x1, x2), function(input) {
 #> Partition count: 3 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpA8rdns/file18b33777a5ed 
+#> Location: /tmp/RtmpmBaigK/file18dd59bc6df3 
 
 # check
 range(output[] - (x1[] + x2[]))
@@ -126,7 +126,7 @@ fmap(list(x1, x2), function(input) {
 #> Partition count: 3 
 #> Partition size: 1 
 #> Storage type: double (internal size: 8)
-#> Location: /tmp/RtmpA8rdns/file18b35d2df60e 
+#> Location: /tmp/RtmpmBaigK/file18dd417d3f92 
 
 # check
 range(output[] - apply(x1[] / x2[], c(2,3), max))
